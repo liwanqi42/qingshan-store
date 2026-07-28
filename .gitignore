@@ -1,0 +1,13 @@
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# 前端（Node）
+**/node_modules/
+**/dist/
+
+# 系统文件
+Thumbs.db
+.DS_Store
