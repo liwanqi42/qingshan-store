@@ -9,9 +9,11 @@ import com.qingshan.context.BaseContext;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
+import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
 import com.qingshan.exception.AccountLockedException;
 import com.qingshan.exception.AccountNotFoundException;
+import com.qingshan.exception.PasswordEditFailedException;
 import com.qingshan.exception.PasswordErrorException;
 import com.qingshan.mapper.EmployeeMapper;
 import com.qingshan.result.PageResult;
@@ -139,6 +141,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
+    /**
+     * 修改员工信息
+     * @param employeeDTO
+     */
     @Override
     public void update(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
@@ -148,6 +154,35 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.update(employee);
+    }
+
+    /**
+     * 修改密码
+     * @param passwordEditDTO
+     */
+    @Override
+    public void editPassword(PasswordEditDTO passwordEditDTO) {
+        //1、根据id查询员工信息
+        Employee employee = employeeMapper.getById(passwordEditDTO.getEmpId());
+        if (employee == null) {
+            throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
+        }
+
+        //2、校验旧密码是否正确（MD5加密后比对）
+        String oldPassword = DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes());
+        if (!oldPassword.equals(employee.getPassword())) {
+            throw new PasswordEditFailedException(MessageConstant.PASSWORD_EDIT_FAILED);
+        }
+
+        //3、更新为新密码（MD5加密）
+        Employee emp = Employee.builder()
+                .id(passwordEditDTO.getEmpId())
+                .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()))
+                .updateTime(LocalDateTime.now())
+                .updateUser(BaseContext.getCurrentId())
+                .build();
+
+        employeeMapper.update(emp);
     }
 
 }

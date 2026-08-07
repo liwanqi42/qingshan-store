@@ -3,6 +3,7 @@ package com.qingshan.service;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
+import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
 import com.qingshan.result.PageResult;
 
@@ -47,4 +48,10 @@ public interface EmployeeService {
      * @param employeeDTO
      */
     void update(EmployeeDTO employeeDTO);
+
+    /**
+     * 修改密码
+     * @param passwordEditDTO
+     */
+    void editPassword(PasswordEditDTO passwordEditDTO);
 }

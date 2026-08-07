@@ -4,6 +4,7 @@ import com.qingshan.constant.JwtClaimsConstant;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
+import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
 import com.qingshan.properties.JwtProperties;
 import com.qingshan.result.PageResult;
@@ -137,6 +138,19 @@ public class EmployeeController {
     public Result update(@RequestBody EmployeeDTO employeeDTO){
         log.info("修改员工信息:{}", employeeDTO);
         employeeService.update(employeeDTO);
+        return Result.success();
+    }
+
+    /**
+     * 修改密码
+     * @param passwordEditDTO
+     * @return
+     */
+    @PutMapping("/editPassword")
+    @ApiOperation("修改密码")
+    public Result editPassword(@RequestBody PasswordEditDTO passwordEditDTO){
+        log.info("修改密码:{}", passwordEditDTO);
+        employeeService.editPassword(passwordEditDTO);
         return Result.success();
     }
 }
