@@ -86,12 +86,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
 
         //创建及修改时间
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
+//        employee.setCreateTime(LocalDateTime.now());
+//        employee.setUpdateTime(LocalDateTime.now());
 
         //设置登录用户id
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+//        employee.setCreateUser(BaseContext.getCurrentId());
+//        employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(employee);
     }
@@ -109,6 +109,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         long total = page.getTotal();
         List<Employee> records = page.getResult();
+
+        //身份证号脱敏
+        records.forEach(this::maskIdNumber);
 
         return new PageResult(total, records);
     }
@@ -137,7 +140,12 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public Employee getById(Long id) {
         Employee employee = employeeMapper.getById(id);
+        if (employee == null) {
+            throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
+        }
+        //密码与身份证号脱敏
         employee.setPassword("******");
+        maskIdNumber(employee);
         return employee;
     }
 
@@ -150,10 +158,40 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeDTO, employee);
 
-        employee.setUpdateTime(LocalDateTime.now());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+        //前端回显的是脱敏后的身份证号，含*时不更新该字段，避免覆盖数据库中的真实数据
+        if (employee.getIdNumber() != null && employee.getIdNumber().contains("*")) {
+            employee.setIdNumber(null);
+        }
+
+//        employee.setUpdateTime(LocalDateTime.now());
+//        employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.update(employee);
+    }
+
+    /**
+     * 身份证号脱敏：保留前6位和后4位，中间用*代替
+     * @param employee
+     */
+    private String maskIdNumber(Employee employee) {
+        String idNumber = employee.getIdNumber();
+        if (idNumber == null) {
+            return null;
+        }
+        int len = idNumber.length();
+        // 支持15位、18位身份证脱敏
+        if (len == 15 || len == 18) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(idNumber, 0, 6);
+            for (int i = 0; i < len - 10; i++) {
+                sb.append('*');
+            }
+            sb.append(idNumber.substring(len - 4));
+            // 将脱敏结果写回对象，否则调用方拿到的仍是原始号码
+            employee.setIdNumber(sb.toString());
+        }
+        // 不符合身份证长度时保持原样
+        return employee.getIdNumber();
     }
 
     /**
@@ -178,8 +216,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee emp = Employee.builder()
                 .id(passwordEditDTO.getEmpId())
                 .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()))
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
+//                .updateTime(LocalDateTime.now())
+//                .updateUser(BaseContext.getCurrentId())
                 .build();
 
         employeeMapper.update(emp);

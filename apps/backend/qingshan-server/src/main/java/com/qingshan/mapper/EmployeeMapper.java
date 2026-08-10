@@ -1,7 +1,9 @@
 package com.qingshan.mapper;
 
+import com.qingshan.annotation.AutoFill;
 import com.qingshan.dto.EmployeePageQueryDTO;
 import com.qingshan.entity.Employee;
+import com.qingshan.enumeration.OperationType;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
@@ -27,6 +29,7 @@ public interface EmployeeMapper {
     @Insert("insert into employee(name, username, password, phone, sex, id_number, create_time, update_time, create_user, update_user, status)" +
             "values " +
             "(#{name}, #{username}, #{password}, #{phone}, #{sex}, #{idNumber}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser}, #{status})")
+    @AutoFill(value = OperationType.INSERT)
     void insert(Employee employee);
 
     /**
@@ -40,6 +43,7 @@ public interface EmployeeMapper {
      * 根据主键更新属性
      * @param employee
      */
+    @AutoFill(value = OperationType.UPDATE)
     void update(Employee employee);
 
     /**
