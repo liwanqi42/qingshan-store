@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -40,4 +41,8 @@ public class ProductVO implements Serializable {
     private String categoryName;
     //商品属性/规格
     private List<ProductAttr> attrs = new ArrayList<>();
+
+    //TODO 前端上线后必须删除
+    //口味/属性（兼容管理端前端回显，value 为属性值JSON字符串）
+    private List<Map<String, String>> flavors = new ArrayList<>();
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.ProductAttrsMapper">
+
+
+    <insert id="insertBatch">
+        insert into product_attr (product_id, name, attr_values)
+        values
+        <foreach collection="attrs" item="pas" separator=",">
+            (#{pas.productId}, #{pas.name}, #{pas.attrValues})
+        </foreach>
+    </insert>
+    <delete id="deleteByProductAttrIds">
+        delete from product_attr where product_id in
+        <foreach collection="ids" open="(" close=")" separator="," item="productId">
+            #{productId}
+        </foreach>
+    </delete>
+</mapper>
