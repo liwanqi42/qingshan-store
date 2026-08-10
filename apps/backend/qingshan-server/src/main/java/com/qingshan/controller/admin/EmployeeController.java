@@ -1,6 +1,7 @@
 package com.qingshan.controller.admin;
 
 import com.qingshan.constant.JwtClaimsConstant;
+import com.qingshan.context.BaseContext;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
@@ -150,6 +151,8 @@ public class EmployeeController {
     @ApiOperation("修改密码")
     public Result editPassword(@RequestBody PasswordEditDTO passwordEditDTO){
         log.info("修改密码:{}", passwordEditDTO);
+        //从JWT上下文中获取当前登录员工id，不信任前端传参
+        passwordEditDTO.setEmpId(BaseContext.getCurrentId());
         employeeService.editPassword(passwordEditDTO);
         return Result.success();
     }
