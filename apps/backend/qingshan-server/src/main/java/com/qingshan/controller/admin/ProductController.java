@@ -3,6 +3,7 @@ package com.qingshan.controller.admin;
 
 import com.qingshan.dto.ProductDTO;
 import com.qingshan.dto.ProductPageQueryDTO;
+import com.qingshan.entity.Product;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.ProductService;
@@ -18,8 +19,7 @@ import java.util.List;
  * 商品管理
  */
 @RestController
-//TODO 暂时用/dish后期必须改/product
-@RequestMapping("/admin/dish")
+@RequestMapping("/admin/product")
 @Slf4j
 public class ProductController {
 
@@ -102,5 +102,17 @@ public class ProductController {
     public Result<String> startOrStop(@PathVariable Integer status, Long id){
         productService.startOrStop(status,id);
         return Result.success();
+    }
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @GetMapping("/list")
+    @ApiOperation("根据分类id查询菜品")
+    public Result<List<Product>> list(Long categoryId){
+        List<Product> list = productService.list(categoryId);
+        return Result.success(list);
     }
 }

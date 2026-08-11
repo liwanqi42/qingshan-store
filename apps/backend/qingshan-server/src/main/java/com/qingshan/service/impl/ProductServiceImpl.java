@@ -123,20 +123,6 @@ public class ProductServiceImpl implements ProductService {
         BeanUtils.copyProperties(product, productVO);
         productVO.setAttrs(productAttrs);
 
-        //TODO 下面前端上线后必须删除
-        //兼容管理端前端回显：前端读取的是 flavors 字段，结构为 {name, value}
-        List<Map<String, String>> flavors = new ArrayList<>();
-        if (productAttrs != null) {
-            for (ProductAttr attr : productAttrs) {
-                Map<String, String> flavor = new LinkedHashMap<>();
-                flavor.put("name", attr.getName());
-                flavor.put("value", attr.getAttrValues());
-                flavors.add(flavor);
-            }
-        }
-        productVO.setFlavors(flavors);
-        //删除到这
-
         return productVO;
     }
 
@@ -163,6 +149,11 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+    /**
+     * 商品起售停售
+     * @param status
+     * @param id
+     */
     @Override
     public void startOrStop(Integer status, Long id) {
         Product product = Product.builder()
@@ -185,5 +176,19 @@ public class ProductServiceImpl implements ProductService {
                 }
             }
         }
+    }
+
+    /**
+     * 根据分类id查询菜品
+     * @param categoryId
+     * @return
+     */
+    @Override
+    public List<Product> list(Long categoryId) {
+        Product product = Product.builder()
+                .categoryId(categoryId)
+                .status(StatusConstant.ENABLE)
+                .build();
+        return productMapper.list(product);
     }
 }

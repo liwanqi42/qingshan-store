@@ -42,7 +42,5 @@ public class ProductVO implements Serializable {
     //商品属性/规格
     private List<ProductAttr> attrs = new ArrayList<>();
 
-    //TODO 前端上线后必须删除
-    //口味/属性（兼容管理端前端回显，value 为属性值JSON字符串）
-    private List<Map<String, String>> flavors = new ArrayList<>();
+
 }

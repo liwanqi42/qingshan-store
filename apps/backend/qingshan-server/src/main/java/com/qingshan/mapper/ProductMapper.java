@@ -66,4 +66,6 @@ public interface ProductMapper {
      */
     @AutoFill(value = OperationType.UPDATE)
     void update(Product product);
+
+    List<Product> list(Product product);
 }

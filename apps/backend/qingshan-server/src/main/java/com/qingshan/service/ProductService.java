@@ -2,6 +2,7 @@ package com.qingshan.service;
 
 import com.qingshan.dto.ProductDTO;
 import com.qingshan.dto.ProductPageQueryDTO;
+import com.qingshan.entity.Product;
 import com.qingshan.result.PageResult;
 import com.qingshan.vo.ProductVO;
 
@@ -20,4 +21,6 @@ public interface ProductService {
     void updateWithAtrr(ProductDTO productDTO);
 
     void startOrStop(Integer status, Long id);
+
+    List<Product> list(Long categoryId);
 }

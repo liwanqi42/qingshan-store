@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.BundleItemMapper">
+
+    <insert id="insertBatch">
+        insert into bundle_item
+        (bundle_id, product_id, name, price, copies)
+        values
+        <foreach collection="bundleItems" item="bi" separator=",">
+            (#{bi.bundleId}, #{bi.productId}, #{bi.name}, #{bi.price}, #{bi.copies})
+        </foreach>
+    </insert>
+</mapper>
