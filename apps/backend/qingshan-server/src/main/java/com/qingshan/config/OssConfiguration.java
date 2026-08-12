@@ -3,7 +3,6 @@ package com.qingshan.config;
 import com.qingshan.properties.AliOssProperties;
 import com.qingshan.utils.AliOssUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.annotation.Before;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

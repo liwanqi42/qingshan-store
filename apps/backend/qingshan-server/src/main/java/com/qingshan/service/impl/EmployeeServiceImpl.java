@@ -5,7 +5,6 @@ import com.github.pagehelper.PageHelper;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.constant.PasswordConstant;
 import com.qingshan.constant.StatusConstant;
-import com.qingshan.context.BaseContext;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -35,8 +33,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     /**
      * 员工登录
      *
-     * @param employeeLoginDTO
-     * @return
+     * @param employeeLoginDTO 员工登录参数
+     * @return 登录成功的员工信息
      */
     public Employee login(EmployeeLoginDTO employeeLoginDTO) {
         String username = employeeLoginDTO.getUsername();
@@ -59,7 +57,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
         }
 
-        if (employee.getStatus() == StatusConstant.DISABLE) {
+        if (StatusConstant.DISABLE.equals(employee.getStatus())) {
             //账号被锁定
             throw new AccountLockedException(MessageConstant.ACCOUNT_LOCKED);
         }
@@ -70,7 +68,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 新增员工
-     * @param employeeDTO
+     * @param employeeDTO 员工信息
      */
     @Override
     public void save(EmployeeDTO employeeDTO) {
@@ -98,28 +96,27 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 分页查询
-     * @param employeePageQueryDTO
-     * @return
+     * @param employeePageQueryDTO 分页查询参数
+     * @return 分页查询结果
      */
     @Override
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
-        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
+        try (Page<Employee> page = PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize())) {
+            List<Employee> records = employeeMapper.pageQuery(employeePageQueryDTO);
 
-        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
+            long total = page.getTotal();
 
-        long total = page.getTotal();
-        List<Employee> records = page.getResult();
+            //身份证号脱敏
+            records.forEach(this::maskIdNumber);
 
-        //身份证号脱敏
-        records.forEach(this::maskIdNumber);
-
-        return new PageResult(total, records);
+            return new PageResult(total, records);
+        }
     }
 
     /**
      * 启用禁用
-     * @param status
-     * @param id
+     * @param status 员工状态，0禁用 1启用
+     * @param id 员工id
      */
     @Override
     public void enableOrDisable(Integer status, long id) {
@@ -134,8 +131,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 根据id查询员工信息
-     * @param id
-     * @return
+     * @param id 员工id
+     * @return 员工信息（密码与身份证号已脱敏）
      */
     @Override
     public Employee getById(Long id) {
@@ -151,7 +148,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 修改员工信息
-     * @param employeeDTO
+     * @param employeeDTO 员工信息
      */
     @Override
     public void update(EmployeeDTO employeeDTO) {
@@ -171,12 +168,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 身份证号脱敏：保留前6位和后4位，中间用*代替
-     * @param employee
+     * @param employee 员工信息，脱敏结果直接写回该对象
      */
-    private String maskIdNumber(Employee employee) {
+    private void maskIdNumber(Employee employee) {
         String idNumber = employee.getIdNumber();
         if (idNumber == null) {
-            return null;
+            return;
         }
         int len = idNumber.length();
         // 支持15位、18位身份证脱敏
@@ -191,12 +188,11 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setIdNumber(sb.toString());
         }
         // 不符合身份证长度时保持原样
-        return employee.getIdNumber();
     }
 
     /**
      * 修改密码
-     * @param passwordEditDTO
+     * @param passwordEditDTO 修改密码参数
      */
     @Override
     public void editPassword(PasswordEditDTO passwordEditDTO) {

@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -43,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
     private setBundleMapper setBundleMapper;
     /**
      * 新增商品及样式
-     * @param productDTO
+     * @param productDTO 商品信息及样式
      */
     @Override
     @Transactional
@@ -58,42 +56,41 @@ public class ProductServiceImpl implements ProductService {
 
         //向样式表插入n条数据
         List<ProductAttr> attrs = productDTO.getAttrs();
-        if (attrs != null && attrs.size()>0){
-            attrs.forEach(productAttr -> {
-                productAttr.setProductId(productId);
-            });
+        if (attrs != null && !attrs.isEmpty()){
+            attrs.forEach(productAttr -> productAttr.setProductId(productId));
             productAttrsMapper.insertBatch(attrs);
         }
     }
 
     /**
      * 商品分页查询
-     * @param productPageQueryDTO
-     * @return
+     * @param productPageQueryDTO 分页查询参数
+     * @return 分页查询结果
      */
     @Override
     public PageResult pageQuery(ProductPageQueryDTO productPageQueryDTO) {
-        PageHelper.startPage(productPageQueryDTO.getPage(), productPageQueryDTO.getPageSize());
-        Page<ProductVO> page = productMapper.pageQuery(productPageQueryDTO);
-        return new PageResult(page.getTotal(), page.getResult());
+        try (Page<ProductVO> page = PageHelper.startPage(productPageQueryDTO.getPage(), productPageQueryDTO.getPageSize())) {
+            List<ProductVO> records = productMapper.pageQuery(productPageQueryDTO);
+            return new PageResult(page.getTotal(), records);
+        }
     }
 
     /**
      * 商品的批量删除
-     * @param ids
+     * @param ids 商品id列表
      */
     @Override
     public void deleteBatch(List<Long> ids) {
         for (Long id : ids) {
             Product product = productMapper.getById(id);
-            if (product.getStatus() == StatusConstant.ENABLE) {
+            if (StatusConstant.ENABLE.equals(product.getStatus())) {
                 throw new DeletionNotAllowedException(MessageConstant.PRODUCT_ON_SALE);
             }
         }
 
         //是否被捆绑包关联
         List<Long> setBundleIds = setBundleItemMapper.getBundleIdsByProductIds(ids);
-        if (setBundleIds != null && setBundleIds.size() >0){
+        if (setBundleIds != null && !setBundleIds.isEmpty()){
             throw new DeletionNotAllowedException((MessageConstant.PRODUCT_BE_RELATED_BY_BUNDLE));
         }
 
@@ -111,8 +108,8 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 根据id查询商品样式
-     * @param id
-     * @return
+     * @param id 商品id
+     * @return 商品信息及样式
      */
     @Override
     public ProductVO getByidWithAttr(Long id) {
@@ -128,7 +125,7 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 修改商品信息
-     * @param productDTO
+     * @param productDTO 商品信息及样式
      */
     @Override
     public void updateWithAtrr(ProductDTO productDTO) {
@@ -140,10 +137,8 @@ public class ProductServiceImpl implements ProductService {
         productAttrsMapper.deleteByProductId(productDTO.getId());
 
         List<ProductAttr> attrs = productDTO.getAttrs();
-        if (attrs != null && attrs.size()>0){
-            attrs.forEach(productAttr -> {
-                productAttr.setProductId(productDTO.getId());
-            });
+        if (attrs != null && !attrs.isEmpty()){
+            attrs.forEach(productAttr -> productAttr.setProductId(productDTO.getId()));
             productAttrsMapper.insertBatch(attrs);
         }
 
@@ -151,8 +146,8 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 商品起售停售
-     * @param status
-     * @param id
+     * @param status 商品状态，0停售 1起售
+     * @param id 商品id
      */
     @Override
     public void startOrStop(Integer status, Long id) {
@@ -162,11 +157,11 @@ public class ProductServiceImpl implements ProductService {
                 .build();
         productMapper.update(product);
 
-        if (status == StatusConstant.DISABLE) {
+        if (StatusConstant.DISABLE.equals(status)) {
             List<Long> productIds = new ArrayList<>();
             productIds.add(id);
             List<Long> bundleIdsByProductIds = setBundleItemMapper.getBundleIdsByProductIds(productIds);
-            if (bundleIdsByProductIds != null && bundleIdsByProductIds.size() >0){
+            if (bundleIdsByProductIds != null && !bundleIdsByProductIds.isEmpty()){
                 for (Long bundleIdsByProductId : bundleIdsByProductIds) {
                     Bundle bundle = Bundle.builder()
                             .id(bundleIdsByProductId)
@@ -180,8 +175,8 @@ public class ProductServiceImpl implements ProductService {
 
     /**
      * 根据分类id查询菜品
-     * @param categoryId
-     * @return
+     * @param categoryId 分类id
+     * @return 商品列表
      */
     @Override
     public List<Product> list(Long categoryId) {

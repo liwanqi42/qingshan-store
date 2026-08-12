@@ -4,7 +4,6 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.constant.StatusConstant;
-import com.qingshan.context.BaseContext;
 import com.qingshan.dto.CategoryDTO;
 import com.qingshan.dto.CategoryPageQueryDTO;
 import com.qingshan.entity.Category;
@@ -18,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 新增分类
-     * @param categoryDTO
+     * @param categoryDTO 分类信息
      */
     @Override
     public void save(CategoryDTO categoryDTO) {
@@ -59,20 +58,21 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 分页查询
-     * @param categoryPageQueryDTO
-     * @return
+     * @param categoryPageQueryDTO 分页查询参数
+     * @return 分页查询结果
      */
     @Override
     public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) {
-        PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize());
-        //下一条sql进行分页，自动加入limit关键字分页
-        Page<Category> page = categoryMapper.pageQuery(categoryPageQueryDTO);
-        return new PageResult(page.getTotal(), page.getResult());
+        try (Page<Category> page = PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize())) {
+            //下一条sql进行分页，自动加入limit关键字分页
+            List<Category> records = categoryMapper.pageQuery(categoryPageQueryDTO);
+            return new PageResult(page.getTotal(), records);
+        }
     }
 
     /**
      * 根据id删除分类
-     * @param id
+     * @param id 分类id
      */
     @Override
     public void deleteById(Long id) {
@@ -96,7 +96,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 修改分类
-     * @param categoryDTO
+     * @param categoryDTO 分类信息
      */
     @Override
     public void update(CategoryDTO categoryDTO) {
@@ -112,8 +112,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 启用、禁用分类
-     * @param status
-     * @param id
+     * @param status 分类状态，0禁用 1启用
+     * @param id 分类id
      */
     @Override
     public void startOrStop(Integer status, Long id) {
@@ -128,8 +128,8 @@ public class CategoryServiceImpl implements CategoryService {
 
     /**
      * 根据类型查询分类
-     * @param type
-     * @return
+     * @param type 分类类型，1商品分类 2套装分类
+     * @return 分类列表
      */
     @Override
     public List<Category> list(Integer type) {

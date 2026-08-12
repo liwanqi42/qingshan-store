@@ -3,18 +3,15 @@ package com.qingshan.aspect;
 import com.qingshan.annotation.AutoFill;
 import com.qingshan.constant.AutoFillConstant;
 import com.qingshan.context.BaseContext;
-import com.qingshan.entity.Employee;
 import com.qingshan.enumeration.OperationType;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 
