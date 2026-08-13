@@ -1,0 +1,101 @@
+.login-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.login-dialog {
+  width: 620rpx;
+  padding: 30rpx 40rpx 30rpx;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-radius: 20rpx;
+}
+
+.login-tabs {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.login-tab {
+  position: relative;
+  padding: 16rpx 30rpx 24rpx;
+  font-size: 32rpx;
+  color: #666666;
+}
+
+.login-tab.active {
+  color: #EB405D;
+  font-weight: bold;
+}
+
+.login-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 48rpx;
+  height: 4rpx;
+  margin-left: -24rpx;
+  border-radius: 2rpx;
+  background-color: #EB405D;
+}
+
+.login-desc {
+  margin: 24rpx 0 30rpx;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  color: #999999;
+  text-align: center;
+}
+
+.login-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 10rpx;
+  font-size: 28rpx;
+  color: #333333;
+  background-color: #fafafa;
+}
+
+.login-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  margin-top: 20rpx;
+  padding: 0;
+  border-radius: 44rpx;
+  background-color: #EB405D;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: normal;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+.login-btn[disabled] {
+  background-color: #F5A3B1;
+  color: #ffffff;
+}
+
+.login-cancel {
+  margin-top: 20rpx;
+  padding: 12rpx 0;
+  font-size: 26rpx;
+  color: #999999;
+  text-align: center;
+}

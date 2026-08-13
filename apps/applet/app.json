@@ -9,5 +9,9 @@
     "navigationBarTextStyle": "black",
     "onReachBottomDistance": 50
   },
+  "navigateToMiniProgramAppIdList": [],
+  "usingComponents": {
+    "login-auth": "/components/login-auth/index"
+  },
   "sitemapLocation": "sitemap.json"
 }

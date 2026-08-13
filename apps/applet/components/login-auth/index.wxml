@@ -1,0 +1,20 @@
+<view class="login-mask" wx:if="{{visible}}" catchtouchmove="noop" bindtap="close">
+  <view class="login-dialog" catchtap="noop">
+    <view class="login-tabs">
+      <view class="login-tab {{mode === 'login' ? 'active' : ''}}" data-mode="login" bindtap="switchMode">登录</view>
+      <view class="login-tab {{mode === 'register' ? 'active' : ''}}" data-mode="register" bindtap="switchMode">注册</view>
+    </view>
+    <view class="login-desc">登录后可下单和管理收货地址</view>
+
+    <input class="login-input" type="number" maxlength="11" placeholder="请输入手机号" value="{{phone}}" bindinput="bindPhone" />
+    <input class="login-input" password="{{true}}" maxlength="32" placeholder="请输入密码（6-32位）" value="{{password}}" bindinput="bindPassword" bindconfirm="submit" />
+
+    <block wx:if="{{mode === 'register'}}">
+      <input class="login-input" password="{{true}}" maxlength="32" placeholder="请再次输入密码" value="{{confirmPassword}}" bindinput="bindConfirmPassword" />
+      <input class="login-input" maxlength="20" placeholder="联系人姓名（选填）" value="{{name}}" bindinput="bindName" />
+    </block>
+
+    <button class="login-btn" loading="{{loading}}" disabled="{{loading}}" bindtap="submit">{{mode === 'login' ? '登录' : '注册并登录'}}</button>
+    <view class="login-cancel" bindtap="close">暂不登录</view>
+  </view>
+</view>
