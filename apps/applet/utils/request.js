@@ -5,6 +5,9 @@ const baseURL = CONFIG.baseURL
 // 后端微信登录接口（qingshan-server UserController）
 const LOGIN_URL = '/user/user/login'
 
+// 微信登录是串行的：并发请求同时 401 时只触发一次 wx.login
+let loginPromise = null
+
 // 拼接 query 参数
 function buildURL (url, params) {
   if (!params) {
@@ -83,7 +86,18 @@ function doLogin (extraData) {
 
 // 微信登录，返回 { id, openid, phone, token }
 export function wxLogin (extraData) {
-  return doLogin(extraData)
+  // 带手机号等附加参数时不能复用静默登录的 Promise
+  if (extraData && Object.keys(extraData).length > 0) {
+    return doLogin(extraData)
+  }
+  if (loginPromise) {
+    return loginPromise
+  }
+  loginPromise = doLogin()
+  // 无论成功失败都重置，避免后续请求复用已结束的 Promise
+  const reset = () => { loginPromise = null }
+  loginPromise.then(reset, reset)
+  return loginPromise
 }
 
 // Add a request interceptor
