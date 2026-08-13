@@ -45,9 +45,7 @@ public class BundleServiceImpl implements BundleService {
 
         List<BundleItem> bundleItems = bundleDTO.getBundleItems();
         if (bundleItems != null && !bundleItems.isEmpty()) {
-            bundleItems.forEach(bundleItem -> {
-                bundleItem.setBundleId(bundleId);
-            });
+            bundleItems.forEach(bundleItem -> bundleItem.setBundleId(bundleId));
 
             bundleItemMapper.insertBatch(bundleItems);
         }
@@ -55,20 +53,17 @@ public class BundleServiceImpl implements BundleService {
 
     @Override
     public PageResult pageQuery(BundlePageQueryDTO bundlePageQueryDTO) {
-        int pageNum = bundlePageQueryDTO.getPage();
-        int pageSize = bundlePageQueryDTO.getPageSize();
-
-        PageHelper.startPage(pageNum,pageSize);
-        Page<BundleVO> page = bundleMapper.pageQuery(bundlePageQueryDTO);
-        return new PageResult(page.getTotal(), page.getResult());
-
+        try (Page<BundleVO> page = PageHelper.startPage(bundlePageQueryDTO.getPage(), bundlePageQueryDTO.getPageSize())) {
+            List<BundleVO> records = bundleMapper.pageQuery(bundlePageQueryDTO);
+            return new PageResult(page.getTotal(), records);
+        }
     }
 
     @Override
     public void deleteBatch(List<Long> ids) {
         ids.forEach(id ->{
             Bundle bundle = bundleMapper.getByid(id);
-            if (StatusConstant.ENABLE == bundle.getStatus()){
+            if (StatusConstant.ENABLE.equals(bundle.getStatus())){
                 throw new DeletionNotAllowedException(MessageConstant.BUNDLE_ON_SALE);
             }
         });
@@ -105,9 +100,7 @@ public class BundleServiceImpl implements BundleService {
 
         List<BundleItem> bundleItems = bundleDTO.getBundleItems();
         if (bundleItems != null && !bundleItems.isEmpty()) {
-            bundleItems.forEach(bundleItem -> {
-                bundleItem.setBundleId(bundleId);
-            });
+            bundleItems.forEach(bundleItem -> bundleItem.setBundleId(bundleId));
 
             bundleItemMapper.insertBatch(bundleItems);
         }
@@ -116,11 +109,11 @@ public class BundleServiceImpl implements BundleService {
 
     @Override
     public void startOrStop(Integer status, Long id) {
-        if(status == StatusConstant.ENABLE){
+        if(status.equals(StatusConstant.ENABLE)){
             List<Product> productList = bundleMapper.getByBundleId(id);
-            if (productList != null && productList.size()>0){
+            if (productList != null && ! productList.isEmpty()){
                 productList.forEach(product -> {
-                    if (StatusConstant.DISABLE == product.getStatus()){
+                    if (StatusConstant.DISABLE.equals(product.getStatus())){
                         throw new BundleEnableFailedException(MessageConstant.BUNDLE_ENABLE_FAILED);
                     }
                 });
