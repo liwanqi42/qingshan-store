@@ -101,7 +101,8 @@ function requestIntercepter (originConfig) {
   }
   const token = getToken()
   if (token) {
-    reqConfig.header.Authorization = 'Bearer ' + token
+    // 后端 qingshan.jwt.user-token-name 配置为 authentication
+    reqConfig.header.authentication = token
   }
   return reqConfig
 }
