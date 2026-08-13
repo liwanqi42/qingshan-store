@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ProductService {
 
-    public void saveWithAttr(ProductDTO productDTO);
+    void saveWithAttr(ProductDTO productDTO);
 
     PageResult pageQuery(ProductPageQueryDTO productPageQueryDTO);
 

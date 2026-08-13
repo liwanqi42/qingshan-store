@@ -8,6 +8,7 @@ import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.ProductService;
 import com.qingshan.vo.ProductVO;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/product")
 @Slf4j
+@Api(tags = "商品相关接口")
 public class ProductController {
 
     @Autowired

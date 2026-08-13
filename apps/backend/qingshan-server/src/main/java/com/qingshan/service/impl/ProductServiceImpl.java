@@ -94,10 +94,6 @@ public class ProductServiceImpl implements ProductService {
             throw new DeletionNotAllowedException((MessageConstant.PRODUCT_BE_RELATED_BY_BUNDLE));
         }
 
-//        for (Long id : ids) {
-//            productMapper.deleteById(id);
-//            productAttrsMapper.deleteByProductId(id);
-//        }
 
         productMapper.deleteByProductIds(ids);
 
