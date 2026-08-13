@@ -42,8 +42,14 @@ qingshan:
     admin-ttl: 72000000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
+    user-secret-key: liwanqi
+    user-ttl: 72000000
+    user-token-name: authentication
   alioss:
     endpoint: ${qingshan.alioss.endpoint}
     access-key-id: ${qingshan.alioss.access-key-id}
     access-key-secret: ${qingshan.alioss.access-key-secret}
     bucket-name: ${qingshan.alioss.bucket-name}
+  wechat:
+    appid: ${qingshan.wechat.appid}
+    secret: ${qingshan.wechat.secret}
