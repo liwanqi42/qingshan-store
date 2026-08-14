@@ -60,4 +60,19 @@
         </where>
     </select>
 
+    <select id="list" parameterType="Bundle" resultType="Bundle">
+        select * from bundle
+        <where>
+            <if test="name != null">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
 </mapper>

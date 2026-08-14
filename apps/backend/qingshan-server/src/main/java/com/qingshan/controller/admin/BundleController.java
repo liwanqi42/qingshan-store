@@ -69,7 +69,7 @@ public class BundleController {
     @GetMapping("/{id}")
     @ApiOperation("根据id查询套餐")
     public Result<BundleVO> getById(@PathVariable Long id) {
-        BundleVO bundleVO = bundleService.getByIdWithDish(id);
+        BundleVO bundleVO = bundleService.getByIdWithItems(id);
         return Result.success(bundleVO);
     }
 

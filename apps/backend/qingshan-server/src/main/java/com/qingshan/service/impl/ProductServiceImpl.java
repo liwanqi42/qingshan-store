@@ -170,7 +170,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 根据分类id查询菜品
+     * 根据分类id查询商品
      * @param categoryId 分类id
      * @return 商品列表
      */
@@ -181,5 +181,30 @@ public class ProductServiceImpl implements ProductService {
                 .status(StatusConstant.ENABLE)
                 .build();
         return productMapper.list(product);
+    }
+
+    /**
+     * 条件查询商品和规格属性
+     * @param product 查询条件
+     * @return 商品列表
+     */
+    @Override
+    public List<ProductVO> listWithAttr(Product product) {
+        List<Product> productList = productMapper.list(product);
+
+        List<ProductVO> productVOList = new ArrayList<>();
+
+        for (Product p : productList) {
+            ProductVO productVO = new ProductVO();
+            BeanUtils.copyProperties(p, productVO);
+
+            //根据商品id查询对应的规格属性
+            List<ProductAttr> attrs = productAttrsMapper.getById(p.getId());
+
+            productVO.setAttrs(attrs);
+            productVOList.add(productVO);
+        }
+
+        return productVOList;
     }
 }

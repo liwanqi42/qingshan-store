@@ -49,10 +49,10 @@ public interface BundleMapper {
 
     /**
      * 根据id删除捆绑包
-     * @param setmealId
+     * @param id
      */
     @Delete("delete from bundle where id = #{id}")
-    void deleteById(Long setmealId);
+    void deleteById(Long id);
 
     /**
      * 更新捆绑包
@@ -61,6 +61,13 @@ public interface BundleMapper {
     @AutoFill(value = OperationType.UPDATE)
     void update(Bundle bundle);
 
-    @Select("select a.* from product a left join bundle_item b on a.id -b.bundle_id where b.product_id= #{bundleId}")
+    @Select("select a.* from product a left join bundle_item b on a.id = b.product_id where b.bundle_id = #{bundleId}")
     List<Product> getByBundleId(Long bundleId);
+
+    /**
+     * 动态条件查询套装
+     * @param bundle
+     * @return
+     */
+    List<Bundle> list(Bundle bundle);
 }

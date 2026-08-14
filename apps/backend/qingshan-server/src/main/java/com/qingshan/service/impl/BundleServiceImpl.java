@@ -16,6 +16,7 @@ import com.qingshan.mapper.BundleMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.BundleService;
 import com.qingshan.vo.BundleVO;
+import com.qingshan.vo.ProductItemVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,7 +76,7 @@ public class BundleServiceImpl implements BundleService {
     }
 
     @Override
-    public BundleVO getByIdWithDish(Long id) {
+    public BundleVO getByIdWithItems(Long id) {
         Bundle bundle = bundleMapper.getByid(id);
         List<BundleItem> bundleItems = bundleItemMapper.getByBundleId(id);
 
@@ -125,5 +126,15 @@ public class BundleServiceImpl implements BundleService {
                 .status(status)
                 .build();
         bundleMapper.update(bundle);
+    }
+
+    @Override
+    public List<Bundle> list(Bundle bundle) {
+        return bundleMapper.list(bundle);
+    }
+
+    @Override
+    public List<ProductItemVO> getProductItemByBundleId(Long id) {
+        return bundleItemMapper.getProductItemByBundleId(id);
     }
 }

@@ -23,4 +23,6 @@ public interface ProductService {
     void startOrStop(Integer status, Long id);
 
     List<Product> list(Long categoryId);
+
+    List<ProductVO> listWithAttr(Product product);
 }

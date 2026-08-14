@@ -107,12 +107,12 @@ public class ProductController {
     }
 
     /**
-     * 根据分类id查询菜品
+     * 根据分类id查询商品
      * @param categoryId
      * @return
      */
     @GetMapping("/list")
-    @ApiOperation("根据分类id查询菜品")
+    @ApiOperation("根据分类id查询商品")
     public Result<List<Product>> list(Long categoryId){
         List<Product> list = productService.list(categoryId);
         return Result.success(list);

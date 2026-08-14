@@ -2,9 +2,10 @@ package com.qingshan.service;
 
 import com.qingshan.dto.BundleDTO;
 import com.qingshan.dto.BundlePageQueryDTO;
+import com.qingshan.entity.Bundle;
 import com.qingshan.result.PageResult;
 import com.qingshan.vo.BundleVO;
-import org.springframework.stereotype.Service;
+import com.qingshan.vo.ProductItemVO;
 
 import java.util.List;
 
@@ -30,11 +31,11 @@ public interface BundleService {
 
 
     /**
-     * 根据id查询套餐和关联的菜品数据
+     * 根据id查询套装和关联的商品数据
      * @param id
      * @return
      */
-    BundleVO getByIdWithDish(Long id);
+    BundleVO getByIdWithItems(Long id);
 
     /**
      * 修改套餐
@@ -49,4 +50,18 @@ public interface BundleService {
      * @param id
      */
     void startOrStop(Integer status, Long id);
+
+    /**
+     * 条件查询套装
+     * @param bundle 查询条件
+     * @return 套装列表
+     */
+    List<Bundle> list(Bundle bundle);
+
+    /**
+     * 根据套装id查询包含的商品
+     * @param id 套装id
+     * @return 套装内商品列表
+     */
+    List<ProductItemVO> getProductItemByBundleId(Long id);
 }
