@@ -9,8 +9,10 @@ import com.qingshan.dto.ProductPageQueryDTO;
 import com.qingshan.entity.Bundle;
 import com.qingshan.entity.Product;
 import com.qingshan.entity.ProductAttr;
+import com.qingshan.entity.ProductImage;
 import com.qingshan.exception.DeletionNotAllowedException;
 import com.qingshan.mapper.ProductAttrsMapper;
+import com.qingshan.mapper.ProductImageMapper;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.mapper.SetBundleItemMapper;
 import com.qingshan.mapper.setBundleMapper;
@@ -23,7 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -33,6 +37,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductAttrsMapper productAttrsMapper;
+
+    @Autowired
+    private ProductImageMapper productImageMapper;
 
     @Autowired
     private SetBundleItemMapper setBundleItemMapper;
@@ -49,10 +56,22 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = new Product();
         BeanUtils.copyProperties(productDTO, product);
+
+        //未单独指定封面时，使用样式图中的第一张作为封面
+        List<String> images = normalizeStyleImages(productDTO);
+        List<String> detailImages = normalizeImageList(productDTO.getDetailImages());
+        if (isBlank(product.getImage()) && !images.isEmpty()) {
+            product.setImage(images.get(0));
+        }
+
         //向商品表插入数据
         productMapper.insert(product);
 
         Long productId = product.getId();
+
+        //分别保存样式图和详情长图
+        saveImages(productId, images, ProductImage.TYPE_STYLE);
+        saveImages(productId, detailImages, ProductImage.TYPE_DETAIL);
 
         //向样式表插入n条数据
         List<ProductAttr> attrs = productDTO.getAttrs();
@@ -80,6 +99,7 @@ public class ProductServiceImpl implements ProductService {
      * @param ids 商品id列表
      */
     @Override
+    @Transactional
     public void deleteBatch(List<Long> ids) {
         for (Long id : ids) {
             Product product = productMapper.getById(id);
@@ -99,6 +119,8 @@ public class ProductServiceImpl implements ProductService {
 
         productAttrsMapper.deleteByProductAttrIds(ids);
 
+        productImageMapper.deleteByProductIds(ids);
+
 
     }
 
@@ -114,7 +136,17 @@ public class ProductServiceImpl implements ProductService {
 
         ProductVO productVO = new ProductVO();
         BeanUtils.copyProperties(product, productVO);
+        productVO.setImage(trimToNull(product.getImage()));
         productVO.setAttrs(productAttrs);
+
+        //样式图列表，兼容历史数据（仅有封面图时也作为一张轮播图）
+        List<String> images = getImageUrls(id, ProductImage.TYPE_STYLE);
+        if (images.isEmpty() && !isBlank(product.getImage())) {
+            images.add(product.getImage().trim());
+        }
+        productVO.setImages(images);
+        //详情长图列表
+        productVO.setDetailImages(getImageUrls(id, ProductImage.TYPE_DETAIL));
 
         return productVO;
     }
@@ -124,9 +156,16 @@ public class ProductServiceImpl implements ProductService {
      * @param productDTO 商品信息及样式
      */
     @Override
+    @Transactional
     public void updateWithAtrr(ProductDTO productDTO) {
         Product product = new Product();
         BeanUtils.copyProperties(productDTO,product);
+
+        List<String> images = normalizeStyleImages(productDTO);
+        List<String> detailImages = normalizeImageList(productDTO.getDetailImages());
+        if (isBlank(product.getImage()) && !images.isEmpty()) {
+            product.setImage(images.get(0));
+        }
 
         productMapper.update(product);
 
@@ -136,6 +175,18 @@ public class ProductServiceImpl implements ProductService {
         if (attrs != null && !attrs.isEmpty()){
             attrs.forEach(productAttr -> productAttr.setProductId(productDTO.getId()));
             productAttrsMapper.insertBatch(attrs);
+        }
+
+        //样式图整体替换；未传图片相关字段时保留原样式图
+        if (productDTO.isImageProvided() || productDTO.isImagesProvided()) {
+            productImageMapper.deleteByProductIdAndType(productDTO.getId(), ProductImage.TYPE_STYLE);
+            saveImages(productDTO.getId(), images, ProductImage.TYPE_STYLE);
+        }
+
+        //详情长图整体替换；未传该字段时保留原详情长图
+        if (productDTO.isDetailImagesProvided()) {
+            productImageMapper.deleteByProductIdAndType(productDTO.getId(), ProductImage.TYPE_DETAIL);
+            saveImages(productDTO.getId(), detailImages, ProductImage.TYPE_DETAIL);
         }
 
     }
@@ -206,5 +257,93 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productVOList;
+    }
+
+    /**
+     * 保存商品图片
+     * @param productId 商品id
+     * @param images 图片地址列表
+     */
+    private void saveImages(Long productId, List<String> images, Integer type) {
+        if (images == null || images.isEmpty()) {
+            return;
+        }
+        List<ProductImage> productImages = new ArrayList<>();
+        for (int i = 0; i < images.size(); i++) {
+            productImages.add(ProductImage.builder()
+                    .productId(productId)
+                    .url(images.get(i))
+                    .type(type)
+                    .sort(i)
+                    .build());
+        }
+        productImageMapper.insertBatch(productImages);
+    }
+
+    /**
+     * 查询指定类型的商品图片地址
+     * @param productId 商品id
+     * @param type 图片类型 1样式图 2详情长图
+     * @return 图片地址列表
+     */
+    private List<String> getImageUrls(Long productId, Integer type) {
+        List<String> images = new ArrayList<>();
+        List<ProductImage> productImages = productImageMapper.getByProductIdAndType(productId, type);
+        if (productImages != null) {
+            productImages.forEach(productImage -> images.add(productImage.getUrl()));
+        }
+        return images;
+    }
+
+    /**
+     * 整理样式图列表：去空、去重，封面图优先
+     * @param productDTO 商品信息
+     * @return 图片地址列表
+     */
+    private List<String> normalizeStyleImages(ProductDTO productDTO) {
+        Set<String> imageSet = new LinkedHashSet<>();
+        String cover = trimToNull(productDTO.getImage());
+        if (cover != null) {
+            imageSet.add(cover);
+        }
+        if (productDTO.getImages() != null) {
+            for (String image : productDTO.getImages()) {
+                String url = trimToNull(image);
+                if (url != null) {
+                    imageSet.add(url);
+                }
+            }
+        }
+        return new ArrayList<>(imageSet);
+    }
+
+    /**
+     * 整理图片地址列表：去空、去重
+     * @param images 图片地址列表
+     * @return 图片地址列表
+     */
+    private List<String> normalizeImageList(List<String> images) {
+        Set<String> imageSet = new LinkedHashSet<>();
+        if (images != null) {
+            for (String image : images) {
+                String url = trimToNull(image);
+                if (url != null) {
+                    imageSet.add(url);
+                }
+            }
+        }
+        return new ArrayList<>(imageSet);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

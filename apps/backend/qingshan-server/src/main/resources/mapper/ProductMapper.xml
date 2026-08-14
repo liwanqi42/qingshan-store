@@ -4,8 +4,8 @@
 <mapper namespace="com.qingshan.mapper.ProductMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into product (name, category_id, price, image, description, status, create_time, update_time, create_user, update_user)
-        values (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+        insert into product (name, category_id, price, image, description, status, stock, create_time, update_time, create_user, update_user)
+        values (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status}, COALESCE(#{stock}, 0), #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
     </insert>
 
     <select id="pageQuery" resultType="com.qingshan.vo.ProductVO">
@@ -69,6 +69,9 @@
             </if>
             <if test="status != null">
                 status = #{status},
+            </if>
+            <if test="stock != null">
+                stock = #{stock},
             </if>
             <if test="updateTime != null">
                 update_time = #{updateTime},

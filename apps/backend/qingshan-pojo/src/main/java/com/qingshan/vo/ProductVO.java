@@ -25,8 +25,12 @@ public class ProductVO implements Serializable {
     private Long categoryId;
     //商品价格
     private BigDecimal price;
-    //图片
+    //封面图片
     private String image;
+    //样式图列表（详情页轮播）
+    private List<String> images = new ArrayList<>();
+    //详情长图列表
+    private List<String> detailImages = new ArrayList<>();
     //描述信息
     private String description;
     //0 下架 1 上架

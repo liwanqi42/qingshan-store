@@ -12,9 +12,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 商品管理
@@ -26,7 +28,10 @@ import java.util.List;
 public class ProductController {
 
     @Autowired
-    public ProductService productService;
+    private ProductService productService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 新增商品及样式
@@ -38,6 +43,9 @@ public class ProductController {
     public Result save(@RequestBody ProductDTO productDTO){
         log.info("新增商品: {}", productDTO);
         productService.saveWithAttr(productDTO);
+
+        //清理缓存数据（含分页缓存）
+        cleanClaim("product_*");
         return Result.success();
     }
 
@@ -64,6 +72,10 @@ public class ProductController {
     public Result delete(@RequestParam List<Long> ids){
         log.info("商品的批量删除:{}", ids);
         productService.deleteBatch(ids);
+
+        //清理缓存数据
+        cleanClaim("product_*");
+
         return Result.success();
     }
 
@@ -90,6 +102,10 @@ public class ProductController {
     public Result update(@RequestBody ProductDTO productDTO){
         log.info("修改商品信息:{}", productDTO);
         productService.updateWithAtrr(productDTO);
+
+        //清理缓存数据
+        cleanClaim("product_*");
+
         return Result.success();
     }
 
@@ -103,6 +119,11 @@ public class ProductController {
     @ApiOperation("商品起售停售")
     public Result<String> startOrStop(@PathVariable Integer status, Long id){
         productService.startOrStop(status,id);
+
+        //清理缓存数据
+        cleanClaim("product_*");
+
+
         return Result.success();
     }
 
@@ -116,5 +137,10 @@ public class ProductController {
     public Result<List<Product>> list(Long categoryId){
         List<Product> list = productService.list(categoryId);
         return Result.success(list);
+    }
+
+    private void cleanClaim(String pattern){
+        Set keys = redisTemplate.keys(pattern);
+        redisTemplate.delete(keys);
     }
 }

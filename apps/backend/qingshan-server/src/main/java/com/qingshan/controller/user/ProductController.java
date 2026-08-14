@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,9 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     /**
      * 根据分类id查询商品
      *
@@ -34,12 +38,21 @@ public class ProductController {
     @GetMapping("/list")
     @ApiOperation("根据分类id查询商品")
     public Result<List<ProductVO>> list(Long categoryId) {
+
+        String key = "product_" +categoryId;
+
+        List<ProductVO> list = (List<ProductVO>) redisTemplate.opsForValue().get((key));
+        if (list != null && ! list.isEmpty()){
+            return Result.success(list);
+        }
+
         Product product = Product.builder()
                 .categoryId(categoryId)
                 .status(StatusConstant.ENABLE)//查询上架中的商品
                 .build();
 
-        List<ProductVO> list = productService.listWithAttr(product);
+        list = productService.listWithAttr(product);
+        redisTemplate.opsForValue().set(key, list);
 
         return Result.success(list);
     }
@@ -56,7 +69,17 @@ public class ProductController {
         //用户端只查询上架商品
         productPageQueryDTO.setStatus(StatusConstant.ENABLE);
 
-        PageResult pageResult = productService.pageQuery(productPageQueryDTO);
+        String key = "product_page_"
+                + (productPageQueryDTO.getCategoryId() == null ? "all" : productPageQueryDTO.getCategoryId()) + "_"
+                + (productPageQueryDTO.getName() == null ? "" : productPageQueryDTO.getName()) + "_"
+                + productPageQueryDTO.getPage() + "_"
+                + productPageQueryDTO.getPageSize();
+
+        PageResult pageResult = (PageResult) redisTemplate.opsForValue().get(key);
+        if (pageResult == null) {
+            pageResult = productService.pageQuery(productPageQueryDTO);
+            redisTemplate.opsForValue().set(key, pageResult);
+        }
         return Result.success(pageResult);
     }
 
