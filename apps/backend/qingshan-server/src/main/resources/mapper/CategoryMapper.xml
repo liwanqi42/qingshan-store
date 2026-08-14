@@ -25,6 +25,9 @@
             <if test="name != null">
                 name = #{name},
             </if>
+            <if test="image != null">
+                image = #{image},
+            </if>
             <if test="sort != null">
                 sort = #{sort},
             </if>

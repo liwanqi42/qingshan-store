@@ -23,6 +23,9 @@ public class Category implements Serializable {
     //分类名称
     private String name;
 
+    //分类图片
+    private String image;
+
     //顺序
     private Integer sort;
 

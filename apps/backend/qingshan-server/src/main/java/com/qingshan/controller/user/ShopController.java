@@ -27,6 +27,10 @@ public class ShopController {
     @ApiOperation("获取店铺营业状态")
     public Result<Integer> getStatus(){
         Integer shopStatus = (Integer) redisTemplate.opsForValue().get(KEY);
+        //未设置营业状态时默认按打烊处理，避免空指针
+        if (shopStatus == null) {
+            shopStatus = 0;
+        }
         log.info("获取店铺营业状态:{}",shopStatus == 1 ? "营业中":"打烊中");
         return Result.success(shopStatus);
     }
