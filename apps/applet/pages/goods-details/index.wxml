@@ -1,0 +1,147 @@
+<view class="not-found" wx:if="{{!goodsDetail.id}}">
+  <image class="not-found-icon" src="/images/goods/not-found.svg" />
+  <view class="hint">商品下架不存在</view>
+</view>
+
+<view class="page" wx:if="{{goodsDetail.id}}">
+  <!-- 商品图轮播 -->
+  <view class="gallery">
+    <swiper class="gallery-swiper" indicator-dots="{{goodsDetail.bannerPicture.length > 1}}" indicator-color="rgba(0,0,0,0.2)" indicator-active-color="#ff4400" autoplay="{{goodsDetail.bannerPicture.length > 1}}" circular bindchange="swiperChange">
+      <swiper-item wx:for="{{goodsDetail.bannerPicture}}" wx:key="*this">
+        <image src="{{item}}" class="gallery-image" mode="aspectFill" lazy-load="true" />
+      </swiper-item>
+    </swiper>
+    <view class="gallery-count" wx:if="{{goodsDetail.bannerPicture.length > 1}}">{{currentBanner + 1}}/{{goodsDetail.bannerPicture.length}}</view>
+  </view>
+
+  <!-- 第一个 box：价格 + 名称 -->
+  <view class="card price-card">
+    <view class="price-head">
+      <view class="price">
+        <text class="price-unit">¥</text>
+        <text class="price-num">{{goodsDetail.price}}</text>
+      </view>
+      <button class="share-btn" open-type="share">
+        <image class="share-icon" src="/images/icon/share.svg"></image>
+        <text class="share-label">分享</text>
+      </button>
+    </view>
+    <view class="goods-name">{{goodsDetail.title}}</view>
+    <view class="goods-desc" wx:if="{{goodsDetail.description}}">{{goodsDetail.description}}</view>
+    <view class="goods-meta" wx:if="{{goodsDetail.sales > 0}}">
+      <text class="meta-item">已售 {{goodsDetail.sales}}</text>
+    </view>
+  </view>
+
+  <!-- 第二个 box：收货地址 + 样式规格 -->
+  <view class="card info-card">
+    <view class="info-row" bindtap="selectAddress">
+      <image class="row-icon" src="/images/address/position-black.svg" />
+      <view class="row-main">
+        <block wx:if="{{address.id}}">
+          <view class="address-text">{{address.provinceName}} {{address.cityName}} {{address.districtName}} {{address.detail}}</view>
+          <view class="address-user">{{address.consignee}}<text class="address-mobile">{{address.phone}}</text></view>
+        </block>
+        <block wx:else>
+          <view class="address-placeholder">选择收货地址</view>
+          <view class="address-hint">下单后按此地址发货</view>
+        </block>
+      </view>
+      <image class="row-arrow" src="/images/icon/next-level.svg" />
+    </view>
+
+    <view class="row-divider"></view>
+
+    <view class="info-row spec-row" bindtap="openSpecPopup">
+      <view class="row-label">已选</view>
+      <view class="row-main spec-selected">{{selectedSpecsText}}</view>
+      <image class="row-arrow" src="/images/icon/next-level.svg" />
+    </view>
+
+    <block wx:if="{{goodsDetail.specList.length > 0}}">
+      <view class="row-divider"></view>
+      <view class="spec-panel">
+        <view class="spec-group" wx:for="{{goodsDetail.specList}}" wx:key="specId">
+          <view class="spec-title">{{item.name}}</view>
+          <view class="spec-options">
+            <view class="spec-option {{selectSpecs[item.specId] === attrItem.attrId ? 'is-active' : ''}} {{selectSpecAttr[item.specId + '-' + attrItem.attrId] ? '' : 'is-disabled'}}"
+                  wx:for="{{item.attrList}}" wx:for-item="attrItem" wx:key="attrId"
+                  data-spec-id="{{item.specId}}" data-attr-id="{{attrItem.attrId}}"
+                  bindtap="doSwitchSpec">{{attrItem.value}}</view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 第三个 box：商品详情长图 -->
+  <view class="card detail-card">
+    <view class="section-title">
+      <view class="section-line"></view>
+      <text class="section-title-text">商品详情</text>
+      <view class="section-line"></view>
+    </view>
+    <view class="detail-images" wx:if="{{detailImages.length > 0}}">
+      <image class="detail-image" wx:for="{{detailImages}}" wx:key="*this" src="{{item}}" mode="widthFix" lazy-load="true" />
+    </view>
+    <view class="detail-empty" wx:else>暂无商品详情图片</view>
+  </view>
+
+  <view class="footer-placeholder"></view>
+
+  <view class="footer">
+    <view class="footer-icon" bindtap="goHome">
+      <image class="footer-icon-img" src="/images/icon/home.svg"></image>
+      <text class="footer-label">首页</text>
+    </view>
+    <view class="footer-icon" bindtap="goShopCar">
+      <view class="cart-badge" wx:if="{{cartNum > 0}}">{{cartNum}}</view>
+      <image class="footer-icon-img" src="/images/icon/car-black.svg"></image>
+      <text class="footer-label">购物车</text>
+    </view>
+    <view class="footer-actions">
+      <view class="footer-btn btn-cart" bindtap="addShopCar">加入购物车</view>
+      <view class="footer-btn btn-buy" bindtap="buyNow">立即购买</view>
+    </view>
+  </view>
+
+  <!-- 规格选择弹窗 -->
+  <view class="show-popup" hidden="{{hideShopPopup}}" catchtouchmove="true">
+    <view class="popup-mask" bindtap="closePopupTap"></view>
+    <view class="popup-contents">
+      <view class="popup-head">
+        <view class="pop-img-box">
+          <image src="{{selectGoodsSku.picture}}" class="goods-thumbnail" />
+        </view>
+        <view class="pop-goods-des">
+          <view class="pop-goods-price"><text class="pop-price-unit">¥</text>{{selectGoodsSku.price}}</view>
+          <view class="pop-goods-stock" wx:if="{{selectReady}}">库存 {{selectGoodsSku.stock}} 件</view>
+          <view class="pop-goods-stockName">{{selectGoodsSku.stockName}}</view>
+        </view>
+        <view class="popup-close" bindtap="closePopupTap">×</view>
+      </view>
+      <view class="pop-goods-specs" wx:for="{{goodsDetail.specList}}" wx:key="specId">
+        <view class="pop-goods-spec-title">{{item.name}}</view>
+        <view class="pop-goods-spec-attrs">
+          <view class="pop-goods-spec-attr {{selectSpecs[item.specId] === attrItem.attrId ? 'checked' : ''}} {{selectSpecAttr[item.specId + '-' + attrItem.attrId] ? '' : 'unable'}}"
+                data-spec-id="{{item.specId}}" data-attr-id="{{attrItem.attrId}}"
+                wx:for="{{item.attrList}}" wx:for-item="attrItem" wx:key="attrId"
+                bindtap="doSwitchSpec">
+            {{attrItem.value}}
+          </view>
+        </view>
+      </view>
+      <view class="buy-num-box">
+        <view class="num-label">购买数量</view>
+        <view class="operation-btn-group">
+          <qty-input value="{{buyNum}}" min="{{1}}" max="{{buyNumMax}}" disabled="{{outofStockStatus}}" bind:change="onBuyNumChange" bind:limit="onBuyNumLimit" />
+        </view>
+      </view>
+      <view class="popup-confirm-wrap" bindtap="{{operationType === 1 ? 'toAddShopCar' : 'toBuyNow'}}">
+        <view wx:if="{{!outofStockStatus}}" class="confirm">确定</view>
+        <view wx:if="{{outofStockStatus}}" class="confirm outof">缺货</view>
+      </view>
+    </view>
+  </view>
+</view>
+<login-auth id="loginAuth" />
