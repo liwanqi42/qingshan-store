@@ -54,6 +54,13 @@ Page({
   },
   async loadHomeBanner() {
     const banners = await banner.getHomeBanner(1, 3)
+    // 后端暂未提供轮播图接口，失败时保持空列表，避免把错误对象渲染成轮播项
+    if (!Array.isArray(banners)) {
+      this.setData({
+        banners: []
+      });
+      return
+    }
     this.setData({
       banners: banners
     });
