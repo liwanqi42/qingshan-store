@@ -1,1 +1,51 @@
-<view class="container"></view>
+<view class="search">
+  <input type="text" placeholder="搜索商品" value="{{name}}" bindinput="bindinput" bindconfirm="bindconfirm"></input>
+  <image src="/images/icon/search.svg"></image>
+</view>
+<view class="shop-status" wx:if="{{shopStatus !== null}}">
+  <view class="status-dot {{shopStatus === 1 ? 'open' : 'closed'}}"></view>
+  <text class="status-label {{shopStatus === 1 ? 'open' : 'closed'}}">{{shopStatus === 1 ? '营业中' : '已打烊'}}</text>
+  <text class="status-desc">{{shopStatus === 1 ? '正常接单，欢迎选购' : '店铺休息中，暂不接单'}}</text>
+</view>
+<view class="swiper-container">
+  <swiper indicator-dots="true" indicator-active-color="#fff" autoplay circular>
+    <swiper-item wx:for="{{banners}}" wx:key="id">
+      <view wx:if="{{item.businessId === 0}}">
+        <image mode="aspectFill" data-id="{{item.id}}" src="{{item.picture}}" />
+      </view>
+      <navigator wx:if="{{item.businessId !== 0}}" url="/pages/goods-details/index?id={{item.businessId}}">
+        <image  mode="aspectFill" data-id="{{item.id}}" src="{{item.picture}}" />
+      </navigator>
+    </swiper-item>
+  </swiper>
+</view>
+<view class="category-box">
+  <view class="category-list" wx:for="{{categories}}" wx:key="id">
+    <view class="category-column {{activeCategoryId == item.id ? 'type-item-on' : ''}}" bindtap="tabClick" id="{{item.categoryId}}">
+      <image mode="aspectFill" class="category-imgbox" src="{{item.picture}}"></image>
+      <view class="category-title">{{item.name}}</view>
+    </view>          
+  </view>
+</view>
+<view class="container">
+  <view class="goods-container">
+    <view class="goods-box" wx:for="{{goodsList}}" wx:key="{{index}}" bindtap="toDetailsTap" data-id="{{item.id}}">
+      <view class="img-box">
+        <image src="{{item.picture}}" class="image" mode="aspectFill" lazy-load="true" />
+      </view>
+      <view class="goods-title">{{item.title}}</view>
+      <view style='display:flex;'>
+        <view class="goods-price">¥ {{item.price}}</view>
+        <view class="goods-sale">{{item.humanNum}}人付款</view>
+      </view>
+    </view>
+  </view>
+  <view class="morePlace" wx:if="{{goodsList.length === 0}}">
+    <view>没有找到商品</view>
+  </view>
+  <view class="morePlace" wx:if="{{curPage > 1 && !loadingMoreHidden}}">
+    <view class="l"></view>
+    <view>没有更多啦</view>
+    <view class="r"></view>
+  </view>
+</view>
