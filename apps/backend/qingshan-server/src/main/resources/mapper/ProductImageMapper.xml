@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.ProductImageMapper">
+
+    <insert id="insertBatch">
+        insert into product_image (product_id, url, type, sort)
+        values
+        <foreach collection="images" item="img" separator=",">
+            (#{img.productId}, #{img.url}, #{img.type}, #{img.sort})
+        </foreach>
+    </insert>
+
+    <delete id="deleteByProductIds">
+        delete from product_image where product_id in
+        <foreach collection="ids" open="(" close=")" separator="," item="productId">
+            #{productId}
+        </foreach>
+    </delete>
+
+</mapper>
