@@ -305,13 +305,15 @@ Page({
       selectGoodsSku.picture = goodsDetail.picture
       selectGoodsSku.price = goodsDetail.price
     }
-    // 库存变化后同步可购买上限
+    // 库存变化后同步可购买上限，并把已选数量收回到上限内
     selectGoodsSku.stock = stock
     const buyNumMax = selectReady ? Math.max(1, Math.min(stock, 999)) : 999
+    const buyNum = Math.max(1, Math.min(this.data.buyNum, buyNumMax))
     this.setData({
       selectGoodsSku: selectGoodsSku,
       selectSkuId: selectSkuId,
-      buyNumMax: buyNumMax
+      buyNumMax: buyNumMax,
+      buyNum: buyNum
     })
   },
   // 无库存的选项置灰
