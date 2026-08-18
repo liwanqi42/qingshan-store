@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.ShoppingCartMapper">
+
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into shopping_cart (name, image, user_id, product_id, bundle_id, sku_id, product_style, number, amount, create_time)
+        values (#{name}, #{image}, #{userId}, #{productId}, #{bundleId}, #{skuId}, #{productStyle}, #{number}, #{amount}, #{createTime})
+    </insert>
+
+    <update id="updateNumber">
+        update shopping_cart
+        set number = #{number},
+            amount = #{amount}
+        where id = #{id}
+    </update>
+
+    <select id="list" resultType="com.qingshan.entity.ShoppingCart">
+        select * from shopping_cart
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="bundleId != null">
+                and bundle_id = #{bundleId}
+            </if>
+            <if test="productId != null">
+                and product_id = #{productId}
+            </if>
+            <if test="skuId != null">
+                and sku_id = #{skuId}
+            </if>
+            <if test="productStyle != null">
+                and product_style = #{productStyle}
+            </if>
+        </where>
+        order by create_time desc, id desc
+    </select>
+
+</mapper>
