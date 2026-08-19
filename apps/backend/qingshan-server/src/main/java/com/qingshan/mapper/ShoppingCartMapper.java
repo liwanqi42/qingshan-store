@@ -3,6 +3,7 @@ package com.qingshan.mapper;
 import com.qingshan.entity.ShoppingCart;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -45,6 +46,13 @@ public interface ShoppingCartMapper {
      */
     @Delete("delete from shopping_cart where id = #{id}")
     void deleteById(Long id);
+
+    /**
+     * 批量删除当前用户的购物车记录
+     * @param ids 购物车记录id列表
+     * @param userId 用户id，避免删除他人购物车记录
+     */
+    void deleteByIds(@Param("ids") List<Long> ids, @Param("userId") Long userId);
 
     /**
      * 修改购物车商品数量及金额

@@ -33,7 +33,7 @@ import java.util.Objects;
 @Slf4j
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
-    private static final int MAX_NUMBER = 99;
+    private static final int MAX_NUMBER = 999;
 
     @Autowired
     private ShoppingCartMapper shoppingCartMapper;
@@ -127,7 +127,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             productStyle = productStyleService.resolve(productId, sku, shoppingCartDTO.getProductStyle());
         } else {
             // 套装没有SKU，名称、图片、价格取套装本身的信息
-            Bundle bundle = bundleMapper.getByid(bundleId);
+            Bundle bundle = bundleMapper.getById(bundleId);
             if (bundle == null) {
                 throw new ShoppingCartBusinessException("套装不存在");
             }
@@ -210,7 +210,32 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public List<ShoppingCart> list() {
         Long userId = getCurrentUserId();
-        return shoppingCartMapper.list(ShoppingCart.builder().userId(userId).build());
+        List<ShoppingCart> list = shoppingCartMapper.list(ShoppingCart.builder().userId(userId).build());
+        // 填充当前库存，前端据此限制可修改的数量并提示库存不足
+        for (ShoppingCart shoppingCart : list) {
+            shoppingCart.setStock(getStock(shoppingCart.getSkuId(), shoppingCart.getProductId()));
+        }
+        return list;
+    }
+
+    /**
+     * 查询购物车商品当前库存：有SKU取SKU库存，否则取商品库存
+     * @return 库存，套装等无库存概念的商品返回null
+     */
+    private Integer getStock(Long skuId, Long productId) {
+        if (skuId != null) {
+            ProductSku sku = productSkuMapper.getById(skuId);
+            if (sku != null) {
+                return sku.getStock();
+            }
+        }
+        if (productId != null) {
+            Product product = productMapper.getById(productId);
+            if (product != null) {
+                return product.getStock();
+            }
+        }
+        return null;
     }
 
     /**
@@ -264,6 +289,21 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setNumber(number);
         shoppingCart.setAmount(unitPrice.multiply(BigDecimal.valueOf(number)));
         shoppingCartMapper.updateNumber(shoppingCart);
+    }
+
+    /**
+     * 批量删除当前用户购物车中的商品
+     * @param ids 购物车记录id列表
+     */
+    @Override
+    @Transactional
+    public void deleteShoppingCart(List<Long> ids) {
+        Long userId = getCurrentUserId();
+        if (ids == null || ids.isEmpty()) {
+            throw new ShoppingCartBusinessException("请选择要删除的商品");
+        }
+        // SQL 同时按用户id过滤，只能删除自己的购物车记录
+        shoppingCartMapper.deleteByIds(ids, userId);
     }
 
     /**

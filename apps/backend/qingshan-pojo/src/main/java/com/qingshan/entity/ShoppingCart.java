@@ -43,6 +43,9 @@ public class ShoppingCart implements Serializable {
     //数量
     private Integer number;
 
+    //当前可售库存（列表查询时填充，非数据库字段）
+    private Integer stock;
+
     //金额
     private BigDecimal amount;
 

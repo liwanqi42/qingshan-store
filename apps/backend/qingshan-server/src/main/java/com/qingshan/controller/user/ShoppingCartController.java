@@ -1,6 +1,7 @@
 package com.qingshan.controller.user;
 
 import com.qingshan.dto.ShoppingCartDTO;
+import com.qingshan.dto.ShoppingCartDeleteDTO;
 import com.qingshan.dto.ShoppingCartEditDTO;
 import com.qingshan.entity.ShoppingCart;
 import com.qingshan.result.Result;
@@ -62,6 +63,19 @@ public class ShoppingCartController {
     public Result edit(@RequestBody ShoppingCartEditDTO shoppingCartEditDTO){
         log.info("修改购物车商品数量：{}", shoppingCartEditDTO);
         shoppingCartService.editShoppingCart(shoppingCartEditDTO);
+        return Result.success();
+    }
+
+    /**
+     * 批量删除购物车商品
+     * @param shoppingCartDeleteDTO 要删除的购物车记录id列表
+     * @return
+     */
+    @PostMapping("/delete")
+    @ApiOperation("批量删除购物车商品")
+    public Result delete(@RequestBody ShoppingCartDeleteDTO shoppingCartDeleteDTO){
+        log.info("批量删除购物车商品：{}", shoppingCartDeleteDTO);
+        shoppingCartService.deleteShoppingCart(shoppingCartDeleteDTO.getIds());
         return Result.success();
     }
 

@@ -16,6 +16,15 @@
         where id = #{id}
     </update>
 
+    <delete id="deleteByIds">
+        delete from shopping_cart
+        where user_id = #{userId}
+          and id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
     <select id="list" resultType="com.qingshan.entity.ShoppingCart">
         select * from shopping_cart
         <where>

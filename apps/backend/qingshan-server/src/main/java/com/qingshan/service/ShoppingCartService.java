@@ -27,6 +27,12 @@ public interface ShoppingCartService {
     void editShoppingCart(ShoppingCartEditDTO shoppingCartEditDTO);
 
     /**
+     * 批量删除当前用户购物车中的商品
+     * @param ids 购物车记录id列表
+     */
+    void deleteShoppingCart(List<Long> ids);
+
+    /**
      * 统计当前用户购物车中的商品条目数
      * @return 条目数
      */
