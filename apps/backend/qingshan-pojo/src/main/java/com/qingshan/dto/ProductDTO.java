@@ -3,6 +3,7 @@ package com.qingshan.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.qingshan.entity.ProductAttr;
+import com.qingshan.entity.ProductSku;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
@@ -45,6 +46,8 @@ public class ProductDTO implements Serializable {
     private Integer stock;
     //商品属性/规格
     private List<ProductAttr> attrs = new ArrayList<>();
+    //SKU列表：修改时不传表示保留原有SKU，传空数组表示清空
+    private List<ProductSku> skuList;
 
     /**
      * 兼容前端把图片数组直接放在 image 字段中的提交方式

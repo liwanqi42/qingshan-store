@@ -10,10 +10,13 @@ import com.qingshan.entity.Bundle;
 import com.qingshan.entity.Product;
 import com.qingshan.entity.ProductAttr;
 import com.qingshan.entity.ProductImage;
+import com.qingshan.entity.ProductSku;
 import com.qingshan.exception.DeletionNotAllowedException;
+import com.qingshan.exception.ProductStyleBusinessException;
 import com.qingshan.mapper.ProductAttrsMapper;
 import com.qingshan.mapper.ProductImageMapper;
 import com.qingshan.mapper.ProductMapper;
+import com.qingshan.mapper.ProductSkuMapper;
 import com.qingshan.mapper.SetBundleItemMapper;
 import com.qingshan.mapper.setBundleMapper;
 import com.qingshan.result.PageResult;
@@ -23,7 +26,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -40,6 +46,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductImageMapper productImageMapper;
+
+    @Autowired
+    private ProductSkuMapper productSkuMapper;
 
     @Autowired
     private SetBundleItemMapper setBundleItemMapper;
@@ -64,6 +73,12 @@ public class ProductServiceImpl implements ProductService {
             product.setImage(images.get(0));
         }
 
+        //有SKU时，商品总库存取各SKU库存之和
+        List<ProductSku> skuList = normalizeSkus(productDTO.getSkuList(), productDTO.getPrice());
+        if (skuList != null && !skuList.isEmpty()) {
+            product.setStock(sumStock(skuList));
+        }
+
         //向商品表插入数据
         productMapper.insert(product);
 
@@ -79,6 +94,9 @@ public class ProductServiceImpl implements ProductService {
             attrs.forEach(productAttr -> productAttr.setProductId(productId));
             productAttrsMapper.insertBatch(attrs);
         }
+
+        //保存每个规格组合的SKU（独立价格与库存）
+        saveSkus(productId, skuList);
     }
 
     /**
@@ -121,6 +139,9 @@ public class ProductServiceImpl implements ProductService {
 
         productImageMapper.deleteByProductIds(ids);
 
+        for (Long id : ids) {
+            productSkuMapper.deleteByProductId(id);
+        }
 
     }
 
@@ -130,7 +151,7 @@ public class ProductServiceImpl implements ProductService {
      * @return 商品信息及样式
      */
     @Override
-    public ProductVO getByidWithAttr(Long id) {
+    public ProductVO getByIdWithAttr(Long id) {
         Product product = productMapper.getById(id);
         List<ProductAttr> productAttrs = productAttrsMapper.getById(id);
 
@@ -138,6 +159,8 @@ public class ProductServiceImpl implements ProductService {
         BeanUtils.copyProperties(product, productVO);
         productVO.setImage(trimToNull(product.getImage()));
         productVO.setAttrs(productAttrs);
+        //每个规格组合的独立库存，前端据此展示和限制各样式可购买数量
+        productVO.setSkuList(productSkuMapper.listByProductId(id));
 
         //样式图列表，兼容历史数据（仅有封面图时也作为一张轮播图）
         List<String> images = getImageUrls(id, ProductImage.TYPE_STYLE);
@@ -167,6 +190,12 @@ public class ProductServiceImpl implements ProductService {
             product.setImage(images.get(0));
         }
 
+        //SKU整体替换；未传skuList时保留原有SKU
+        List<ProductSku> skuList = normalizeSkus(productDTO.getSkuList(), productDTO.getPrice());
+        if (skuList != null && !skuList.isEmpty()) {
+            product.setStock(sumStock(skuList));
+        }
+
         productMapper.update(product);
 
         productAttrsMapper.deleteByProductId(productDTO.getId());
@@ -175,6 +204,11 @@ public class ProductServiceImpl implements ProductService {
         if (attrs != null && !attrs.isEmpty()){
             attrs.forEach(productAttr -> productAttr.setProductId(productDTO.getId()));
             productAttrsMapper.insertBatch(attrs);
+        }
+
+        if (skuList != null) {
+            productSkuMapper.deleteByProductId(productDTO.getId());
+            saveSkus(productDTO.getId(), skuList);
         }
 
         //样式图整体替换；未传图片相关字段时保留原样式图
@@ -257,6 +291,77 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productVOList;
+    }
+
+    /**
+     * 校验并补全SKU默认值
+     * @param skuList 前端提交的SKU列表，null表示修改时未传该字段
+     * @param defaultPrice 商品价格，SKU未单独定价时使用
+     * @return 处理后的SKU列表
+     */
+    private List<ProductSku> normalizeSkus(List<ProductSku> skuList, BigDecimal defaultPrice) {
+        if (skuList == null) {
+            return null;
+        }
+        for (ProductSku sku : skuList) {
+            if (sku == null) {
+                throw new ProductStyleBusinessException("SKU信息不能为空");
+            }
+            //无规格商品也允许有一个默认SKU，此时属性为空对象
+            if (!StringUtils.hasText(sku.getAttrs())) {
+                sku.setAttrsValue("{}");
+            }
+            if (sku.getPrice() == null) {
+                sku.setPrice(defaultPrice);
+            }
+            if (sku.getPrice() == null) {
+                throw new ProductStyleBusinessException("SKU价格不能为空");
+            }
+            if (sku.getStock() == null) {
+                sku.setStock(0);
+            }
+            if (sku.getStatus() == null) {
+                sku.setStatus(StatusConstant.ENABLE);
+            }
+            if (!StringUtils.hasText(sku.getSkuCode())) {
+                sku.setSkuCode(null);
+            }
+        }
+        return skuList;
+    }
+
+    /**
+     * 保存商品SKU
+     * @param productId 商品id
+     * @param skuList SKU列表
+     */
+    private void saveSkus(Long productId, List<ProductSku> skuList) {
+        if (skuList == null || skuList.isEmpty()) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        for (ProductSku sku : skuList) {
+            sku.setId(null);
+            sku.setProductId(productId);
+            sku.setCreateTime(now);
+            sku.setUpdateTime(now);
+            productSkuMapper.insert(sku);
+        }
+    }
+
+    /**
+     * 商品总库存 = 启用状态SKU库存之和
+     * @param skuList SKU列表
+     * @return 总库存
+     */
+    private int sumStock(List<ProductSku> skuList) {
+        int total = 0;
+        for (ProductSku sku : skuList) {
+            if (StatusConstant.ENABLE.equals(sku.getStatus()) && sku.getStock() != null) {
+                total += sku.getStock();
+            }
+        }
+        return total;
     }
 
     /**

@@ -16,7 +16,7 @@ public interface ProductService {
 
     void deleteBatch(List<Long> ids);
 
-    ProductVO getByidWithAttr(Long id);
+    ProductVO getByIdWithAttr(Long id);
 
     void updateWithAtrr(ProductDTO productDTO);
 

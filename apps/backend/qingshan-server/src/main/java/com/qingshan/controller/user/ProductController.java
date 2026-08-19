@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,7 +42,7 @@ public class ProductController {
 
         String key = "product_" +categoryId;
 
-        List<ProductVO> list = (List<ProductVO>) redisTemplate.opsForValue().get((key));
+        List<ProductVO> list = getCache(key);
         if (list != null && ! list.isEmpty()){
             return Result.success(list);
         }
@@ -75,7 +76,7 @@ public class ProductController {
                 + productPageQueryDTO.getPage() + "_"
                 + productPageQueryDTO.getPageSize();
 
-        PageResult pageResult = (PageResult) redisTemplate.opsForValue().get(key);
+        PageResult pageResult = getCache(key);
         if (pageResult == null) {
             pageResult = productService.pageQuery(productPageQueryDTO);
             redisTemplate.opsForValue().set(key, pageResult);
@@ -92,8 +93,24 @@ public class ProductController {
     @GetMapping("/{id}")
     @ApiOperation("根据id查询商品详情")
     public Result<ProductVO> getById(@PathVariable Long id) {
-        ProductVO productVO = productService.getByidWithAttr(id);
+        ProductVO productVO = productService.getByIdWithAttr(id);
         return Result.success(productVO);
+    }
+
+    /**
+     * 读取商品缓存。缓存对象来自旧版本的类时反序列化会失败，
+     * 此时删除脏缓存并返回 null，让调用方回源数据库。
+     * @param key 缓存key
+     * @return 缓存值，缓存不可用时返回null
+     */
+    private <T> T getCache(String key) {
+        try {
+            return (T) redisTemplate.opsForValue().get(key);
+        } catch (SerializationException e) {
+            log.warn("商品缓存反序列化失败，删除脏缓存：{}", key, e);
+            redisTemplate.delete(key);
+            return null;
+        }
     }
 
 }

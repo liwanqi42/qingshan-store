@@ -88,7 +88,7 @@ public class ProductController {
     @ApiOperation("根据id查询商品样式")
     public Result<ProductVO> getById(@PathVariable Long id){
         log.info("根据id查询商品样式: {}",id);
-        ProductVO productVO = productService.getByidWithAttr(id);
+        ProductVO productVO = productService.getByIdWithAttr(id);
         return Result.success(productVO);
     }
 

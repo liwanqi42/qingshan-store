@@ -63,7 +63,7 @@ public class BundleServiceImpl implements BundleService {
     @Override
     public void deleteBatch(List<Long> ids) {
         ids.forEach(id ->{
-            Bundle bundle = bundleMapper.getByid(id);
+            Bundle bundle = bundleMapper.getById(id);
             if (StatusConstant.ENABLE.equals(bundle.getStatus())){
                 throw new DeletionNotAllowedException(MessageConstant.BUNDLE_ON_SALE);
             }
@@ -77,7 +77,7 @@ public class BundleServiceImpl implements BundleService {
 
     @Override
     public BundleVO getByIdWithItems(Long id) {
-        Bundle bundle = bundleMapper.getByid(id);
+        Bundle bundle = bundleMapper.getById(id);
         List<BundleItem> bundleItems = bundleItemMapper.getByBundleId(id);
 
         BundleVO bundleVO = new BundleVO();

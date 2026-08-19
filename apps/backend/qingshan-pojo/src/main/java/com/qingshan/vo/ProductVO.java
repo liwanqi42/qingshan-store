@@ -1,6 +1,7 @@
 package com.qingshan.vo;
 
 import com.qingshan.entity.ProductAttr;
+import com.qingshan.entity.ProductSku;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductVO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Long id;
     //商品名称
@@ -45,6 +48,8 @@ public class ProductVO implements Serializable {
     private String categoryName;
     //商品属性/规格
     private List<ProductAttr> attrs = new ArrayList<>();
+    //商品SKU（每个规格组合的独立价格与库存）
+    private List<ProductSku> skuList = new ArrayList<>();
 
 
 }

@@ -45,7 +45,7 @@ public interface BundleMapper {
      * @return
      */
     @Select("select * from bundle where id = #{id}")
-    Bundle getByid(Long id);
+    Bundle getById(Long id);
 
     /**
      * 根据id删除捆绑包
