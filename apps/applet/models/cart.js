@@ -47,7 +47,11 @@ class Cart {
   }
 
   async getCartGoodsNum() {
-    return get('/user/shoppingcart/count')
+    const res = await get('/user/shoppingcart/count')
+    if (typeof res === 'number') {
+      return { num: res }
+    }
+    return res
   }
 }
 
