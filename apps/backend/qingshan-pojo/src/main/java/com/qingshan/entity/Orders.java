@@ -18,40 +18,56 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Orders implements Serializable {
 
-    /**
-     * 订单状态 1待付款 2待发货 3已发货 4配送中 5已完成 6已取消 7退款
-     */
+    // region 订单状态
+    /** 1-待付款 */
     public static final Integer STATUS_PENDING_PAYMENT = 1;
+    /** 2-待发货 */
     public static final Integer STATUS_AWAITING_SHIPMENT = 2;
+    /** 3-已发货 */
     public static final Integer STATUS_SHIPPED = 3;
+    /** 4-配送中 */
     public static final Integer STATUS_IN_TRANSIT = 4;
+    /** 5-已完成 */
     public static final Integer STATUS_COMPLETED = 5;
+    /** 6-已取消 */
     public static final Integer STATUS_CANCELLED = 6;
+    /** 7-退款 */
     public static final Integer STATUS_REFUND = 7;
+    // endregion
 
-    /**
-     * 支付状态 0未支付 1已支付 2退款
-     */
+    // region 支付状态
+    /** 0-未支付 */
     public static final Integer PAY_STATUS_UN_PAID = 0;
+    /** 1-已支付 */
     public static final Integer PAY_STATUS_PAID = 1;
+    /** 2-已退款 */
     public static final Integer PAY_STATUS_REFUND = 2;
+    // endregion
 
-    /**
-     * 退款类型 1仅退款 2退货退款
-     */
+    // region 退款类型
+    /** 1-仅退款 */
     public static final Integer REFUND_TYPE_REFUND_ONLY = 1;
+    /** 2-退货退款 */
     public static final Integer REFUND_TYPE_RETURN_REFUND = 2;
+    // endregion
 
-    /**
-     * 退款状态 0无退款 1退款申请中 2待买家退货 3买家已退货待商家收货 4退款完成 5退款申请被拒绝 6退款关闭
-     */
+    // region 退款状态
+    /** 0-无退款 */
     public static final Integer REFUND_STATUS_NONE = 0;
+    /** 1-退款申请中 */
     public static final Integer REFUND_STATUS_APPLIED = 1;
+    /** 2-待买家退货 */
     public static final Integer REFUND_STATUS_WAIT_RETURN = 2;
+    /** 3-买家已退货待商家收货 */
     public static final Integer REFUND_STATUS_RETURNED = 3;
+    /** 4-退款完成 */
     public static final Integer REFUND_STATUS_COMPLETED = 4;
+    /** 5-退款申请驳回 */
     public static final Integer REFUND_STATUS_REJECTED = 5;
+    /** 6-退款关闭 */
     public static final Integer REFUND_STATUS_CLOSED = 6;
+    // endregion
+
 
     private static final long serialVersionUID = 1L;
 
@@ -75,10 +91,10 @@ public class Orders implements Serializable {
     //结账时间
     private LocalDateTime checkoutTime;
 
-    //支付方式 1微信 2支付宝 3银行卡
+    //支付方式 1:微信 2:支付宝 3:银行卡
     private Integer payMethod;
 
-    //支付状态 0未支付 1已支付 2退款
+    //支付状态 0:未支付 1:已支付 2:退款
     private Integer payStatus;
 
     //实收金额
@@ -141,10 +157,10 @@ public class Orders implements Serializable {
     //退款时间
     private LocalDateTime refundTime;
 
-    //退款类型 1仅退款 2退货退款
+    //退款类型 1:仅退款 2:退货退款
     private Integer refundType;
 
-    //退款状态 0无退款 1退款申请中 2待买家退货 3买家已退货待商家收货 4退款完成 5退款申请被拒绝 6退款关闭
+    //退款状态 0:无退款 1:退款申请中 2:待买家退货 3:买家已退货待商家收货 4:退款完成 5:退款申请被拒绝 6:退款关闭
     private Integer refundStatus;
 
     //退款补充说明

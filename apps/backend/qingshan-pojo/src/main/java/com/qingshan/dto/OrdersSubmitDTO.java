@@ -6,6 +6,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class OrdersSubmitDTO implements Serializable {
@@ -28,4 +29,6 @@ public class OrdersSubmitDTO implements Serializable {
     private String invoiceTitle;
     //总金额
     private BigDecimal amount;
+    //下单商品明细，直接购买时传入；为空时按购物车下单
+    private List<OrdersSubmitItemDTO> items;
 }

@@ -13,6 +13,7 @@
 
 # 开发配置（重点，防止密钥提交）
 qingshan-server/src/main/resources/application-dev.yml
+qingshan-server/qingshan-server.iml
 
 *Test.java
 **/test/

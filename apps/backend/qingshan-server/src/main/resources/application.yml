@@ -30,19 +30,17 @@ logging:
   level:
     com:
       qingshan:
+        # TODO(security): 上线前改为 info，debug 会把手机号、地址等 SQL 参数打进日志
         mapper: debug
         service: info
         controller: info
 
 qingshan:
   jwt:
-    # 设置jwt签名加密时使用的秘钥
-    admin-secret-key: liwanqi
     # 设置jwt过期时间
     admin-ttl: 72000000
     # 设置前端传递过来的令牌名称
     admin-token-name: token
-    user-secret-key: liwanqi
     user-ttl: 72000000
     user-token-name: authentication
   alioss:
@@ -50,6 +48,37 @@ qingshan:
     access-key-id: ${qingshan.alioss.access-key-id}
     access-key-secret: ${qingshan.alioss.access-key-secret}
     bucket-name: ${qingshan.alioss.bucket-name}
-  wechat:
-    appid: ${qingshan.wechat.appid}
-    secret: ${qingshan.wechat.secret}
+  qingshan:
+    wechat:
+      # 微信小程序appid
+      appid: ${qingshan.wechat.appid}
+      # 小程序appsecret
+      secret: ${qingshan.wechat.secret}
+      # 商户号
+      mchid: ${qingshan.wechat.mchid}
+      # 商户证书序列号
+      mch-serial-no: ${qingshan.wechat.mch-serial-no}
+      # 商户私钥文件路径
+      private-key-file-path: ${qingshan.wechat.private-key-file-path}
+      # 微信支付V3密钥（32位）
+      api-v3-key: ${qingshan.wechat.api-v3-key}
+      # 微信支付平台证书文件路径
+      we-chat-pay-cert-file-path: ${qingshan.wechat.we-chat-pay-cert-file-path}
+      # 支付结果回调地址（公网HTTPS）
+      notify-url: ${qingshan.wechat.notify-url}
+      # 退款结果回调地址（公网HTTPS）
+      refund-notify-url: ${qingshan.wechat.refund-notify-url}
+
+
+  snowflake:
+    # 多实例部署时，每个实例必须配置不同的 worker-id（0~1023）
+    worker-id: 1
+  order:
+    # 未支付订单保留时长（分钟），超时后由定时任务自动取消并回滚库存
+    timeout-minutes: 15
+    # 每个用户允许同时存在的未支付订单数量
+    max-unpaid-orders: 999
+    # 统计窗口内允许被自动取消的订单次数，超过后暂时禁止下单
+    max-timeout-orders: 999
+    # 超时订单统计窗口（小时）
+    timeout-window-hours: 24
