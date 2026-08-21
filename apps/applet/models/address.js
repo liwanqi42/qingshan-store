@@ -2,8 +2,13 @@ import { get, _delete, post, put } from '../utils/request'
 
 class Address {
 
+  // 地址列表：后端返回数组，页面统一按 { list } 使用
   async getAddressList() {
-    return get('/user/addressBook/list')
+    const res = await get('/user/addressBook/list')
+    if (Array.isArray(res)) {
+      return { list: res }
+    }
+    return res
   }
 
   async getAddressById(id) {
