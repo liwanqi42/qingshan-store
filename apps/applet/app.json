@@ -3,7 +3,8 @@
     "pages/index/index",
     "pages/category/category",
     "pages/goods/list",
-    "pages/goods-details/index"
+    "pages/goods-details/index",
+    "pages/shop-cart/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -29,6 +30,12 @@
         "iconPath": "images/nav/ic_catefory_normal.png",
         "selectedIconPath": "images/nav/ic_catefory_pressed.png",
         "text": "分类"
+      },
+      {
+        "pagePath": "pages/shop-cart/index",
+        "iconPath": "images/nav/cart-off.png",
+        "selectedIconPath": "images/nav/cart-on.png",
+        "text": "购物车"
       }
     ]
   },

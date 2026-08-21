@@ -1,0 +1,46 @@
+<view class="container">
+  <view class="empty-car" wx:if="{{goodsList.length === 0}}">
+    <image src="/images/icon/empty-car.svg"/>
+    <view class="hint">{{needLogin ? '登录后查看购物车' : '购物车空空的，去逛逛吧'}}</view>
+    <view class="btn" wx:if="{{needLogin}}" bindtap="goLogin">去登录</view>
+    <view class="btn" wx:else bindtap="goCategory">去逛逛</view>
+  </view>
+  <view class="goods-list" wx:if="{{goodsList.length > 0}}">
+    <scroll-view scroll-x="true" bindscroll="scroll" wx:for="{{goodsList}}">
+      <view class="scroll-view_H">
+        <view class="goods">
+          <view wx:if="{{item.status === 0}}" class="select-btn {{selectCart[item.id] ? 'selected' : ''}} " data-id="{{item.id}}" bindtap="doSelectCart">
+            <image src="/images/icon/selected.svg" />
+          </view>
+          <view wx:if="{{item.status !== 0}}" class="invalid">{{item.soldOut ? '缺货' : '失效'}}</view>
+          <image class="main" src="{{item.picture}}" data-id="{{item.goodsId}}" bindtap="goGoodsDetail" />
+          <view class="goods-info">
+            <navigator url="/pages/goods-details/index?id={{item.goodsId}}">
+              <view class="title">{{item.title}}</view>
+            </navigator>
+            <view wx:if="{{item.status === 0}}" class="specs">{{item.specs}}</view>
+            <view wx:if="{{item.status === 0}}" class="price">￥ {{item.price}}</view>
+            <view wx:if="{{item.status === 0 && item.hasStock && item.num > item.stock}}" class="stock-warning">库存不足，仅剩 {{item.stock}} 件</view>
+            <view wx:if="{{item.status !== 0}}" class="invalid-hint">{{item.soldOut ? '库存不足，暂时无法购买' : '商品已经不能购买了'}}</view>
+          </view>
+          <view class="operation-btn-group" wx:if="{{item.status === 0}}">
+            <qty-input value="{{item.num}}" min="{{1}}" max="{{item.maxNum}}" data-id="{{item.id}}" bind:change="onQtyChange" bind:limit="onQtyLimit" />
+          </view>
+        </view>
+        <view class="removeBtn" data-id="{{item.id}}" bindtap="doDeleteCart">删除</view>
+      </view>
+    </scroll-view>
+  </view>
+  <view class="settlement" wx:if="{{goodsList.length > 0}}">
+    <view class="selectAll">
+      <view class="select-btn {{selectAll ? 'selected' : ''}}" bindtap="doSelectAll">
+        <image src="/images/icon/selected.svg" />
+      </view>
+      <view class="text">全选</view>
+    </view>
+    <view class="delete-btn" bindtap="doDeleteSelected">删除所选</view>
+    <view class="amount">合计<text>￥{{amount}}</text></view>
+    <view class="confirm-btn" bindtap="goSettlement">结算({{selectNum}})</view>
+  </view>
+</view>
+<login-auth id="loginAuth" />

@@ -1,0 +1,118 @@
+.qty-input {
+  display: flex;
+  align-items: center;
+}
+.qty-btn {
+  box-sizing: border-box;
+  width: 52rpx;
+  height: 52rpx;
+  line-height: 48rpx;
+  text-align: center;
+  font-size: 34rpx;
+  color: #333333;
+  background-color: #F7F7F7;
+  border-radius: 8rpx;
+}
+.qty-btn:active {
+  background-color: #FFE1D6;
+}
+.qty-btn.disabled {
+  color: #CCCCCC;
+  background-color: #FAFAFA;
+}
+.qty-num {
+  min-width: 76rpx;
+  padding: 0 8rpx;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 26rpx;
+  color: #333333;
+}
+.qty-num.disabled {
+  color: #CCCCCC;
+}
+.qty-mask {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.qty-dialog {
+  width: 560rpx;
+  padding: 40rpx 40rpx 0;
+  box-sizing: border-box;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+}
+.qty-dialog-title {
+  font-size: 32rpx;
+  color: #222222;
+  text-align: center;
+}
+.qty-dialog-tip {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #999999;
+  text-align: center;
+}
+.qty-quick-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 30rpx;
+}
+.qty-quick-item {
+  width: 108rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  margin: 0 16rpx 16rpx 0;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 26rpx;
+  color: #333333;
+  background-color: #F7F7F7;
+  border-radius: 8rpx;
+}
+.qty-quick-item:nth-child(4n) {
+  margin-right: 0;
+}
+.qty-quick-item:active {
+  color: #EB4D50;
+  background-color: #FFE1D6;
+}
+.qty-dialog-input {
+  margin: 10rpx 0 40rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  padding: 0 20rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #DDDDDD;
+  border-radius: 8rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #222222;
+}
+.qty-dialog-actions {
+  display: flex;
+  border-top: 1rpx solid #EEEEEE;
+}
+.qty-dialog-btn {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 30rpx;
+}
+.qty-dialog-btn.cancel {
+  color: #666666;
+  border-right: 1rpx solid #EEEEEE;
+}
+.qty-dialog-btn.confirm {
+  color: #EB4D50;
+  font-weight: 500;
+}

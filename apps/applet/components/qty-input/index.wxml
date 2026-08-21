@@ -1,0 +1,22 @@
+<view class="qty-input">
+  <view class="qty-btn {{disabled ? 'disabled' : ''}}" data-delta="-1" bindtap="onReduceTap" bindlongpress="startLongPress" bindtouchend="stopLongPress" bindtouchcancel="stopLongPress">-</view>
+  <view class="qty-num {{disabled ? 'disabled' : ''}}" bindtap="openEdit">{{num}}</view>
+  <view class="qty-btn {{disabled ? 'disabled' : ''}}" data-delta="1" bindtap="onAddTap" bindlongpress="startLongPress" bindtouchend="stopLongPress" bindtouchcancel="stopLongPress">+</view>
+</view>
+
+<view class="qty-mask" wx:if="{{showEdit}}" catchtouchmove="noop" bindtap="closeEdit">
+  <view class="qty-dialog" catchtap="noop">
+    <view class="qty-dialog-title">购买数量</view>
+    <view class="qty-dialog-tip">最多可购买 {{max}} 件</view>
+    <view class="qty-quick-list">
+      <block wx:for="{{presets}}" wx:key="*this">
+        <view class="qty-quick-item" wx:if="{{item >= min && item <= max}}" data-num="{{item}}" bindtap="selectPreset">{{item}}</view>
+      </block>
+    </view>
+    <input class="qty-dialog-input" type="number" value="{{editValue}}" placeholder="或输入其他数量" maxlength="6" bindinput="onEditInput" bindconfirm="confirmEdit" />
+    <view class="qty-dialog-actions">
+      <view class="qty-dialog-btn cancel" bindtap="closeEdit">取消</view>
+      <view class="qty-dialog-btn confirm" bindtap="confirmEdit">确定</view>
+    </view>
+  </view>
+</view>
