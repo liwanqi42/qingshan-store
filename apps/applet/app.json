@@ -4,7 +4,10 @@
     "pages/category/category",
     "pages/goods/list",
     "pages/goods-details/index",
-    "pages/shop-cart/index"
+    "pages/shop-cart/index",
+    "pages/address/index",
+    "pages/address/edit/index",
+    "pages/option-address/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -13,6 +16,14 @@
     "navigationBarTextStyle": "black",
     "onReachBottomDistance": 50
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于自动定位并填写收货地址"
+    }
+  },
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
   "tabBar": {
     "color": "#6e6d6b",
     "selectedColor": "#e64340",
