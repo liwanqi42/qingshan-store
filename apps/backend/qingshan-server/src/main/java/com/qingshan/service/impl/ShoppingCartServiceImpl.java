@@ -1,27 +1,25 @@
 package com.qingshan.service.impl;
 
 import com.qingshan.constant.MessageConstant;
-import com.qingshan.constant.StatusConstant;
+import com.qingshan.constant.NumConstant;
 import com.qingshan.context.BaseContext;
 import com.qingshan.dto.ShoppingCartDTO;
 import com.qingshan.dto.ShoppingCartEditDTO;
-import com.qingshan.entity.Bundle;
 import com.qingshan.entity.Product;
 import com.qingshan.entity.ProductSku;
 import com.qingshan.entity.ShoppingCart;
 import com.qingshan.exception.ShoppingCartBusinessException;
 import com.qingshan.exception.UserNotLoginException;
-import com.qingshan.mapper.BundleMapper;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.mapper.ProductSkuMapper;
 import com.qingshan.mapper.ShoppingCartMapper;
-import com.qingshan.service.ProductStyleService;
+import com.qingshan.model.ResolvedOrderItem;
 import com.qingshan.service.ShoppingCartService;
+import com.qingshan.service.support.OrderItemResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,8 +31,6 @@ import java.util.Objects;
 @Slf4j
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
-    private static final int MAX_NUMBER = 999;
-
     @Autowired
     private ShoppingCartMapper shoppingCartMapper;
 
@@ -42,13 +38,10 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     private ProductMapper productMapper;
 
     @Autowired
-    private BundleMapper bundleMapper;
-
-    @Autowired
-    private ProductStyleService productStyleService;
-
-    @Autowired
     private ProductSkuMapper productSkuMapper;
+
+    @Autowired
+    private OrderItemResolver orderItemResolver;
 
     /**
      * 添加购物车
@@ -60,124 +53,45 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         // 1、获取当前登录用户，未登录不能加购
         Long userId = getCurrentUserId();
 
-        // 商品和套装必须二选一：都为空或都不为空都视为参数错误
-        Long productId = shoppingCartDTO.getProductId();
-        Long bundleId = shoppingCartDTO.getBundleId();
-        if ((productId == null) == (bundleId == null)) {
-            throw new ShoppingCartBusinessException("商品或套装信息不完整");
-        }
+        // 2、商品/套装、SKU、价格、库存和已选属性统一由 OrderItemResolver 校验
+        ResolvedOrderItem item = orderItemResolver.resolve(
+                shoppingCartDTO.getProductId(),
+                shoppingCartDTO.getBundleId(),
+                shoppingCartDTO.getSkuId(),
+                shoppingCartDTO.getProductStyle(),
+                shoppingCartDTO.getNumber());
 
-        // 未传数量时默认购买1件，小于1按1件处理，超过上限直接拦截
-        int number = shoppingCartDTO.getNumber() == null ? 1 : shoppingCartDTO.getNumber();
-        if (number < 1) {
-            number = 1;
-        }
-        if (number > MAX_NUMBER) {
-            throw new ShoppingCartBusinessException("单个商品最多购买" + MAX_NUMBER + "件");
-        }
-
-        // 当前版本前端没有真实SKU时会传0，统一按“无SKU”处理
-        Long skuId = shoppingCartDTO.getSkuId();
-        if (skuId != null && skuId <= 0) {
-            skuId = null;
-        }
-
-        // 以下字段最终写入购物车记录，由商品/套装和SKU信息计算得出
-        String name;
-        String image;
-        BigDecimal price;
-        Integer stock = null;
-        String productStyle;
-
-        if (productId != null) {
-            // 2、商品：先取商品基础信息，存在SKU时再用SKU信息覆盖
-            Product product = productMapper.getById(productId);
-            if (product == null) {
-                throw new ShoppingCartBusinessException("商品不存在");
-            }
-            if (!StatusConstant.ENABLE.equals(product.getStatus())) {
-                throw new ShoppingCartBusinessException("商品已下架");
-            }
-            name = product.getName();
-            image = product.getImage();
-            price = product.getPrice();
-            stock = product.getStock();
-
-            // 3、SKU是具体规格组合，价格、库存、图片和已选属性都以它为准
-            ProductSku sku = null;
-            if (skuId != null) {
-                sku = productSkuMapper.getById(skuId);
-                if (sku == null || !Objects.equals(sku.getProductId(), productId)) {
-                    throw new ShoppingCartBusinessException("商品规格不存在");
-                }
-                if (StatusConstant.DISABLE.equals(sku.getStatus())) {
-                    throw new ShoppingCartBusinessException("该规格已下架");
-                }
-                if (sku.getPrice() != null) {
-                    price = sku.getPrice();
-                }
-                if (sku.getStock() != null) {
-                    stock = sku.getStock();
-                }
-                if (StringUtils.hasText(sku.getImage())) {
-                    image = sku.getImage();
-                }
-            }
-            // 4、有SKU时直接取SKU属性；无SKU时校验前端已选属性并生成规范JSON
-            productStyle = productStyleService.resolve(productId, sku, shoppingCartDTO.getProductStyle());
-        } else {
-            // 套装没有SKU，名称、图片、价格取套装本身的信息
-            Bundle bundle = bundleMapper.getById(bundleId);
-            if (bundle == null) {
-                throw new ShoppingCartBusinessException("套装不存在");
-            }
-            if (!StatusConstant.ENABLE.equals(bundle.getStatus())) {
-                throw new ShoppingCartBusinessException("套装已下架");
-            }
-            name = bundle.getName();
-            image = bundle.getImage();
-            price = bundle.getPrice();
-            // 套装规格暂不支持属性校验，沿用前端提交的已选文案
-            productStyle = StringUtils.hasText(shoppingCartDTO.getProductStyle())
-                    ? shoppingCartDTO.getProductStyle().trim() : null;
-        }
-
-        // 价格缺失时无法计算购物车金额
-        if (price == null) {
-            throw new ShoppingCartBusinessException("商品价格异常");
-        }
-
-        // 5、查询当前用户是否已经加购过同一商品/套装、同一SKU、同一规格
+        // 3、查询当前用户是否已经加购过同一商品/套装、同一SKU、同一规格
         ShoppingCart query = ShoppingCart.builder()
                 .userId(userId)
-                .productId(productId)
-                .bundleId(bundleId)
-                .skuId(skuId)
+                .productId(item.getProductId())
+                .bundleId(item.getBundleId())
+                .skuId(item.getSkuId())
                 .build();
         // SQL 只过滤非空条件，这里再按商品/套装、SKU、规格精确匹配一次，避免误合并
         ShoppingCart exist = null;
         for (ShoppingCart cart : shoppingCartMapper.list(query)) {
-            if (Objects.equals(cart.getProductId(), productId)
-                    && Objects.equals(cart.getBundleId(), bundleId)
-                    && Objects.equals(cart.getSkuId(), skuId)
-                    && Objects.equals(cart.getProductStyle(), productStyle)) {
+            if (Objects.equals(cart.getProductId(), item.getProductId())
+                    && Objects.equals(cart.getBundleId(), item.getBundleId())
+                    && Objects.equals(cart.getSkuId(), item.getSkuId())
+                    && Objects.equals(cart.getProductStyle(), item.getProductStyle())) {
                 exist = cart;
                 break;
             }
         }
 
-        // 已存在则合并数量，并重新校验单商品上限和库存
+        // 4、已存在则合并数量，并重新校验单商品上限和库存
         int existNumber = exist == null || exist.getNumber() == null ? 0 : exist.getNumber();
-        int totalNumber = existNumber + number;
-        if (totalNumber > MAX_NUMBER) {
-            throw new ShoppingCartBusinessException("单个商品最多购买" + MAX_NUMBER + "件");
+        int totalNumber = existNumber + item.getNumber();
+        if (totalNumber > NumConstant.PRODUCT_MAX_BUY) {
+            throw new ShoppingCartBusinessException(MessageConstant.PRODUCT_BUY_LIMIT);
         }
-        if (stock != null && totalNumber > stock) {
+        if (item.getStock() != null && totalNumber > item.getStock()) {
             throw new ShoppingCartBusinessException(MessageConstant.PRODUCT_STOCK_NOT_ENOUGH);
         }
 
         // 金额 = 单价 × 合并后的总数量
-        BigDecimal amount = price.multiply(BigDecimal.valueOf(totalNumber));
+        BigDecimal amount = item.getPrice().multiply(BigDecimal.valueOf(totalNumber));
 
         if (exist != null) {
             // 已在购物车中：只更新数量和金额
@@ -187,15 +101,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             return;
         }
 
-        // 不在购物车中：新增一条加购记录
+        // 5、不在购物车中：新增一条加购记录
         ShoppingCart shoppingCart = ShoppingCart.builder()
-                .name(name)
-                .image(image)
+                .name(item.getName())
+                .image(item.getImage())
                 .userId(userId)
-                .productId(productId)
-                .bundleId(bundleId)
-                .skuId(skuId)
-                .productStyle(productStyle)
+                .productId(item.getProductId())
+                .bundleId(item.getBundleId())
+                .skuId(item.getSkuId())
+                .productStyle(item.getProductStyle())
                 .number(totalNumber)
                 .amount(amount)
                 .createTime(LocalDateTime.now())
@@ -260,8 +174,8 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             shoppingCartMapper.deleteById(shoppingCart.getId());
             return;
         }
-        if (number > MAX_NUMBER) {
-            throw new ShoppingCartBusinessException("单个商品最多购买" + MAX_NUMBER + "件");
+        if (number > NumConstant.PRODUCT_MAX_BUY) {
+            throw new ShoppingCartBusinessException(MessageConstant.PRODUCT_BUY_LIMIT);
         }
 
         // 校验库存：有SKU取SKU库存，否则取商品库存

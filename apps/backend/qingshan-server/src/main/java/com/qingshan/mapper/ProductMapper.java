@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -68,4 +69,22 @@ public interface ProductMapper {
     void update(Product product);
 
     List<Product> list(Product product);
+
+    /**
+     * 扣减库存，库存不足时不更新（返回0）
+     * @param id 商品id
+     * @param number 扣减数量
+     * @return 更新的行数
+     */
+    @Update("update product set stock = stock - #{number} where id = #{id} and stock >= #{number}")
+    int deductStock(@Param("id") Long id, @Param("number") Integer number);
+
+    /**
+     * 回滚库存
+     * @param id 商品id
+     * @param number 回滚数量
+     * @return 更新的行数
+     */
+    @Update("update product set stock = stock + #{number} where id = #{id}")
+    int restoreStock(@Param("id") Long id, @Param("number") Integer number);
 }

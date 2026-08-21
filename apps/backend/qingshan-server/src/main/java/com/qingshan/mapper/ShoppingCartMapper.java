@@ -59,4 +59,5 @@ public interface ShoppingCartMapper {
      * @param shoppingCart
      */
     void updateNumber(ShoppingCart shoppingCart);
+
 }

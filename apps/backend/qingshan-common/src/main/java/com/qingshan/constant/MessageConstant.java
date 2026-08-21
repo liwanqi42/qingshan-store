@@ -25,5 +25,17 @@ public class MessageConstant {
     public static final String PRODUCT_STOCK_NOT_ENOUGH = "商品库存不足";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";
+    public static final String TIMEOUT_CANCEL_REASON = "超时未支付，系统自动取消";
+    public static final String PRODUCT_STYLE_OFF_SHELF = "该商品样式已下架";
+    public static final String BUNDLE_NOT_FOUND = "套装不存在";
+    public static final String BUNDLE_OFF_SHELF = "该套装已下架";
+    public static final String PRODUCT_NOT_FOUND = "商品不存在";
+    public static final String PRODUCT_OFF_SHELF = "该商品已下架";
+    public static final String PRODUCT_PRICE = "商品价格异常";
+    public static final String ORDER_NAME_DESC = "青山商店订单";
+    public static final String ORDER_ALREADY_PAID = "该订单已支付";
+    public static final String PRODUCT_BUNDLE_INCOMPLETE = "商品或套装信息不完整";
+    public static final String PRODUCT_BUY_LIMIT = "单个商品最多购买" + NumConstant.PRODUCT_MAX_BUY + "件";
+
 
 }
