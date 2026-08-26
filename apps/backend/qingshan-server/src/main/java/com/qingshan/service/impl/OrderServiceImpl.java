@@ -1,12 +1,17 @@
 package com.qingshan.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.constant.NumConstant;
 import com.qingshan.context.BaseContext;
+import com.qingshan.dto.OrdersPageQueryDTO;
 import com.qingshan.dto.OrdersPaymentDTO;
 import com.qingshan.dto.OrdersSubmitDTO;
 import com.qingshan.dto.OrdersSubmitItemDTO;
+import com.qingshan.dto.ShoppingCartDTO;
 import com.qingshan.entity.*;
 import com.qingshan.exception.AddressBookBusinessException;
 import com.qingshan.exception.OrderBusinessException;
@@ -14,14 +19,18 @@ import com.qingshan.exception.ShoppingCartBusinessException;
 import com.qingshan.mapper.*;
 import com.qingshan.model.ResolvedOrderItem;
 import com.qingshan.properties.OrderProperties;
+import com.qingshan.result.PageResult;
 import com.qingshan.service.OrderService;
+import com.qingshan.service.ShoppingCartService;
 import com.qingshan.service.support.OrderItemResolver;
 import com.qingshan.service.support.OrderStockService;
 import com.qingshan.utils.SnowflakeIdGenerator;
 import com.qingshan.utils.WeChatPayUtil;
 import com.qingshan.vo.OrderPaymentVO;
 import com.qingshan.vo.OrderSubmitVO;
+import com.qingshan.vo.UserOrderVO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -35,6 +44,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -56,13 +66,16 @@ public class OrderServiceImpl implements OrderService {
     private OrderMapper orderMapper;
 
     @Autowired
-    private OderDetailMapper oderDetailMapper;
+    private OrderDetailMapper orderDetailMapper;
 
     @Autowired
     private AddressBookMapper addressBookMapper;
 
     @Autowired
     private ShoppingCartMapper shoppingCartMapper;
+
+    @Autowired
+    private ShoppingCartService shoppingCartService;
 
     @Autowired
     private OrderItemResolver orderItemResolver;
@@ -103,7 +116,7 @@ public class OrderServiceImpl implements OrderService {
         //4.写入订单及订单明细
         Orders orders = createOrder(ordersSubmitDTO, addressBook, userId, orderItems.getAmount());
         orderMapper.insert(orders);
-        oderDetailMapper.insertBatch(toOrderDetails(orders.getId(), orderItems.getItems()));
+        orderDetailMapper.insertBatch(toOrderDetails(orders.getId(), orderItems.getItems()));
 
         //5.清空本次下单涉及的购物车记录，直接购买的商品不在购物车中，无需清理
         if (!orderItems.getCartIds().isEmpty()) {
@@ -337,7 +350,7 @@ public class OrderServiceImpl implements OrderService {
             if (updated == 0) {
                 continue;
             }
-            List<OrderDetail> orderDetails = oderDetailMapper.listByOrderId(orderId);
+            List<OrderDetail> orderDetails = orderDetailMapper.listByOrderId(orderId);
             for (OrderDetail orderDetail : orderDetails) {
                 orderStockService.restore(orderDetail);
             }
@@ -345,6 +358,297 @@ public class OrderServiceImpl implements OrderService {
         }
         if (cancelled > 0) {
             log.info("自动取消超时未支付订单{}笔", cancelled);
+        }
+    }
+
+    /**
+     * 用户端订单分页查询
+     * @param pageNum
+     * @param pageSize
+     * @param status 小程序端状态
+     * @return
+     */
+    @Override
+    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) {
+        // 设置分页
+        PageHelper.startPage(pageNum, pageSize);
+
+        OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
+        ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
+        // 小程序端状态转成后端 orders.status
+        ordersPageQueryDTO.setStatus(toBackendStatus(status));
+
+        // 分页条件查询
+        Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
+
+        List<UserOrderVO> list = new ArrayList<>();
+        if (page != null && page.getTotal() > 0) {
+            for (Orders orders : page) {
+                List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orders.getId());
+                list.add(toUserOrderVO(orders, orderDetails));
+            }
+        }
+        return new PageResult(page.getTotal(), list);
+    }
+
+    /**
+     * 用户端订单详情
+     * @param orderNumber 订单号
+     * @return
+     */
+    @Override
+    public UserOrderVO getDetail4User(String orderNumber) {
+        Orders orders = orderMapper.getByNumber(orderNumber);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (orders == null || !Objects.equals(orders.getUserId(), BaseContext.getCurrentId())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        List<OrderDetail> orderDetails = orderDetailMapper.getByOrderId(orders.getId());
+        UserOrderVO orderVO = toUserOrderVO(orders, orderDetails);
+        // 详情页只展示门牌号等详细地址，去掉省市区前缀
+        orderVO.getAddress().setAddress(detailAddress(orders));
+        return orderVO;
+    }
+
+    /**
+     * 从下单时保存的完整地址中截取详细地址（省市区之后的部分）
+     */
+    private String detailAddress(Orders orders) {
+        String address = orders.getAddress();
+        if (address == null || address.isEmpty()) {
+            return address;
+        }
+        AddressBook addressBook = addressBookMapper.getById(orders.getAddressBookId());
+        if (addressBook == null) {
+            return address;
+        }
+        String prefix = (addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())
+                + (addressBook.getCityName() == null ? "" : addressBook.getCityName())
+                + (addressBook.getDistrictName() == null ? "" : addressBook.getDistrictName());
+        if (!prefix.isEmpty() && address.startsWith(prefix)) {
+            return address.substring(prefix.length());
+        }
+        return address;
+    }
+
+    /**
+     * 用户取消订单
+     * @return
+     */
+    @Override
+    @Transactional
+    public void userCancelById(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders ordersDB = orderMapper.getById(id);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (ordersDB == null || !Objects.equals(ordersDB.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 只有待付款订单可以取消；已支付订单需要走退款流程，暂不支持
+        int updated = orderMapper.cancelByUser(id, userId, LocalDateTime.now(), "用户取消");
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 回滚下单时占用的库存
+        for (OrderDetail orderDetail : orderDetailMapper.listByOrderId(id)) {
+            orderStockService.restore(orderDetail);
+        }
+    }
+
+    /**
+     * 再来一单：把订单商品重新加入购物车
+     *
+     * @param id
+     */
+    @Override
+    @Transactional
+    public void repetition(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getById(id);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (orders == null || !Objects.equals(orders.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+        if (orderDetailList.isEmpty()) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 逐项复用加购逻辑：校验商品/SKU/库存，并合并同规格商品
+        for (OrderDetail detail : orderDetailList) {
+            ShoppingCartDTO shoppingCartDTO = new ShoppingCartDTO();
+            shoppingCartDTO.setProductId(detail.getProductId());
+            shoppingCartDTO.setBundleId(detail.getBundleId());
+            shoppingCartDTO.setSkuId(detail.getSkuId());
+            shoppingCartDTO.setProductStyle(detail.getProductAttr());
+            shoppingCartDTO.setNumber(detail.getNumber());
+            shoppingCartService.addShoppingCart(shoppingCartDTO);
+        }
+    }
+
+    /**
+     * 删除订单：只允许删除已完成、已取消、已退款的订单
+     *
+     * @param id
+     */
+    @Override
+    @Transactional
+    public void deleteOrderById(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders ordersDB = orderMapper.getById(id);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (ordersDB == null || !Objects.equals(ordersDB.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        Integer status = ordersDB.getStatus();
+        if (!Orders.STATUS_COMPLETED.equals(status)
+                && !Orders.STATUS_CANCELLED.equals(status)
+                && !Orders.STATUS_REFUND.equals(status)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        orderDetailMapper.deleteByOrderId(id);
+        orderMapper.deleteByIdAndUser(id, userId);
+    }
+
+    /**
+     * 小程序端订单状态 -> 后端 orders.status
+     * -999全部(不筛选) 0待付款 1待发货 2待收货 3已完成 4退款申请 5已退款
+     */
+    private Integer toBackendStatus(Integer status) {
+        if (status == null || status == -999) {
+            return null;
+        }
+        switch (status) {
+            case 0:
+                return Orders.STATUS_PENDING_PAYMENT;
+            case 1:
+                return Orders.STATUS_AWAITING_SHIPMENT;
+            case 2:
+                return Orders.STATUS_SHIPPED;
+            case 3:
+                return Orders.STATUS_COMPLETED;
+            case 4:
+            case 5:
+                return Orders.STATUS_REFUND;
+            default:
+                // 兼容直接传后端状态
+                return status;
+        }
+    }
+
+    /**
+     * 后端订单状态 -> 小程序端订单状态
+     */
+    private Integer toAppStatus(Orders orders) {
+        Integer status = orders.getStatus();
+        if (Orders.STATUS_REFUND.equals(status)) {
+            return Orders.PAY_STATUS_REFUND.equals(orders.getPayStatus()) ? 5 : 4;
+        }
+        if (Orders.STATUS_CANCELLED.equals(status)) {
+            return -1;
+        }
+        if (Orders.STATUS_COMPLETED.equals(status)) {
+            return 3;
+        }
+        // 已发货、配送中都属于“待收货”
+        if (Orders.STATUS_SHIPPED.equals(status) || Orders.STATUS_IN_TRANSIT.equals(status)) {
+            return 2;
+        }
+        if (Orders.STATUS_AWAITING_SHIPMENT.equals(status)) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * 订单 + 明细 -> 小程序端订单视图
+     */
+    private UserOrderVO toUserOrderVO(Orders orders, List<OrderDetail> orderDetails) {
+        List<UserOrderVO.GoodsItem> goodsList = new ArrayList<>();
+        int goodsNum = 0;
+        BigDecimal goodsAmount = BigDecimal.ZERO;
+        for (OrderDetail detail : orderDetails) {
+            int number = detail.getNumber() == null ? 0 : detail.getNumber();
+            BigDecimal lineAmount = detail.getAmount() == null ? BigDecimal.ZERO : detail.getAmount();
+            // 订单明细存的是该行总价，页面展示的是单价
+            BigDecimal unitPrice = number > 0
+                    ? lineAmount.divide(BigDecimal.valueOf(number), NumConstant.AMOUNT_SCALE, RoundingMode.HALF_UP)
+                    : lineAmount;
+            goodsList.add(UserOrderVO.GoodsItem.builder()
+                    .goodsId(detail.getProductId() != null ? detail.getProductId() : detail.getBundleId())
+                    .picture(detail.getImage())
+                    .title(detail.getName())
+                    .specs(formatStyle(detail.getProductAttr()))
+                    .price(unitPrice)
+                    .num(detail.getNumber())
+                    .productId(detail.getProductId())
+                    .bundleId(detail.getBundleId())
+                    .skuId(detail.getSkuId())
+                    .productStyle(detail.getProductAttr())
+                    .build());
+            goodsNum += number;
+            goodsAmount = goodsAmount.add(lineAmount);
+        }
+
+        BigDecimal dispatchAmount = orders.getFreightAmount() == null ? BigDecimal.ZERO : orders.getFreightAmount();
+        BigDecimal discountAmount = goodsAmount.add(dispatchAmount).subtract(orders.getAmount());
+        if (discountAmount.signum() < 0) {
+            discountAmount = BigDecimal.ZERO;
+        }
+
+        return UserOrderVO.builder()
+                .id(orders.getId())
+                .orderNo(orders.getNumber())
+                .status(toAppStatus(orders))
+                .payAmount(orders.getAmount())
+                .payMethod(orders.getPayMethod())
+                .goodsNum(goodsNum)
+                .goodsList(goodsList)
+                .goodsAmount(goodsAmount)
+                .discountAmount(discountAmount)
+                .dispatchAmount(dispatchAmount)
+                .placeTime(orders.getOrderTime())
+                .payTime(orders.getCheckoutTime())
+                .deliverTime(orders.getShipTime())
+                .address(UserOrderVO.Address.builder()
+                        .contacts(orders.getConsignee())
+                        .mobile(orders.getPhone())
+                        .provinceStr("")
+                        .cityStr("")
+                        .areaStr("")
+                        .address(orders.getAddress())
+                        .fullAddress(orders.getAddress())
+                        .build())
+                .refundApply(UserOrderVO.RefundApply.builder().refundNo("").build())
+                .build();
+    }
+
+    /**
+     * 规格 JSON 字符串 -> 展示文本，如 {"颜色":"白色","大小":"中"} -> "白色 中"
+     */
+    private String formatStyle(String productAttr) {
+        if (productAttr == null || productAttr.isEmpty()) {
+            return "";
+        }
+        try {
+            JSONObject style = JSON.parseObject(productAttr);
+            StringBuilder text = new StringBuilder();
+            for (Object value : style.values()) {
+                if (value == null) {
+                    continue;
+                }
+                if (text.length() > 0) {
+                    text.append(' ');
+                }
+                text.append(value);
+            }
+            return text.toString();
+        } catch (Exception e) {
+            return productAttr;
         }
     }
 

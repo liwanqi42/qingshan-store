@@ -1,6 +1,9 @@
 package com.qingshan.mapper;
 
+import com.github.pagehelper.Page;
+import com.qingshan.dto.OrdersPageQueryDTO;
 import com.qingshan.entity.Orders;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -23,6 +26,13 @@ public interface OrderMapper {
      */
     @Select("select * from orders where number = #{orderNumber}")
     Orders getByNumber(String orderNumber);
+
+    /**
+     * 根据订单id查询订单
+     * @param id
+     */
+    @Select("select * from orders where id = #{id}")
+    Orders getById(Long id);
 
     /**
      * 修改订单信息
@@ -51,6 +61,21 @@ public interface OrderMapper {
     int cancelTimeoutOrder(@Param("id") Long id,
                            @Param("cancelTime") LocalDateTime cancelTime,
                            @Param("cancelReason") String cancelReason);
+
+    /**
+     * 用户取消订单，只有属于该用户的待付款订单会被更新
+     * @param id 订单id
+     * @param userId 用户id
+     * @param cancelTime 取消时间
+     * @param cancelReason 取消原因
+     * @return 更新的行数
+     */
+    @Update("update orders set status = 6, cancel_reason = #{cancelReason}, cancel_time = #{cancelTime} " +
+            "where id = #{id} and user_id = #{userId} and status = 1 and pay_status = 0")
+    int cancelByUser(@Param("id") Long id,
+                     @Param("userId") Long userId,
+                     @Param("cancelTime") LocalDateTime cancelTime,
+                     @Param("cancelReason") String cancelReason);
 
     /**
      * 支付成功后更新订单状态，只有待付款订单会被更新
@@ -82,4 +107,20 @@ public interface OrderMapper {
     int countTimeoutOrders(@Param("userId") Long userId,
                            @Param("cancelReason") String cancelReason,
                            @Param("since") LocalDateTime since);
+
+    /**
+     * 删除属于指定用户的订单
+     * @param id 订单id
+     * @param userId 用户id
+     * @return 删除的行数
+     */
+    @Delete("delete from orders where id = #{id} and user_id = #{userId}")
+    int deleteByIdAndUser(@Param("id") Long id, @Param("userId") Long userId);
+
+    /**
+     * 用户端订单分页查询
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    Page<Orders> pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 }

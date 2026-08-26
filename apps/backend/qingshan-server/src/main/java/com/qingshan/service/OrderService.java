@@ -2,8 +2,10 @@ package com.qingshan.service;
 
 import com.qingshan.dto.OrdersPaymentDTO;
 import com.qingshan.dto.OrdersSubmitDTO;
+import com.qingshan.result.PageResult;
 import com.qingshan.vo.OrderPaymentVO;
 import com.qingshan.vo.OrderSubmitVO;
+import com.qingshan.vo.UserOrderVO;
 
 public interface OrderService {
     /**
@@ -38,4 +40,39 @@ public interface OrderService {
      * 取消超时未支付的订单并回滚库存
      */
     void cancelTimeoutOrders();
+
+    /**
+     * 用户端订单分页查询
+     * @param page
+     * @param pageSize
+     * @param status
+     * @return
+     */
+    PageResult pageQuery4User(int page, int pageSize, Integer status);
+
+    /**
+     * 用户端订单详情
+     * @param orderNumber 订单号
+     * @return
+     */
+    UserOrderVO getDetail4User(String orderNumber);
+
+    /**
+     * 用户取消订单
+     * @param id
+     */
+    void userCancelById(Long id);
+
+    /**
+     * 再来一单
+     * @param id
+     * @return
+     */
+    void repetition(Long id);
+
+    /**
+     * 删除订单
+     * @param id
+     */
+    void deleteOrderById(Long id);
 }
