@@ -51,6 +51,7 @@ public class AddressBookController {
     @PostMapping
     @ApiOperation("新增地址")
     public Result save(@RequestBody AddressBook addressBook) {
+        // TODO(security): 上线前不要打印完整地址对象（含姓名、手机号、详细地址），改为打印 id
         log.info("新增地址：{}", addressBook);
         addressBookService.save(addressBook);
         return Result.success();

@@ -45,7 +45,7 @@ public class EmployeeController {
     @PostMapping("/login")
     @ApiOperation(value = "员工登录")
     public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
-        log.info("员工登录：{}", employeeLoginDTO);
+        log.info("员工登录：{}", employeeLoginDTO.getUsername());
 
         Employee employee = employeeService.login(employeeLoginDTO);
 
@@ -150,9 +150,9 @@ public class EmployeeController {
     @PutMapping("/editPassword")
     @ApiOperation("修改密码")
     public Result editPassword(@RequestBody PasswordEditDTO passwordEditDTO){
-        log.info("修改密码:{}", passwordEditDTO);
         //从JWT上下文中获取当前登录员工id，不信任前端传参
         passwordEditDTO.setEmpId(BaseContext.getCurrentId());
+        log.info("修改密码，员工id：{}", passwordEditDTO.getEmpId());
         employeeService.editPassword(passwordEditDTO);
         return Result.success();
     }

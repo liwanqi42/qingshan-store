@@ -42,6 +42,7 @@ public class UserController {
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         User user;
         if (StringUtils.hasText(userLoginDTO.getPhone()) && StringUtils.hasText(userLoginDTO.getPassword())) {
+            // TODO(security): 上线前对手机号脱敏或移除日志
             log.info("手机号密码登录:{}", userLoginDTO.getPhone());
             user = userService.loginByPassword(userLoginDTO.getPhone(), userLoginDTO.getPassword());
         } else {
@@ -59,6 +60,7 @@ public class UserController {
     @PostMapping("/register")
     @ApiOperation("手机号注册")
     public Result<UserLoginVO> register(@RequestBody UserRegisterDTO userRegisterDTO) {
+        // TODO(security): 上线前对手机号脱敏或移除日志，见 SECURITY_TODO.md
         log.info("手机号注册:{}", userRegisterDTO.getPhone());
         User user = userService.register(userRegisterDTO);
         return Result.success(buildLoginVO(user));

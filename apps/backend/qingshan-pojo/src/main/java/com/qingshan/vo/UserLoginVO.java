@@ -14,6 +14,7 @@ import java.io.Serializable;
 public class UserLoginVO implements Serializable {
 
     private Long id;
+    // TODO(security): 前端未实际使用，收尾时移除，避免把微信身份标识下发给客户端
     private String openid;
     private String phone;
     private String token;
