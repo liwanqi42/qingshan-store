@@ -68,6 +68,12 @@
             <if test="number != null and number!=''">
                 and number like concat('%',#{number},'%')
             </if>
+            <if test="keyword != null and keyword!=''">
+                and (number like concat('%',#{keyword},'%') or exists (
+                    select 1 from order_detail od
+                    where od.order_id = orders.id and od.name like concat('%',#{keyword},'%')
+                ))
+            </if>
             <if test="phone != null and phone!=''">
                 and phone like concat('%',#{phone},'%')
             </if>
@@ -76,6 +82,12 @@
             </if>
             <if test="status != null">
                 and status = #{status}
+            </if>
+            <if test="statuses != null and statuses.size() > 0">
+                and status in
+                <foreach collection="statuses" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
             </if>
             <if test="beginTime != null">
                 and order_time &gt;= #{beginTime}

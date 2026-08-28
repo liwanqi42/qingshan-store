@@ -11,6 +11,7 @@ import com.qingshan.dto.OrdersPageQueryDTO;
 import com.qingshan.dto.OrdersPaymentDTO;
 import com.qingshan.dto.OrdersSubmitDTO;
 import com.qingshan.dto.OrdersSubmitItemDTO;
+import com.qingshan.dto.RefundApplyDTO;
 import com.qingshan.dto.ShoppingCartDTO;
 import com.qingshan.entity.*;
 import com.qingshan.exception.AddressBookBusinessException;
@@ -27,7 +28,10 @@ import com.qingshan.service.support.OrderStockService;
 import com.qingshan.utils.SnowflakeIdGenerator;
 import com.qingshan.utils.WeChatPayUtil;
 import com.qingshan.vo.OrderPaymentVO;
+import com.qingshan.vo.OrderRemindVO;
 import com.qingshan.vo.OrderSubmitVO;
+import com.qingshan.vo.RefundApplyVO;
+import com.qingshan.vo.RefundDetailVO;
 import com.qingshan.vo.UserOrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -39,7 +43,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -91,6 +97,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+
+    /**
+     * 退款详情页的时间格式
+     */
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 用户下单
@@ -369,14 +381,21 @@ public class OrderServiceImpl implements OrderService {
      * @return
      */
     @Override
-    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status) {
+    public PageResult pageQuery4User(int pageNum, int pageSize, Integer status, String keyword, int days) {
         // 设置分页
         PageHelper.startPage(pageNum, pageSize);
 
         OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
         ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
-        // 小程序端状态转成后端 orders.status
-        ordersPageQueryDTO.setStatus(toBackendStatus(status));
+        // 小程序端状态转成后端 orders.status（一个前端状态可能对应多个后端状态）
+        ordersPageQueryDTO.setStatuses(toBackendStatuses(status));
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            ordersPageQueryDTO.setKeyword(keyword.trim());
+        }
+        // 时间筛选：近 N 天
+        if (days > 0) {
+            ordersPageQueryDTO.setBeginTime(LocalDateTime.now().minusDays(days));
+        }
 
         // 分页条件查询
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
@@ -490,6 +509,147 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 确认收货：只有已发货、配送中的订单可以确认
+     *
+     * @param id
+     */
+    @Override
+    public void confirmGoods(Long id) {
+        Long userId = BaseContext.getCurrentId();
+        Orders ordersDB = orderMapper.getById(id);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (ordersDB == null || !Objects.equals(ordersDB.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        // 条件更新，避免重复确认或对未发货订单确认
+        int updated = orderMapper.confirmGoods(id, userId);
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+    }
+
+    /**
+     * 申请售后：支持待发货、待收货、已完成的已支付订单
+     *
+     * @param refundApplyDTO
+     * @return 退款编号
+     */
+    @Override
+    public RefundApplyVO refundApply(RefundApplyDTO refundApplyDTO) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getByNumber(refundApplyDTO.getOrderNo());
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (orders == null || !Objects.equals(orders.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        if (refundApplyDTO.getReason() == null || refundApplyDTO.getReason().trim().isEmpty()) {
+            throw new OrderBusinessException("请选择退款原因");
+        }
+
+        // 条件更新，避免重复申请或对未支付订单申请
+        int updated = orderMapper.applyRefund(orders.getId(), userId,
+                refundApplyDTO.getReason().trim(), LocalDateTime.now());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        return RefundApplyVO.builder().refundNo(orders.getNumber()).build();
+    }
+
+    /**
+     * 退款详情
+     *
+     * @param refundNo 退款编号（订单号）
+     * @return 退款详情
+     */
+    @Override
+    public RefundDetailVO refundDetail(String refundNo) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getByNumber(refundNo);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (orders == null || !Objects.equals(orders.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        List<RefundDetailVO.GoodsItem> goodsList = new ArrayList<>();
+        for (OrderDetail detail : orderDetailMapper.getByOrderId(orders.getId())) {
+            goodsList.add(RefundDetailVO.GoodsItem.builder()
+                    .goodsId(detail.getProductId() != null ? detail.getProductId() : detail.getBundleId())
+                    .picture(detail.getImage())
+                    .title(detail.getName())
+                    .specs(formatStyle(detail.getProductAttr()))
+                    .build());
+        }
+
+        return RefundDetailVO.builder()
+                .refundNo(orders.getNumber())
+                .status(toRefundDetailStatus(orders.getRefundStatus()))
+                .reason(orders.getRefundReason())
+                .refundAmount(orders.getRefundAmount())
+                .applyTime(formatDateTime(orders.getRefundApplyTime()))
+                .refundTime(formatDateTime(orders.getRefundTime()))
+                .goodsList(goodsList)
+                .build();
+    }
+
+    /**
+     * 撤销退款申请，只有处理中的申请可以撤销
+     *
+     * @param refundNo 退款编号（订单号）
+     */
+    @Override
+    public void undoRefund(String refundNo) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderMapper.getByNumber(refundNo);
+        // 不区分“不存在”和“不属于当前用户”，避免泄露他人订单信息
+        if (orders == null || !Objects.equals(orders.getUserId(), userId)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+        int updated = orderMapper.undoRefund(refundNo, userId);
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+    }
+
+    /**
+     * 退款状态 -> 退款详情页状态 0处理中 1退款成功 2已结束
+     */
+    private Integer toRefundDetailStatus(Integer refundStatus) {
+        if (refundStatus == null) {
+            return 2;
+        }
+        if (refundStatus.equals(Orders.REFUND_STATUS_APPLIED)
+                || refundStatus.equals(Orders.REFUND_STATUS_WAIT_RETURN)
+                || refundStatus.equals(Orders.REFUND_STATUS_RETURNED)) {
+            return 0;
+        }
+        if (refundStatus.equals(Orders.REFUND_STATUS_COMPLETED)) {
+            return 1;
+        }
+        return 2;
+    }
+
+    /**
+     * 存在售后记录时返回退款编号（订单号），否则返回空串
+     */
+    private String refundNo(Orders orders) {
+        Integer refundStatus = orders.getRefundStatus();
+        if (refundStatus != null && (refundStatus.equals(Orders.REFUND_STATUS_APPLIED)
+                || refundStatus.equals(Orders.REFUND_STATUS_WAIT_RETURN)
+                || refundStatus.equals(Orders.REFUND_STATUS_RETURNED)
+                || refundStatus.equals(Orders.REFUND_STATUS_COMPLETED))) {
+            return orders.getNumber();
+        }
+        return "";
+    }
+
+    /**
+     * LocalDateTime -> 退款详情页展示格式
+     */
+    private String formatDateTime(LocalDateTime time) {
+        return time == null ? null : time.format(DATE_TIME_FORMATTER);
+    }
+
+    /**
      * 删除订单：只允许删除已完成、已取消、已退款的订单
      *
      * @param id
@@ -504,9 +664,12 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
         }
         Integer status = ordersDB.getStatus();
+        // 退款完成的订单即使原状态未改为 7，也允许删除
+        boolean refundCompleted = Orders.REFUND_STATUS_COMPLETED.equals(ordersDB.getRefundStatus());
         if (!Orders.STATUS_COMPLETED.equals(status)
                 && !Orders.STATUS_CANCELLED.equals(status)
-                && !Orders.STATUS_REFUND.equals(status)) {
+                && !Orders.STATUS_REFUND.equals(status)
+                && !refundCompleted) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
@@ -515,35 +678,70 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 个人中心订单提醒数量
+     * @return 待付款、待发货、待收货数量
+     */
+    @Override
+    public OrderRemindVO getRemindCount4User() {
+        OrderRemindVO remind = orderMapper.getRemindCount(BaseContext.getCurrentId());
+        // 用户没有任何订单时，各统计值按 0 处理
+        if (remind == null) {
+            return OrderRemindVO.builder().waitPay(0).notExpress(0).waitReceive(0).build();
+        }
+        return remind;
+    }
+
+    /**
      * 小程序端订单状态 -> 后端 orders.status
      * -999全部(不筛选) 0待付款 1待发货 2待收货 3已完成 4退款申请 5已退款
      */
-    private Integer toBackendStatus(Integer status) {
+    private List<Integer> toBackendStatuses(Integer status) {
         if (status == null || status == -999) {
             return null;
         }
         switch (status) {
             case 0:
-                return Orders.STATUS_PENDING_PAYMENT;
+                return toStatusList(Orders.STATUS_PENDING_PAYMENT);
             case 1:
-                return Orders.STATUS_AWAITING_SHIPMENT;
+                return toStatusList(Orders.STATUS_AWAITING_SHIPMENT);
             case 2:
-                return Orders.STATUS_SHIPPED;
+                return toStatusList(Orders.STATUS_SHIPPED, Orders.STATUS_IN_TRANSIT);
             case 3:
-                return Orders.STATUS_COMPLETED;
+                return toStatusList(Orders.STATUS_COMPLETED);
             case 4:
             case 5:
-                return Orders.STATUS_REFUND;
+                return toStatusList(Orders.STATUS_REFUND);
             default:
                 // 兼容直接传后端状态
-                return status;
+                return toStatusList(status);
         }
+    }
+
+    /**
+     * 必须用公开的 ArrayList，OGNL 无法反射调用 Collections$SingletonList 等包级私有类的方法
+     */
+    private List<Integer> toStatusList(Integer... statuses) {
+        List<Integer> list = new ArrayList<>(statuses.length);
+        Collections.addAll(list, statuses);
+        return list;
     }
 
     /**
      * 后端订单状态 -> 小程序端订单状态
      */
     private Integer toAppStatus(Orders orders) {
+        // 售后流程优先于订单原状态：申请中显示“退款中”，完成后显示“交易关闭”
+        Integer refundStatus = orders.getRefundStatus();
+        if (refundStatus != null) {
+            if (refundStatus.equals(Orders.REFUND_STATUS_APPLIED)
+                    || refundStatus.equals(Orders.REFUND_STATUS_WAIT_RETURN)
+                    || refundStatus.equals(Orders.REFUND_STATUS_RETURNED)) {
+                return 4;
+            }
+            if (refundStatus.equals(Orders.REFUND_STATUS_COMPLETED)) {
+                return 5;
+            }
+        }
         Integer status = orders.getStatus();
         if (Orders.STATUS_REFUND.equals(status)) {
             return Orders.PAY_STATUS_REFUND.equals(orders.getPayStatus()) ? 5 : 4;
@@ -623,7 +821,7 @@ public class OrderServiceImpl implements OrderService {
                         .address(orders.getAddress())
                         .fullAddress(orders.getAddress())
                         .build())
-                .refundApply(UserOrderVO.RefundApply.builder().refundNo("").build())
+                .refundApply(UserOrderVO.RefundApply.builder().refundNo(refundNo(orders)).build())
                 .build();
     }
 

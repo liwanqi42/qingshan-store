@@ -3,6 +3,7 @@ package com.qingshan.mapper;
 import com.github.pagehelper.Page;
 import com.qingshan.dto.OrdersPageQueryDTO;
 import com.qingshan.entity.Orders;
+import com.qingshan.vo.OrderRemindVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -109,6 +110,43 @@ public interface OrderMapper {
                            @Param("since") LocalDateTime since);
 
     /**
+     * 申请售后，只有属于该用户、已支付且未在退款流程中的订单会被更新
+     * @param id 订单id
+     * @param userId 用户id
+     * @param reason 退款原因
+     * @param applyTime 申请时间
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 1, refund_type = 1, refund_reason = #{reason}, " +
+            "refund_amount = amount, refund_apply_time = #{applyTime}, refund_time = null, " +
+            "refund_reject_reason = null " +
+            "where id = #{id} and user_id = #{userId} and pay_status = 1 " +
+            "and status in (2, 3, 4, 5) and (refund_status is null or refund_status in (0, 5, 6))")
+    int applyRefund(@Param("id") Long id,
+                    @Param("userId") Long userId,
+                    @Param("reason") String reason,
+                    @Param("applyTime") LocalDateTime applyTime);
+
+    /**
+     * 用户撤销退款申请，只有处理中的申请会被撤销
+     * @param number 订单号（即退款编号）
+     * @param userId 用户id
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 6 " +
+            "where number = #{number} and user_id = #{userId} and refund_status in (1, 2, 3)")
+    int undoRefund(@Param("number") String number, @Param("userId") Long userId);
+
+    /**
+     * 确认收货，只有属于该用户且已发货/配送中的订单会被更新
+     * @param id 订单id
+     * @param userId 用户id
+     * @return 更新的行数
+     */
+    @Update("update orders set status = 5 where id = #{id} and user_id = #{userId} and status in (3, 4)")
+    int confirmGoods(@Param("id") Long id, @Param("userId") Long userId);
+
+    /**
      * 删除属于指定用户的订单
      * @param id 订单id
      * @param userId 用户id
@@ -123,4 +161,16 @@ public interface OrderMapper {
      * @return
      */
     Page<Orders> pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
+
+    /**
+     * 统计用户各状态订单数量（个人中心提醒）
+     * @param userId 用户id
+     * @return 待付款、待发货、待收货数量
+     */
+    @Select("select " +
+            "coalesce(sum(case when status = 1 and pay_status = 0 then 1 else 0 end), 0) as waitPay, " +
+            "coalesce(sum(case when status = 2 then 1 else 0 end), 0) as notExpress, " +
+            "coalesce(sum(case when status in (3, 4) then 1 else 0 end), 0) as waitReceive " +
+            "from orders where user_id = #{userId}")
+    OrderRemindVO getRemindCount(@Param("userId") Long userId);
 }
