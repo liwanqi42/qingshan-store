@@ -5,6 +5,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class OrdersPageQueryDTO implements Serializable {
@@ -18,6 +19,11 @@ public class OrdersPageQueryDTO implements Serializable {
     private  String phone;
 
     private Integer status;
+
+    private List<Integer> statuses;
+
+    //订单号或商品名称关键词
+    private String keyword;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime beginTime;
