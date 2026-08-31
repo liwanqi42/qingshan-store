@@ -143,7 +143,9 @@ public interface OrderMapper {
      * @param userId 用户id
      * @return 更新的行数
      */
-    @Update("update orders set status = 5 where id = #{id} and user_id = #{userId} and status in (3, 4)")
+    @Update("update orders set status = 5, delivery_time = now() " +
+            "where id = #{id} and user_id = #{userId} and status in (3, 4) " +
+            "and (refund_status is null or refund_status in (0, 5, 6))")
     int confirmGoods(@Param("id") Long id, @Param("userId") Long userId);
 
     /**
@@ -171,6 +173,14 @@ public interface OrderMapper {
             "coalesce(sum(case when status = 1 and pay_status = 0 then 1 else 0 end), 0) as waitPay, " +
             "coalesce(sum(case when status = 2 then 1 else 0 end), 0) as notExpress, " +
             "coalesce(sum(case when status in (3, 4) then 1 else 0 end), 0) as waitReceive " +
-            "from orders where user_id = #{userId}")
+            "from orders where user_id = #{userId} " +
+            "and (refund_status is null or refund_status not in (1, 2, 3, 4))")
     OrderRemindVO getRemindCount(@Param("userId") Long userId);
+
+    /**
+     * 根据状态统计订单数量
+     * @param status
+     */
+    @Select("select count(id) from orders where status = #{status}")
+    Integer countStatus(Integer status);
 }

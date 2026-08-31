@@ -133,6 +133,9 @@ public class Orders implements Serializable {
     //发货时间
     private LocalDateTime shipTime;
 
+    //送达时间（订单完成时间）
+    private LocalDateTime deliveryTime;
+
     //快递公司
     private String expressCompany;
 

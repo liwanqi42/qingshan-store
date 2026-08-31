@@ -46,6 +46,12 @@
             <if test="cancelTime != null">
                 cancel_time=#{cancelTime},
             </if>
+            <if test="deliveryTime != null">
+                delivery_time=#{deliveryTime},
+            </if>
+            <if test="shipTime != null">
+                ship_time=#{shipTime},
+            </if>
             <if test="payStatus != null">
                 pay_status=#{payStatus},
             </if>
@@ -88,6 +94,15 @@
                 <foreach collection="statuses" item="item" open="(" separator="," close=")">
                     #{item}
                 </foreach>
+            </if>
+            <if test="refundStatuses != null and refundStatuses.size() > 0">
+                and refund_status in
+                <foreach collection="refundStatuses" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="excludeRefunding">
+                and (refund_status is null or refund_status not in (1, 2, 3, 4))
             </if>
             <if test="beginTime != null">
                 and order_time &gt;= #{beginTime}
