@@ -60,7 +60,7 @@ public class OrderController {
      * 历史订单查询
      * @param page
      * @param pageSize
-     * @param status   订单状态 1待付款 2待发货 3已发货 4配送中 5已完成 6已取消 7退款
+     * @param status   订单状态 -999全部 0待付款 1待发货 2待收货 3已完成 4退款/售后 5已退款
      * @return
      */
     @GetMapping("/historyOrders")

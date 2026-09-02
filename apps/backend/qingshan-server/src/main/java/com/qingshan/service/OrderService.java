@@ -1,15 +1,8 @@
 package com.qingshan.service;
 
-import com.qingshan.dto.OrdersPaymentDTO;
-import com.qingshan.dto.OrdersSubmitDTO;
-import com.qingshan.dto.RefundApplyDTO;
+import com.qingshan.dto.*;
 import com.qingshan.result.PageResult;
-import com.qingshan.vo.OrderPaymentVO;
-import com.qingshan.vo.OrderRemindVO;
-import com.qingshan.vo.OrderSubmitVO;
-import com.qingshan.vo.RefundApplyVO;
-import com.qingshan.vo.RefundDetailVO;
-import com.qingshan.vo.UserOrderVO;
+import com.qingshan.vo.*;
 
 public interface OrderService {
     /**
@@ -113,4 +106,53 @@ public interface OrderService {
      * @return 待付款、待发货、待收货数量
      */
     OrderRemindVO getRemindCount4User();
+
+    /**
+     * 订单搜索
+     * @param ordersPageQueryDTO
+     */
+    PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO);
+
+    /**
+     * 管理端订单详情
+     * @param id 订单id
+     * @return
+     */
+    OrderVO getDetail4Admin(Long id);
+
+    /**
+     * 各个状态的订单数量统计
+     * @return
+     */
+    OrderStatisticsVO statistics();
+
+    /**
+     * 接单
+     * @param ordersConfirmDTO
+     */
+    void confirm(OrdersConfirmDTO ordersConfirmDTO);
+
+    /**
+     * 拒单
+     * @param ordersRejectionDTO
+     */
+    void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception;
+
+    /**
+     * 取消订单
+     * @param ordersCancelDTO
+     */
+    void cancel(OrdersCancelDTO ordersCancelDTO);
+
+    /**
+     * 派送订单
+     * @param id
+     */
+    void delivery(Long id);
+
+    /**
+     * 完成订单
+     * @param id
+     */
+    void complete(Long id);
 }
