@@ -20,6 +20,7 @@ import com.qingshan.service.support.OrderConverter;
 import com.qingshan.service.support.OrderManager;
 import com.qingshan.service.support.OrderStatusHandler;
 import com.qingshan.service.support.OrderValidator;
+import com.qingshan.utils.PageUtil;
 import com.qingshan.utils.SnowflakeIdGenerator;
 import com.qingshan.utils.WeChatPayUtil;
 import com.qingshan.vo.*;
@@ -106,6 +107,9 @@ public class OrderServiceImpl implements OrderService {
         //当前登录用户id
         Long userId = BaseContext.getCurrentId();
         User user = userMapper.getById(userId);
+        // TODO(wechat-pay): 手机号注册的用户没有 openid，直接支付会失败；
+        //   需在结算前引导微信授权登录并绑定 openid，openid 为空时返回明确的业务提示
+        // TODO(wechat-pay): 校验 order 的 pay_status 为未支付，已取消/已支付订单不能再次发起支付
 
         //调用微信支付接口，生成预支付交易单
         JSONObject jsonObject = weChatPayUtil.pay(
@@ -138,6 +142,8 @@ public class OrderServiceImpl implements OrderService {
         int updated = orderMapper.paySuccess(ordersDB.getId(), LocalDateTime.now());
         if (updated == 0) {
             // 重复回调可以忽略；若订单已被自动取消但用户仍支付成功，需要走退款处理
+            // TODO(wechat-pay): 订单已取消/超时而微信回调仍成功时，必须自动发起退款，并记录 payment_notify_log，
+            //   不能只打 warn 后放过（否则用户付了钱但订单是关闭状态）
             log.warn("订单{}当前不是待付款状态，跳过支付状态更新", outTradeNo);
         }
     }
@@ -183,8 +189,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public PageResult pageQuery4User(int pageNum, int pageSize, Integer status, String keyword, int days) {
-        // 设置分页
-        PageHelper.startPage(pageNum, pageSize);
+        // 设置分页，限制单页最大条数
+        PageHelper.startPage(PageUtil.pageNum(pageNum), PageUtil.pageSize(pageSize));
 
         OrdersPageQueryDTO ordersPageQueryDTO = new OrdersPageQueryDTO();
         ordersPageQueryDTO.setUserId(BaseContext.getCurrentId());
@@ -357,6 +363,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        ordersPageQueryDTO.setPage(PageUtil.pageNum(ordersPageQueryDTO.getPage()));
+        ordersPageQueryDTO.setPageSize(PageUtil.pageSize(ordersPageQueryDTO.getPageSize()));
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
 
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);

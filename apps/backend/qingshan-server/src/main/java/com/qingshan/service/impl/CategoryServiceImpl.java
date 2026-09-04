@@ -13,6 +13,7 @@ import com.qingshan.mapper.CategoryMapper;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.CategoryService;
+import com.qingshan.utils.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,8 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public PageResult pageQuery(CategoryPageQueryDTO categoryPageQueryDTO) {
+        categoryPageQueryDTO.setPage(PageUtil.pageNum(categoryPageQueryDTO.getPage()));
+        categoryPageQueryDTO.setPageSize(PageUtil.pageSize(categoryPageQueryDTO.getPageSize()));
         try (Page<Category> page = PageHelper.startPage(categoryPageQueryDTO.getPage(),categoryPageQueryDTO.getPageSize())) {
             //下一条sql进行分页，自动加入limit关键字分页
             List<Category> records = categoryMapper.pageQuery(categoryPageQueryDTO);

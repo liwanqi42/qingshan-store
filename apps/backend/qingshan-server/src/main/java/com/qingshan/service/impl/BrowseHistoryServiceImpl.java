@@ -11,6 +11,7 @@ import com.qingshan.mapper.BrowseHistoryMapper;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.BrowseHistoryService;
+import com.qingshan.utils.PageUtil;
 import com.qingshan.vo.BrowseHistoryVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class BrowseHistoryServiceImpl implements BrowseHistoryService {
     @Override
     public PageResult pageQuery(int page, int size) {
         Long userId = getCurrentUserId();
-        try (Page<BrowseHistoryVO> pageResult = PageHelper.startPage(page, size)) {
+        try (Page<BrowseHistoryVO> pageResult = PageHelper.startPage(PageUtil.pageNum(page), PageUtil.pageSize(size))) {
             List<BrowseHistoryVO> records = browseHistoryMapper.pageQuery(userId);
             return new PageResult(pageResult.getTotal(), records);
         }

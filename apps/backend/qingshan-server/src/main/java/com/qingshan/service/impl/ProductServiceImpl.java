@@ -21,6 +21,7 @@ import com.qingshan.mapper.SetBundleItemMapper;
 import com.qingshan.mapper.setBundleMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.ProductService;
+import com.qingshan.utils.PageUtil;
 import com.qingshan.vo.ProductVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,6 +107,8 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public PageResult pageQuery(ProductPageQueryDTO productPageQueryDTO) {
+        productPageQueryDTO.setPage(PageUtil.pageNum(productPageQueryDTO.getPage()));
+        productPageQueryDTO.setPageSize(PageUtil.pageSize(productPageQueryDTO.getPageSize()));
         try (Page<ProductVO> page = PageHelper.startPage(productPageQueryDTO.getPage(), productPageQueryDTO.getPageSize())) {
             List<ProductVO> records = productMapper.pageQuery(productPageQueryDTO);
             return new PageResult(page.getTotal(), records);

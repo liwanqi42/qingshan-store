@@ -17,11 +17,15 @@ import com.qingshan.exception.PasswordErrorException;
 import com.qingshan.mapper.EmployeeMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.EmployeeService;
+import com.qingshan.utils.PageUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -29,6 +33,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     /**
      * 员工登录
@@ -49,12 +55,20 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
 
-        //密码比对
-        //对前端明文密码进行MD5加密
-        password = DigestUtils.md5DigestAsHex(password.getBytes());
-        if (!password.equals(employee.getPassword())) {
+        //密码比对：兼容历史 MD5，新密码统一使用 BCrypt
+        if (!matchesPassword(password, employee.getPassword())) {
             //密码错误
             throw new PasswordErrorException(MessageConstant.PASSWORD_ERROR);
+        }
+
+        //历史 MD5 密码登录成功后自动升级为 BCrypt
+        if (isMd5(employee.getPassword())) {
+            Employee upgrade = Employee.builder()
+                    .id(employee.getId())
+                    .password(passwordEncoder.encode(password))
+                    .build();
+            employeeMapper.update(upgrade);
+            employee.setPassword(upgrade.getPassword());
         }
 
         if (StatusConstant.DISABLE.equals(employee.getStatus())) {
@@ -81,7 +95,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setStatus(StatusConstant.ENABLE);
 
         //设置密码
-        employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
+        // TODO(prod): 不要使用统一的默认密码，改为随机初始密码并通过安全渠道发给员工
+        employee.setPassword(passwordEncoder.encode(PasswordConstant.DEFAULT_PASSWORD));
 
 
         employeeMapper.insert(employee);
@@ -94,13 +109,18 @@ public class EmployeeServiceImpl implements EmployeeService {
      */
     @Override
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
+        employeePageQueryDTO.setPage(PageUtil.pageNum(employeePageQueryDTO.getPage()));
+        employeePageQueryDTO.setPageSize(PageUtil.pageSize(employeePageQueryDTO.getPageSize()));
         try (Page<Employee> page = PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize())) {
             List<Employee> records = employeeMapper.pageQuery(employeePageQueryDTO);
 
             long total = page.getTotal();
 
-            //身份证号脱敏
-            records.forEach(this::maskIdNumber);
+            //密码一律不下发，身份证号脱敏后再返回
+            records.forEach(employee -> {
+                employee.setPassword(null);
+                maskIdNumber(employee);
+            });
 
             return new PageResult(total, records);
         }
@@ -157,6 +177,27 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     /**
+     * 兼容历史无盐 MD5 与新 BCrypt 密码校验
+     */
+    private boolean matchesPassword(String rawPassword, String storedPassword) {
+        if (!StringUtils.hasText(rawPassword) || !StringUtils.hasText(storedPassword)) {
+            return false;
+        }
+        if (isMd5(storedPassword)) {
+            String md5 = DigestUtils.md5DigestAsHex(rawPassword.getBytes(StandardCharsets.UTF_8));
+            return md5.equalsIgnoreCase(storedPassword);
+        }
+        return passwordEncoder.matches(rawPassword, storedPassword);
+    }
+
+    /**
+     * 32 位十六进制视为历史 MD5 密码
+     */
+    private boolean isMd5(String password) {
+        return password != null && password.matches("^[a-fA-F0-9]{32}$");
+    }
+
+    /**
      * 身份证号脱敏：保留前6位和后4位，中间用*代替
      * @param employee 员工信息，脱敏结果直接写回该对象
      */
@@ -192,16 +233,15 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
         }
 
-        //2、校验旧密码是否正确（MD5加密后比对）
-        String oldPassword = DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes());
-        if (!oldPassword.equals(employee.getPassword())) {
+        //2、校验旧密码是否正确（兼容历史 MD5）
+        if (!matchesPassword(passwordEditDTO.getOldPassword(), employee.getPassword())) {
             throw new PasswordEditFailedException(MessageConstant.PASSWORD_EDIT_FAILED);
         }
 
-        //3、更新为新密码（MD5加密）
+        //3、更新为新密码（BCrypt）
         Employee emp = Employee.builder()
                 .id(passwordEditDTO.getEmpId())
-                .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()))
+                .password(passwordEncoder.encode(passwordEditDTO.getNewPassword()))
 //                .updateTime(LocalDateTime.now())
 //                .updateUser(BaseContext.getCurrentId())
                 .build();

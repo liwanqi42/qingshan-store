@@ -15,6 +15,7 @@ import com.qingshan.mapper.BundleItemMapper;
 import com.qingshan.mapper.BundleMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.BundleService;
+import com.qingshan.utils.PageUtil;
 import com.qingshan.vo.BundleVO;
 import com.qingshan.vo.ProductItemVO;
 import org.springframework.beans.BeanUtils;
@@ -54,6 +55,8 @@ public class BundleServiceImpl implements BundleService {
 
     @Override
     public PageResult pageQuery(BundlePageQueryDTO bundlePageQueryDTO) {
+        bundlePageQueryDTO.setPage(PageUtil.pageNum(bundlePageQueryDTO.getPage()));
+        bundlePageQueryDTO.setPageSize(PageUtil.pageSize(bundlePageQueryDTO.getPageSize()));
         try (Page<BundleVO> page = PageHelper.startPage(bundlePageQueryDTO.getPage(), bundlePageQueryDTO.getPageSize())) {
             List<BundleVO> records = bundleMapper.pageQuery(bundlePageQueryDTO);
             return new PageResult(page.getTotal(), records);
