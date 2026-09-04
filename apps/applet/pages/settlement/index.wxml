@@ -1,0 +1,162 @@
+<view class="settlement">
+  <view class="address">
+    <view class="select-address" data-id="0" wx:if="{{!address.id}}" bindtap="selectAddress">
+      <image src="/images/address/position-red.svg" />
+      <view class="text">选择地址</view>
+    </view>
+    <view class="address-info" wx:if="{{address.id}}">
+      <image class="position" src="/images/address/position-black.svg" />
+      <view class="info" data-id="{{address.id}}" bindtap="selectAddress">
+        <view class="contacts">{{address.consignee}}<text class="mobile">{{displayPhone}}</text></view>
+        <view class="detail">{{address.provinceName}} {{address.cityName}} {{address.districtName}} {{address.detail}}</view>
+      </view>
+      <image class="next-level" src="/images/icon/next-level.svg" data-id="{{address.id}}" bindtap="selectAddress"/>
+    </view>
+    <image class="border" src="/images/address/border.svg" />
+  </view>
+
+  <view class="goods-list">
+    <view class="card-title">
+      <view class="l">商品清单</view>
+      <view class="r">共 {{goodsCount}} 件</view>
+    </view>
+    <view class="goods" wx:for="{{goodsList}}" wx:for-item="goodsItem" wx:key="goodsId">
+      <image src="{{goodsItem.picture}}" />
+      <view class="info">
+        <view class="title">{{goodsItem.title}}</view>
+        <view class="specs" wx:if="{{goodsItem.specs}}">{{goodsItem.specs}}</view>
+      </view>
+      <view class="amount">
+        <view class="price">￥{{goodsItem.price}}</view>
+        <view class="goods-qty">
+          <qty-input value="{{goodsItem.num}}" min="{{1}}" max="{{goodsItem.maxNum}}" data-index="{{index}}" bind:change="onQtyChange" bind:limit="onQtyLimit" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card addon" wx:if="{{addOnGoods.length > 0}}">
+    <view class="card-title">
+      <view class="l">随手买</view>
+      <view class="r">凑单更划算</view>
+    </view>
+    <scroll-view scroll-x="true" class="addon-scroll">
+      <view class="addon-item" wx:for="{{addOnGoods}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleAddOn">
+        <image src="{{item.picture}}" />
+        <view class="addon-title">{{item.title}}</view>
+        <view class="addon-bottom">
+          <view class="addon-price">￥{{item.price}}</view>
+          <view class="addon-btn {{selectedAddOn[item.id] ? 'checked' : ''}}">{{selectedAddOn[item.id] ? '✓' : '+'}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 随手买规格选择弹窗 -->
+  <view class="show-popup" wx:if="{{addOnPopupVisible}}" catchtouchmove="true">
+    <view class="popup-mask" bindtap="closeAddOnPopup"></view>
+    <view class="popup-contents">
+      <view class="popup-head">
+        <view class="pop-img-box">
+          <image src="{{addOnSelectPicture}}" class="goods-thumbnail" />
+        </view>
+        <view class="pop-goods-des">
+          <view class="pop-goods-price"><text class="pop-price-unit">¥</text>{{addOnSelectPrice}}</view>
+          <view class="pop-goods-stock" wx:if="{{addOnSelectReady}}">库存 {{addOnSelectStock}} 件</view>
+          <view class="pop-goods-stockName">{{addOnSelectText}}</view>
+        </view>
+        <view class="popup-close" bindtap="closeAddOnPopup">×</view>
+      </view>
+      <view class="pop-goods-specs" wx:for="{{addOnDetail.specList}}" wx:key="specId">
+        <view class="pop-goods-spec-title">{{item.name}}</view>
+        <view class="pop-goods-spec-attrs">
+          <view class="pop-goods-spec-attr {{addOnSelectSpecs[item.specId] === attrItem.attrId ? 'checked' : ''}} {{addOnSelectSpecAttr[item.specId + '-' + attrItem.attrId] ? '' : 'unable'}}"
+                data-spec-id="{{item.specId}}" data-attr-id="{{attrItem.attrId}}"
+                wx:for="{{item.attrList}}" wx:for-item="attrItem" wx:key="attrId"
+                bindtap="doSelectAddOnSpec">
+            {{attrItem.value}}
+          </view>
+        </view>
+      </view>
+      <view class="popup-confirm-wrap" bindtap="confirmAddOn">
+        <view class="confirm {{!addOnSelectReady || addOnSelectStock <= 0 ? 'outof' : ''}}">{{!addOnSelectReady ? '请选择规格' : (addOnSelectStock > 0 ? '确定' : '缺货')}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="coupons">
+    <view class="title">
+      <view class="l">优惠券</view>
+      <view class="r">可使用({{couponList.length}})</view>
+    </view>
+    <view class="coupon-list">
+      <view class="empty" wx:if="{{couponList.length === 0}}">暂无可用的优惠券</view>
+      <scroll-view scroll-y="true" style="max-height: 220rpx;" bindscrolltolower="scrolltolowerEvent">
+        <view class="coupon" wx:for="{{couponList}}">
+          <view class="select-btn {{selectedCoupon.cLogId === item.cLogId ? 'selected' : ''}}" data-id="{{item.cLogId}}" bindtap="selectCoupon">
+            <image src="/images/icon/selected.svg" />
+          </view>
+          <view class="desc">{{item.title}}</view>
+          <view class="period">{{item.period}}</view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="card remark">
+    <view class="card-title">
+      <view class="l">订单备注</view>
+      <view class="r">{{remarkLength}}/100</view>
+    </view>
+    <textarea class="remark-input" placeholder="选填，请先和商家协商一致" maxlength="100" value="{{remark}}" bindinput="bindRemark" />
+  </view>
+
+  <view class="card price-detail">
+    <view class="card-title">
+      <view class="l">价格明细</view>
+    </view>
+    <view class="price-row">
+      <text>商品金额</text>
+      <text>￥{{goodsAmount}}</text>
+    </view>
+    <view class="price-row">
+      <text>优惠券</text>
+      <text class="discount">-￥{{discountAmount}}</text>
+    </view>
+    <!-- <view class="price-row">
+      <text>运费</text>
+      <text>{{freightText}}</text>
+    </view> -->
+    <view class="price-row total">
+      <text>实付款</text>
+      <text class="pay">￥{{amount}}</text>
+    </view>
+  </view>
+
+  <view class="card pay-method">
+    <view class="card-title">
+      <view class="l">支付方式</view>
+    </view>
+    <view class="pay-item" wx:for="{{payMethods}}" wx:key="value" data-value="{{item.value}}" bindtap="selectPayMethod">
+      <view class="pay-name">{{item.name}}</view>
+      <view class="pay-desc" wx:if="{{item.desc}}">{{item.desc}}</view>
+      <view class="select-btn {{payMethod === item.value ? 'selected' : ''}}">
+        <image wx:if="{{payMethod === item.value}}" src="/images/icon/selected.svg" />
+      </view>
+    </view>
+  </view>
+
+  <!-- <view class="card number-protect">
+    <view class="protect-main">
+      <view class="l">号码保护</view>
+      <switch checked="{{numberProtection}}" color="#EB405D" bindchange="toggleNumberProtection" />
+    </view>
+    <view class="protect-desc">开启后，商家和配送员将通过虚拟号码联系你，保护真实手机号</view>
+  </view> -->
+
+  <view class="bottom">
+    <view class="amount">合计 <text style="color: red;">￥{{amount}}</text></view>
+    <view class="btn" bindtap="submitOrder">提交订单</view>
+  </view>
+</view>
+<login-auth id="loginAuth" />
