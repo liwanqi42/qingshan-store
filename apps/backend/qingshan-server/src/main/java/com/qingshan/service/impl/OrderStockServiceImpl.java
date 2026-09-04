@@ -1,4 +1,4 @@
-package com.qingshan.service.support;
+package com.qingshan.service.impl;
 
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.entity.OrderDetail;
@@ -6,16 +6,12 @@ import com.qingshan.exception.ShoppingCartBusinessException;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.mapper.ProductSkuMapper;
 import com.qingshan.model.ResolvedOrderItem;
+import com.qingshan.service.OrderStockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-/**
- * 订单库存变更
- * 下单占用库存，订单超时取消时回滚
- */
 @Service
-public class OrderStockService {
-
+public class OrderStockServiceImpl implements OrderStockService {
     @Autowired
     private ProductMapper productMapper;
 

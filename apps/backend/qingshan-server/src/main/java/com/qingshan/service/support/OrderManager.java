@@ -15,6 +15,7 @@ import com.qingshan.mapper.OrderMapper;
 import com.qingshan.mapper.ShoppingCartMapper;
 import com.qingshan.model.ResolvedOrderItem;
 import com.qingshan.properties.OrderProperties;
+import com.qingshan.service.OrderStockService;
 import com.qingshan.service.ShoppingCartService;
 import com.qingshan.utils.WeChatPayUtil;
 import com.qingshan.vo.OrderStatisticsVO;
@@ -43,6 +44,9 @@ public class OrderManager {
 
     /**
      * 模拟支付的退款金额
+     *
+     * TODO(wechat-pay): 退款金额不能写死 0.01，必须用订单实际金额 ordersDB.getAmount(),
+     *   且 refund(退款金额/total) 两个参数都要与微信侧原始支付金额一致
      */
     private static final BigDecimal MOCK_REFUND_AMOUNT = new BigDecimal(0.01);
 
