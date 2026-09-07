@@ -1,14 +1,29 @@
 server:
   port: 8080
+  # TODO(prod): 生产在 Nginx 后运行时只监听内网；启动参数加 -Duser.timezone=Asia/Shanghai，
+  #             并配置 Tomcat 的 max-http-header-size / 连接数等参数
+  error:
+    # 不向前端返回异常消息和堆栈
+    include-message: never
+    include-stacktrace: never
+  # 位于 Nginx 之后时，按 X-Forwarded-For 解析真实客户端 IP（登录限流需要）
+  forward-headers-strategy: framework
 
 spring:
   profiles:
-    active: dev
+    # 生产启动时设置环境变量 SPRING_PROFILES_ACTIVE=prod
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  servlet:
+    multipart:
+      # 与 CommonController 的 5MB 校验保持一致
+      max-file-size: 5MB
+      max-request-size: 5MB
   main:
     allow-circular-references: true
   datasource:
     druid:
       driver-class-name: ${qingshan.datasource.driver-class-name}
+      # TODO(prod): 生产改用 useSSL=true（并配置证书/verifyServerCertificate），不要用 allowPublicKeyRetrieval=true
       url: jdbc:mysql://${qingshan.datasource.host}:${qingshan.datasource.port}/${qingshan.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${qingshan.datasource.username}
       password: ${qingshan.datasource.password}
@@ -26,11 +41,15 @@ mybatis:
     #开启驼峰命名
     map-underscore-to-camel-case: true
 
+pagehelper:
+  # 页码小于 1 时自动按第一页处理
+  reasonable: true
+
 logging:
   level:
     com:
       qingshan:
-        # TODO(security): 上线前改为 info，debug 会把手机号、地址等 SQL 参数打进日志
+        # 开发环境保留 debug；生产 profile 在 application-prod.yml 中改为 info
         mapper: debug
         service: info
         controller: info
@@ -48,37 +67,43 @@ qingshan:
     access-key-id: ${qingshan.alioss.access-key-id}
     access-key-secret: ${qingshan.alioss.access-key-secret}
     bucket-name: ${qingshan.alioss.bucket-name}
-  qingshan:
-    wechat:
-      # 微信小程序appid
-      appid: ${qingshan.wechat.appid}
-      # 小程序appsecret
-      secret: ${qingshan.wechat.secret}
-      # 商户号
-      mchid: ${qingshan.wechat.mchid}
-      # 商户证书序列号
-      mch-serial-no: ${qingshan.wechat.mch-serial-no}
-      # 商户私钥文件路径
-      private-key-file-path: ${qingshan.wechat.private-key-file-path}
-      # 微信支付V3密钥（32位）
-      api-v3-key: ${qingshan.wechat.api-v3-key}
-      # 微信支付平台证书文件路径
-      we-chat-pay-cert-file-path: ${qingshan.wechat.we-chat-pay-cert-file-path}
-      # 支付结果回调地址（公网HTTPS）
-      notify-url: ${qingshan.wechat.notify-url}
-      # 退款结果回调地址（公网HTTPS）
-      refund-notify-url: ${qingshan.wechat.refund-notify-url}
+  # 微信小程序/支付配置：生产通过环境变量注入，开发环境由 application-dev.yml 覆盖
+  wechat:
+    # 微信小程序appid
+    appid: ${QINGSHAN_WECHAT_APPID:}
+    # 小程序appsecret
+    secret: ${QINGSHAN_WECHAT_SECRET:}
+    # 商户号
+    mchid: ${QINGSHAN_WECHAT_MCHID:}
+    # 商户证书序列号
+    mch-serial-no: ${QINGSHAN_WECHAT_MCH_SERIAL_NO:}
+    # 商户私钥文件路径
+    private-key-file-path: ${QINGSHAN_WECHAT_PRIVATE_KEY_FILE_PATH:}
+    # 微信支付V3密钥（32位）
+    api-v3-key: ${QINGSHAN_WECHAT_API_V3_KEY:}
+    # 微信支付平台证书文件路径
+    we-chat-pay-cert-file-path: ${QINGSHAN_WECHAT_PAY_CERT_FILE_PATH:}
+    # 支付结果回调地址（公网HTTPS）
+    notify-url: ${QINGSHAN_WECHAT_NOTIFY_URL:}
+    # 退款结果回调地址（公网HTTPS）
+    refund-notify-url: ${QINGSHAN_WECHAT_REFUND_NOTIFY_URL:}
 
 
+  security:
+    # 登录失败限流：同一账号连续失败 5 次或同一 IP 失败 20 次后锁定 15 分钟
+    login-max-failures: 5
+    login-ip-max-failures: 20
+    login-lock-minutes: 15
   snowflake:
     # 多实例部署时，每个实例必须配置不同的 worker-id（0~1023）
+    # 开发默认 1；生产通过 application-prod.yml 的 QINGSHAN_SNOWFLAKE_WORKER_ID 注入
     worker-id: 1
   order:
     # 未支付订单保留时长（分钟），超时后由定时任务自动取消并回滚库存
     timeout-minutes: 15
-    # 每个用户允许同时存在的未支付订单数量
+    # 每个用户允许同时存在的未支付订单数量（开发环境放宽；生产在 application-prod.yml 中调小）
     max-unpaid-orders: 999
-    # 统计窗口内允许被自动取消的订单次数，超过后暂时禁止下单
+    # 统计窗口内允许被自动取消的订单次数，超过后暂时禁止下单（生产在 application-prod.yml 中调小）
     max-timeout-orders: 999
     # 超时订单统计窗口（小时）
     timeout-window-hours: 24

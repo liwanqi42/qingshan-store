@@ -1,0 +1,66 @@
+# 生产环境配置模板
+# 所有敏感值通过环境变量注入，本文件不保存真实密钥
+# 启动方式：SPRING_PROFILES_ACTIVE=prod（必填变量缺失时应用会启动失败，便于尽早发现配置问题）
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com:
+      qingshan:
+        # 生产关闭 SQL 参数日志，避免手机号、地址等个人信息的 SQL 参数落盘
+        mapper: info
+
+knife4j:
+  # 关闭接口文档页面（WebMvcConfiguration 中也会拦截文档相关路径）
+  production: true
+
+qingshan:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: ${QINGSHAN_DB_HOST}
+    port: ${QINGSHAN_DB_PORT:3306}
+    database: ${QINGSHAN_DB_NAME:qingshan-store}
+    username: ${QINGSHAN_DB_USERNAME}
+    password: ${QINGSHAN_DB_PASSWORD}
+  redis:
+    host: ${QINGSHAN_REDIS_HOST}
+    port: ${QINGSHAN_REDIS_PORT:6379}
+    password: ${QINGSHAN_REDIS_PASSWORD:}
+    database: ${QINGSHAN_REDIS_DATABASE:0}
+  alioss:
+    endpoint: ${QINGSHAN_ALIOSS_ENDPOINT}
+    access-key-id: ${QINGSHAN_ALIOSS_ACCESS_KEY_ID}
+    access-key-secret: ${QINGSHAN_ALIOSS_ACCESS_KEY_SECRET}
+    bucket-name: ${QINGSHAN_ALIOSS_BUCKET_NAME}
+  wechat:
+    appid: ${QINGSHAN_WECHAT_APPID}
+    secret: ${QINGSHAN_WECHAT_SECRET}
+    mchid: ${QINGSHAN_WECHAT_MCHID:}
+    mch-serial-no: ${QINGSHAN_WECHAT_MCH_SERIAL_NO:}
+    private-key-file-path: ${QINGSHAN_WECHAT_PRIVATE_KEY_FILE_PATH:}
+    api-v3-key: ${QINGSHAN_WECHAT_API_V3_KEY:}
+    we-chat-pay-cert-file-path: ${QINGSHAN_WECHAT_PAY_CERT_FILE_PATH:}
+    notify-url: ${QINGSHAN_WECHAT_NOTIFY_URL:}
+    refund-notify-url: ${QINGSHAN_WECHAT_REFUND_NOTIFY_URL:}
+  jwt:
+    admin-secret-key: ${QINGSHAN_JWT_ADMIN_SECRET_KEY}
+    admin-ttl: ${QINGSHAN_JWT_ADMIN_TTL:72000000}
+    admin-token-name: token
+    user-secret-key: ${QINGSHAN_JWT_USER_SECRET_KEY}
+    user-ttl: ${QINGSHAN_JWT_USER_TTL:72000000}
+    user-token-name: authentication
+  security:
+    login-max-failures: ${QINGSHAN_LOGIN_MAX_FAILURES:5}
+    login-ip-max-failures: ${QINGSHAN_LOGIN_IP_MAX_FAILURES:20}
+    login-lock-minutes: ${QINGSHAN_LOGIN_LOCK_MINUTES:15}
+  snowflake:
+    # 多实例部署时每个实例必须配置不同值
+    worker-id: ${QINGSHAN_SNOWFLAKE_WORKER_ID:1}
+  order:
+    timeout-minutes: ${QINGSHAN_ORDER_TIMEOUT_MINUTES:15}
+    max-unpaid-orders: ${QINGSHAN_ORDER_MAX_UNPAID_ORDERS:5}
+    max-timeout-orders: ${QINGSHAN_ORDER_MAX_TIMEOUT_ORDERS:3}
+    timeout-window-hours: ${QINGSHAN_ORDER_TIMEOUT_WINDOW_HOURS:24}
+    # 生产禁止开启模拟支付
+    mock-pay-enabled: false

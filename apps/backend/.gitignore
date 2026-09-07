@@ -10,6 +10,7 @@
 
 # 日志
 *.log
+/logs/
 
 # 开发配置（重点，防止密钥提交）
 qingshan-server/src/main/resources/application-dev.yml

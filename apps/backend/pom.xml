@@ -18,6 +18,9 @@
         <module>qingshan-server</module>
     </modules>
     <properties>
+        <!-- TODO(prod): Spring Boot 2.7.3 已停止维护；fastjson 1.2.76 / druid 1.2.1 / jjwt 0.9.1 / poi 3.16 版本较旧，
+             上线前跑一遍依赖漏洞扫描（OWASP Dependency-Check / mvn versions:display-dependency-updates），
+             至少升级 spring-boot、fastjson、jjwt 到有安全维护的版本 -->
         <mybatis.spring>2.2.0</mybatis.spring>
         <lombok>1.18.36</lombok>
         <fastjson>1.2.76</fastjson>
