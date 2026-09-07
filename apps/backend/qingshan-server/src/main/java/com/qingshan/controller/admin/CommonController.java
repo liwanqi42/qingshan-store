@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -23,9 +27,15 @@ import java.util.UUID;
 @Slf4j
 public class CommonController {
 
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024L;
+    private static final Set<String> ALLOWED_EXTENSIONS =
+            new HashSet<>(Arrays.asList("jpg", "jpeg", "png", "webp"));
+
     private final AliOssUtil aliOssUtil;
 
-    public CommonController(AliOssUtil aliOssUtil) {this.aliOssUtil = aliOssUtil;}
+    public CommonController(AliOssUtil aliOssUtil) {
+        this.aliOssUtil = aliOssUtil;
+    }
 
     /**
      * 文件上传
@@ -35,25 +45,85 @@ public class CommonController {
      */
     @PostMapping("/upload")
     @ApiOperation("文件上传")
-    public Result<String> upload(MultipartFile file, @RequestParam(required = false) Integer type){
-        log.info("文件上传:{}, type:{}", file, type);
+    public Result<String> upload(MultipartFile file, @RequestParam(required = false) Integer type) {
+        if (file == null || file.isEmpty()) {
+            return Result.error(MessageConstant.UPLOAD_FAILED);
+        }
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.contains(".")) {
+            return Result.error(MessageConstant.UPLOAD_TYPE_NOT_ALLOWED);
+        }
+        if (file.getSize() > MAX_IMAGE_SIZE) {
+            return Result.error(MessageConstant.UPLOAD_SIZE_EXCEEDED);
+        }
+
+        String extension = originalFilename
+                .substring(originalFilename.lastIndexOf('.') + 1)
+                .toLowerCase(Locale.ROOT);
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            return Result.error(MessageConstant.UPLOAD_TYPE_NOT_ALLOWED);
+        }
 
         try {
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || !originalFilename.contains(".")) {
-                return Result.error(MessageConstant.UPLOAD_FAILED);
+            byte[] bytes = file.getBytes();
+            // 以文件头识别的真实类型为准，客户端 Content-Type 和扩展名都不可信
+            String imageType = detectImageType(bytes);
+            if (imageType == null || !extensionMatches(extension, imageType)) {
+                return Result.error(MessageConstant.UPLOAD_TYPE_NOT_ALLOWED);
             }
-            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            String objectName = resolveUploadDir(type) + UUID.randomUUID() + extension;
 
-            //文件请求路径
-            String filePath = aliOssUtil.upload(file.getBytes(), objectName);
+            String objectName = resolveUploadDir(type) + UUID.randomUUID() + "." + imageType;
+            String filePath = aliOssUtil.upload(bytes, objectName);
             return Result.success(filePath);
         } catch (Exception e) {
-            log.error("文件上传失败", e);
+            log.error("文件上传失败，filename={}", originalFilename, e);
         }
 
         return Result.error(MessageConstant.UPLOAD_FAILED);
+    }
+
+    /**
+     * 按文件头识别真实图片类型
+     */
+    private String detectImageType(byte[] bytes) {
+        if (bytes.length < 12) {
+            return null;
+        }
+        // JPEG: FF D8 FF
+        if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8 && (bytes[2] & 0xFF) == 0xFF) {
+            return "jpg";
+        }
+        // PNG: 89 50 4E 47 0D 0A 1A 0A
+        if ((bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G'
+                && bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A) {
+            return "png";
+        }
+        // WebP: RIFF....WEBP
+        if (bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') {
+            return "webp";
+        }
+        return null;
+    }
+
+    private boolean extensionMatches(String extension, String imageType) {
+        if ("jpg".equals(imageType)) {
+            return "jpg".equals(extension) || "jpeg".equals(extension);
+        }
+        return imageType.equals(extension);
+    }
+
+    private String contentTypeOf(String imageType) {
+        switch (imageType) {
+            case "jpg":
+                return "image/jpeg";
+            case "png":
+                return "image/png";
+            case "webp":
+                return "image/webp";
+            default:
+                return null;
+        }
     }
 
     /**
