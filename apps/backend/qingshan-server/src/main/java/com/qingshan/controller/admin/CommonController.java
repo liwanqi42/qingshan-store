@@ -73,7 +73,7 @@ public class CommonController {
             }
 
             String objectName = resolveUploadDir(type) + UUID.randomUUID() + "." + imageType;
-            String filePath = aliOssUtil.upload(bytes, objectName);
+            String filePath = aliOssUtil.upload(bytes, objectName, contentTypeOf(imageType));
             return Result.success(filePath);
         } catch (Exception e) {
             log.error("文件上传失败，filename={}", originalFilename, e);

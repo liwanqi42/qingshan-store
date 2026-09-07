@@ -4,6 +4,7 @@ import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.OSSException;
+import com.aliyun.oss.model.ObjectMetadata;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,25 +28,33 @@ public class AliOssUtil {
      * @return
      */
     public String upload(byte[] bytes, String objectName) {
+        return upload(bytes, objectName, null);
+    }
+
+    /**
+     * 文件上传，并设置浏览器/CDN 使用的 Content-Type
+     */
+    public String upload(byte[] bytes, String objectName, String contentType) {
 
         // 创建OSSClient实例。
+        // TODO(prod): 不要使用主账号 AccessKey，改用只有该 Bucket 写权限的 RAM 子账号，
+        //   条件允许时改用 STS 临时凭证；Bucket 建议私有读 + CDN 签名，并配置防盗链
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
 
         try {
-            // 创建PutObject请求。
-            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes));
+            ObjectMetadata metadata = new ObjectMetadata();
+            if (contentType != null) {
+                metadata.setContentType(contentType);
+            }
+            metadata.setCacheControl("public, max-age=31536000");
+            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes), metadata);
         } catch (OSSException oe) {
-            System.out.println("Caught an OSSException, which means your request made it to OSS, "
-                    + "but was rejected with an error response for some reason.");
-            System.out.println("Error Message:" + oe.getErrorMessage());
-            System.out.println("Error Code:" + oe.getErrorCode());
-            System.out.println("Request ID:" + oe.getRequestId());
-            System.out.println("Host ID:" + oe.getHostId());
+            log.error("OSS 上传失败：code={}, requestId={}, message={}",
+                    oe.getErrorCode(), oe.getRequestId(), oe.getErrorMessage());
+            throw new IllegalStateException("文件上传失败", oe);
         } catch (ClientException ce) {
-            System.out.println("Caught an ClientException, which means the client encountered "
-                    + "a serious internal problem while trying to communicate with OSS, "
-                    + "such as not being able to access the network.");
-            System.out.println("Error Message:" + ce.getMessage());
+            log.error("OSS 客户端异常", ce);
+            throw new IllegalStateException("文件上传失败", ce);
         } finally {
             if (ossClient != null) {
                 ossClient.shutdown();
