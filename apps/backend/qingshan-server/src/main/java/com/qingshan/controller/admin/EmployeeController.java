@@ -11,6 +11,7 @@ import com.qingshan.properties.JwtProperties;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.EmployeeService;
+import com.qingshan.service.support.LoginRateLimiter;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.EmployeeLoginVO;
 import io.swagger.annotations.Api;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +37,8 @@ public class EmployeeController {
     private EmployeeService employeeService;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private LoginRateLimiter loginRateLimiter;
 
     /**
      * 登录
@@ -44,10 +48,21 @@ public class EmployeeController {
      */
     @PostMapping("/login")
     @ApiOperation(value = "员工登录")
-    public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO) {
+    public Result<EmployeeLoginVO> login(@RequestBody EmployeeLoginDTO employeeLoginDTO, HttpServletRequest request) {
         log.info("员工登录：{}", employeeLoginDTO.getUsername());
 
-        Employee employee = employeeService.login(employeeLoginDTO);
+        String account = employeeLoginDTO.getUsername();
+        String ip = request.getRemoteAddr();
+        loginRateLimiter.checkAllowed("admin", account, ip);
+
+        Employee employee;
+        try {
+            employee = employeeService.login(employeeLoginDTO);
+            loginRateLimiter.recordSuccess("admin", account);
+        } catch (RuntimeException e) {
+            loginRateLimiter.recordFailure("admin", account, ip);
+            throw e;
+        }
 
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
@@ -86,6 +101,7 @@ public class EmployeeController {
     @PostMapping
     @ApiOperation("新增员工")
     public Result save(@RequestBody EmployeeDTO employeeDTO){
+        // TODO(security): EmployeeDTO 含手机号和身份证号，生产日志改打 username 或 id
         log.info("新增员工：{}", employeeDTO);
         employeeService.save(employeeDTO);
         return Result.success();
@@ -137,6 +153,7 @@ public class EmployeeController {
     @PutMapping
     @ApiOperation("修改员工信息")
     public Result update(@RequestBody EmployeeDTO employeeDTO){
+        // TODO(security): 同上，不要打印含身份证号/手机号的完整 DTO
         log.info("修改员工信息:{}", employeeDTO);
         employeeService.update(employeeDTO);
         return Result.success();

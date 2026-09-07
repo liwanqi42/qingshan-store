@@ -7,6 +7,7 @@ import com.qingshan.entity.User;
 import com.qingshan.properties.JwtProperties;
 import com.qingshan.result.Result;
 import com.qingshan.service.UserService;
+import com.qingshan.service.support.LoginRateLimiter;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.UserLoginVO;
 import io.swagger.annotations.Api;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 @RestController
@@ -31,6 +33,8 @@ public class UserController {
     private UserService userService;
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private LoginRateLimiter loginRateLimiter;
 
     /**
      * 登录：手机号密码登录或微信登录
@@ -39,16 +43,25 @@ public class UserController {
      */
     @PostMapping("/login")
     @ApiOperation("用户登录")
-    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
-        User user;
+    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO, HttpServletRequest request) {
+        // 微信登录的 code 是一次性的，不存在密码撞库，只对手机号密码登录做失败限流
         if (StringUtils.hasText(userLoginDTO.getPhone()) && StringUtils.hasText(userLoginDTO.getPassword())) {
-            // TODO(security): 上线前对手机号脱敏或移除日志
-            log.info("手机号密码登录:{}", userLoginDTO.getPhone());
-            user = userService.loginByPassword(userLoginDTO.getPhone(), userLoginDTO.getPassword());
-        } else {
-            log.info("微信登录:{}", userLoginDTO.getCode());
-            user = userService.wxLogin(userLoginDTO);
+            String account = userLoginDTO.getPhone().trim();
+            String ip = request.getRemoteAddr();
+            loginRateLimiter.checkAllowed("user", account, ip);
+
+            User user;
+            try {
+                user = userService.loginByPassword(account, userLoginDTO.getPassword());
+                loginRateLimiter.recordSuccess("user", account);
+            } catch (RuntimeException e) {
+                loginRateLimiter.recordFailure("user", account, ip);
+                throw e;
+            }
+            return Result.success(buildLoginVO(user));
         }
+
+        User user = userService.wxLogin(userLoginDTO);
         return Result.success(buildLoginVO(user));
     }
 
@@ -59,10 +72,18 @@ public class UserController {
      */
     @PostMapping("/register")
     @ApiOperation("手机号注册")
-    public Result<UserLoginVO> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        // TODO(security): 上线前对手机号脱敏或移除日志，见 SECURITY_TODO.md
-        log.info("手机号注册:{}", userRegisterDTO.getPhone());
-        User user = userService.register(userRegisterDTO);
+    public Result<UserLoginVO> register(@RequestBody UserRegisterDTO userRegisterDTO, HttpServletRequest request) {
+        String account = userRegisterDTO.getPhone() == null ? null : userRegisterDTO.getPhone().trim();
+        String ip = request.getRemoteAddr();
+        loginRateLimiter.checkAllowed("register", account, ip);
+
+        User user;
+        try {
+            user = userService.register(userRegisterDTO);
+        } finally {
+            // 注册成功也计数，防止同一 IP 批量注册
+            loginRateLimiter.recordAttempt("register", account, ip);
+        }
         return Result.success(buildLoginVO(user));
     }
 
