@@ -6,6 +6,7 @@ import com.qingshan.entity.Product;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.ProductService;
+import com.qingshan.utils.PageUtil;
 import com.qingshan.vo.ProductVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,13 +18,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController("userProductController")
 @RequestMapping("/user/product")
 @Slf4j
 @Api(tags = "C端-商品浏览接口")
 public class ProductController {
+
+    private static final long CACHE_TTL_MINUTES = 30;
+
     @Autowired
     private ProductService productService;
 
@@ -53,7 +59,7 @@ public class ProductController {
                 .build();
 
         list = productService.listWithAttr(product);
-        redisTemplate.opsForValue().set(key, list);
+        redisTemplate.opsForValue().set(key, list, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
 
         return Result.success(list);
     }
@@ -69,6 +75,9 @@ public class ProductController {
     public Result<PageResult> page(ProductPageQueryDTO productPageQueryDTO) {
         //用户端只查询上架商品
         productPageQueryDTO.setStatus(StatusConstant.ENABLE);
+        // 先归一化分页参数，避免用超大 pageSize 生成无效缓存 key
+        productPageQueryDTO.setPage(PageUtil.pageNum(productPageQueryDTO.getPage()));
+        productPageQueryDTO.setPageSize(PageUtil.pageSize(productPageQueryDTO.getPageSize()));
 
         String key = "product_page_"
                 + (productPageQueryDTO.getCategoryId() == null ? "all" : productPageQueryDTO.getCategoryId()) + "_"
@@ -79,7 +88,7 @@ public class ProductController {
         PageResult pageResult = getCache(key);
         if (pageResult == null) {
             pageResult = productService.pageQuery(productPageQueryDTO);
-            redisTemplate.opsForValue().set(key, pageResult);
+            redisTemplate.opsForValue().set(key, pageResult, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
         }
         return Result.success(pageResult);
     }
