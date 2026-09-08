@@ -71,8 +71,6 @@ public class AddressBookController {
     @PutMapping
     @ApiOperation("根据id修改地址")
     public Result update(@RequestBody AddressBook addressBook) {
-        // TODO(security): 不要打印完整地址对象（含姓名、手机号、详细地址），改为只打印 id
-        log.info("修改地址：{}", addressBook);
         addressBookService.update(addressBook);
         return Result.success();
     }

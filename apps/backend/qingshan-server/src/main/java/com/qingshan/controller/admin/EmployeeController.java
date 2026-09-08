@@ -101,8 +101,6 @@ public class EmployeeController {
     @PostMapping
     @ApiOperation("新增员工")
     public Result save(@RequestBody EmployeeDTO employeeDTO){
-        // TODO(security): EmployeeDTO 含手机号和身份证号，生产日志改打 username 或 id
-        log.info("新增员工：{}", employeeDTO);
         employeeService.save(employeeDTO);
         return Result.success();
     }
@@ -153,8 +151,6 @@ public class EmployeeController {
     @PutMapping
     @ApiOperation("修改员工信息")
     public Result update(@RequestBody EmployeeDTO employeeDTO){
-        // TODO(security): 同上，不要打印含身份证号/手机号的完整 DTO
-        log.info("修改员工信息:{}", employeeDTO);
         employeeService.update(employeeDTO);
         return Result.success();
     }
