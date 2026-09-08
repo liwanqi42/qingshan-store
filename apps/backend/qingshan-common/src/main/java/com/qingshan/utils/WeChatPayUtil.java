@@ -54,6 +54,8 @@ public class WeChatPayUtil {
         //merchantPrivateKey商户API私钥，如何加载商户API私钥请看常见问题
         PrivateKey merchantPrivateKey = PemUtil.loadPrivateKey(Files.newInputStream(Paths.get(weChatProperties.getPrivateKeyFilePath())));
         //加载平台证书文件
+        // TODO(wechat-pay): 微信支付平台证书会轮换，生产改用自动更新平台证书的
+        //   WechatPayHttpClientBuilder.create().withMerchant(...).withWechatPay(...) 方案或定时刷新
         X509Certificate x509Certificate = PemUtil.loadCertificate(Files.newInputStream(Paths.get(weChatProperties.getWeChatPayCertFilePath())));
         //wechatPayCertificates微信支付平台证书列表。你也可以使用后面章节提到的“定时更新平台证书功能”，而不需要关心平台证书的来龙去脉
         List<X509Certificate> wechatPayCertificates = Collections.singletonList(x509Certificate);
@@ -137,6 +139,8 @@ public class WeChatPayUtil {
         String bodyAsString = jsapi(orderNum, total, description, openid);
         //解析返回结果
         JSONObject jsonObject = JSON.parseObject(bodyAsString);
+        // TODO(prod): 删除 System.out，改用日志（不要打印完整响应，避免泄露交易信息）；
+        //   同时检查 post() 的 HTTP 状态码，非 2xx 时抛出带 err_code 的业务异常
         System.out.println(jsonObject);
 
         String prepayId = jsonObject.getString("prepay_id");

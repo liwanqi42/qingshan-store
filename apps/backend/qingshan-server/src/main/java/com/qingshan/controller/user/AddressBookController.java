@@ -51,8 +51,6 @@ public class AddressBookController {
     @PostMapping
     @ApiOperation("新增地址")
     public Result save(@RequestBody AddressBook addressBook) {
-        // TODO(security): 上线前不要打印完整地址对象（含姓名、手机号、详细地址），改为打印 id
-        log.info("新增地址：{}", addressBook);
         addressBookService.save(addressBook);
         return Result.success();
     }
@@ -73,6 +71,7 @@ public class AddressBookController {
     @PutMapping
     @ApiOperation("根据id修改地址")
     public Result update(@RequestBody AddressBook addressBook) {
+        // TODO(security): 不要打印完整地址对象（含姓名、手机号、详细地址），改为只打印 id
         log.info("修改地址：{}", addressBook);
         addressBookService.update(addressBook);
         return Result.success();
@@ -87,7 +86,7 @@ public class AddressBookController {
     @PutMapping("/default")
     @ApiOperation("设置默认地址")
     public Result setDefault(@RequestBody AddressBook addressBook) {
-        log.info("设置默认地址：{}", addressBook);
+        log.info("设置默认地址：{}", addressBook.getId());
         addressBookService.setDefault(addressBook);
         return Result.success();
     }

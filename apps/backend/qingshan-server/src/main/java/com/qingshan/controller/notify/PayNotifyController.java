@@ -39,6 +39,7 @@ public class PayNotifyController {
         // TODO(security): 上线前校验 Wechatpay-Signature 等请求头，防伪造和重放
         //读取数据
         String body = readData(request);
+        // TODO(security): 只记录订单号/回调摘要，不要记录完整 body 和解密后的明文（含用户支付信息）
         log.info("支付成功回调：{}", body);
 
         //数据解密
@@ -49,6 +50,11 @@ public class PayNotifyController {
         String outTradeNo = jsonObject.getString("out_trade_no");//商户平台订单号
         String transactionId = jsonObject.getString("transaction_id");//微信支付交易号
 
+        // TODO(wechat-pay): 校验 jsonObject.amount.total 与订单实际金额一致；
+        //   trade_state 必须为 SUCCESS；按 transaction_id 做幂等并写入 payment_notify_log，
+        //   防止重复回调/金额篡改/伪造通知
+        // TODO(wechat-pay): 目前没有退款结果回调接口（refund-notify-url 未使用），
+        //   需要新增 /notify/refundSuccess 并把退款状态落库
         log.info("商户平台订单号：{}", outTradeNo);
         log.info("微信支付交易号：{}", transactionId);
 

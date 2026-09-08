@@ -43,6 +43,8 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
     // 微信 access_token 有调用频率限制，这里做进程内缓存
+    // TODO(prod): 多实例部署时每个实例各自缓存，会互相刷新导致 token 失效；
+    //   改为存 Redis 并加分布式锁，所有实例共享
     private volatile String accessToken;
     private volatile long accessTokenExpireAt;
 
@@ -103,6 +105,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User register(UserRegisterDTO userRegisterDTO) {
+        // TODO(prod): 注册/密码重置没有短信验证码，任何人都能用他人手机号注册或占用历史手机号；
+        //   上线前接入短信验证码（或仅允许微信手机号授权），并给 user.phone 加唯一索引，
+        //   否则并发注册会产生重复手机号，getByPhone 的 limit 1 会随机命中其中一个
         String phone = userRegisterDTO.getPhone() == null ? null : userRegisterDTO.getPhone().trim();
         String password = userRegisterDTO.getPassword();
         checkPhoneAndPassword(phone, password);
