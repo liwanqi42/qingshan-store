@@ -328,7 +328,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 管理端同意退款：先退款再更新订单，退款失败时订单状态保持不变
+     * 管理端同意退款：先抢占退款申请再发起退款，避免并发审核重复退款
      *
      * @param ordersRefundDTO 订单id
      */
@@ -338,14 +338,14 @@ public class OrderServiceImpl implements OrderService {
         Orders ordersDB = orderValidator.requireById(ordersRefundDTO.getId());
         orderValidator.checkCanHandleRefund(ordersDB);
 
-        // 调用微信退款，失败时抛出异常并回滚订单状态更新
-        orderManager.refundIfPaid(ordersDB);
-
-        // 条件更新，避免重复审核或用户已撤销申请
+        // 条件更新抢占退款申请，避免重复审核或用户已撤销申请后仍发起退款；
+        // 退款失败时抛出异常，订单状态随事务回滚到退款申请中
         int updated = orderMapper.approveRefund(ordersDB.getId(), LocalDateTime.now());
         if (updated == 0) {
             throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
         }
+
+        orderManager.refundIfPaid(ordersDB);
 
         // 待发货订单尚未出库，退款后回滚库存；已发货订单商品已出库，不恢复库存
         if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())) {
