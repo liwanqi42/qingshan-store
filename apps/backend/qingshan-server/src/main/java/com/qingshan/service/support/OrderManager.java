@@ -290,6 +290,11 @@ public class OrderManager {
     public boolean refundIfPaid(Orders ordersDB) {
         boolean paid = Orders.PAY_STATUS_PAID.equals(ordersDB.getPayStatus());
         if (paid) {
+            // 开发环境使用模拟支付，没有真实微信订单，退款同样走模拟，避免调用微信接口失败
+            if (orderProperties.isMockPayEnabled()) {
+                log.info("模拟退款：订单{}", ordersDB.getNumber());
+                return true;
+            }
             try {
                 String refund = weChatPayUtil.refund(
                         ordersDB.getNumber(),

@@ -152,6 +152,14 @@ public class OrderStatusHandler {
     }
 
     /**
+     * 是否处于退款处理中（尚未退款完成）
+     */
+    public boolean isRefunding(Orders orders) {
+        Integer refundStatus = orders.getRefundStatus();
+        return refundStatus != null && REFUNDING_STATUSES.contains(refundStatus);
+    }
+
+    /**
      * 是否处于退款中或已退款，这类订单不能再接单、派送、完成
      */
     public boolean isRefundedOrRefunding(Orders orders) {

@@ -90,6 +90,18 @@ public interface OrderService {
     void undoRefund(String refundNo);
 
     /**
+     * 管理端同意退款
+     * @param ordersRefundDTO 订单id
+     */
+    void approveRefund(OrdersRefundDTO ordersRefundDTO);
+
+    /**
+     * 管理端拒绝退款
+     * @param ordersRefundRejectDTO 订单id、拒绝原因
+     */
+    void rejectRefund(OrdersRefundRejectDTO ordersRefundRejectDTO);
+
+    /**
      * 确认收货
      * @param id 订单id
      */

@@ -29,6 +29,9 @@ public class MessageConstant {
     public static final String PRODUCT_STOCK_NOT_ENOUGH = "商品库存不足";
     public static final String ORDER_STATUS_ERROR = "订单状态错误";
     public static final String ORDER_NOT_FOUND = "订单不存在";
+    public static final String ORDER_REFUNDING = "该订单正在退款处理中，请先处理退款申请";
+    public static final String REFUND_NOT_PENDING = "该订单没有待处理的退款申请";
+    public static final String REFUND_REJECT_REASON_REQUIRED = "请填写拒绝退款原因";
     public static final String TIMEOUT_CANCEL_REASON = "超时未支付，系统自动取消";
     public static final String PRODUCT_STYLE_OFF_SHELF = "该商品样式已下架";
     public static final String BUNDLE_NOT_FOUND = "套装不存在";

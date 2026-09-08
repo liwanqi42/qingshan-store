@@ -205,9 +205,33 @@ public class OrderValidator {
         }
     }
 
+    /**
+     * 只有退款申请中的订单可以审核退款
+     */
+    public void checkCanHandleRefund(Orders orders) {
+        if (!Orders.REFUND_STATUS_APPLIED.equals(orders.getRefundStatus())) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+        }
+    }
+
+    /**
+     * 校验拒绝退款原因
+     */
+    public void checkRejectReason(String rejectReason) {
+        if (rejectReason == null || rejectReason.trim().isEmpty()) {
+            throw new OrderBusinessException(MessageConstant.REFUND_REJECT_REASON_REQUIRED);
+        }
+    }
+
     private void checkAwaitingShipment(Orders orders) {
-        if (!Orders.STATUS_AWAITING_SHIPMENT.equals(orders.getStatus())
-                || orderStatusHandler.isRefundedOrRefunding(orders)) {
+        if (!Orders.STATUS_AWAITING_SHIPMENT.equals(orders.getStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        // 有待处理的退款申请时给出明确提示，避免只报“订单状态错误”
+        if (orderStatusHandler.isRefunding(orders)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_REFUNDING);
+        }
+        if (orderStatusHandler.isRefundedOrRefunding(orders)) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
     }

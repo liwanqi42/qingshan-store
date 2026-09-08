@@ -138,6 +138,27 @@ public interface OrderMapper {
     int undoRefund(@Param("number") String number, @Param("userId") Long userId);
 
     /**
+     * 管理端同意退款：只有退款申请中的订单会被更新
+     * @param id 订单id
+     * @param refundTime 退款完成时间
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 4, refund_time = #{refundTime}, " +
+            "status = 7, pay_status = 2 " +
+            "where id = #{id} and pay_status = 1 and refund_status = 1")
+    int approveRefund(@Param("id") Long id, @Param("refundTime") LocalDateTime refundTime);
+
+    /**
+     * 管理端拒绝退款：只有退款申请中的订单会被更新，订单状态保持不变
+     * @param id 订单id
+     * @param rejectReason 拒绝原因
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 5, refund_reject_reason = #{rejectReason} " +
+            "where id = #{id} and refund_status = 1")
+    int rejectRefund(@Param("id") Long id, @Param("rejectReason") String rejectReason);
+
+    /**
      * 确认收货，只有属于该用户且已发货/配送中的订单会被更新
      * @param id 订单id
      * @param userId 用户id

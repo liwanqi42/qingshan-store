@@ -3,6 +3,8 @@ package com.qingshan.controller.admin;
 import com.qingshan.dto.OrdersCancelDTO;
 import com.qingshan.dto.OrdersConfirmDTO;
 import com.qingshan.dto.OrdersPageQueryDTO;
+import com.qingshan.dto.OrdersRefundDTO;
+import com.qingshan.dto.OrdersRefundRejectDTO;
 import com.qingshan.dto.OrdersRejectionDTO;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
@@ -93,6 +95,30 @@ public class OrderController {
     @ApiOperation("取消订单")
     public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception {
         orderService.cancel(ordersCancelDTO);
+        return Result.success();
+    }
+
+    /**
+     * 同意退款
+     *
+     * @return
+     */
+    @PutMapping("/refund/approve")
+    @ApiOperation("同意退款")
+    public Result approveRefund(@RequestBody OrdersRefundDTO ordersRefundDTO) {
+        orderService.approveRefund(ordersRefundDTO);
+        return Result.success();
+    }
+
+    /**
+     * 拒绝退款
+     *
+     * @return
+     */
+    @PutMapping("/refund/reject")
+    @ApiOperation("拒绝退款")
+    public Result rejectRefund(@RequestBody OrdersRefundRejectDTO ordersRefundRejectDTO) {
+        orderService.rejectRefund(ordersRefundRejectDTO);
         return Result.success();
     }
 

@@ -95,6 +95,9 @@
                     #{item}
                 </foreach>
             </if>
+            <if test="refundStatus != null">
+                and refund_status = #{refundStatus}
+            </if>
             <if test="refundStatuses != null and refundStatuses.size() > 0">
                 and refund_status in
                 <foreach collection="refundStatuses" item="item" open="(" separator="," close=")">

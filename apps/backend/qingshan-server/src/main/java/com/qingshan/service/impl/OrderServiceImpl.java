@@ -328,6 +328,51 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 管理端同意退款：先退款再更新订单，退款失败时订单状态保持不变
+     *
+     * @param ordersRefundDTO 订单id
+     */
+    @Override
+    @Transactional
+    public void approveRefund(OrdersRefundDTO ordersRefundDTO) {
+        Orders ordersDB = orderValidator.requireById(ordersRefundDTO.getId());
+        orderValidator.checkCanHandleRefund(ordersDB);
+
+        // 调用微信退款，失败时抛出异常并回滚订单状态更新
+        orderManager.refundIfPaid(ordersDB);
+
+        // 条件更新，避免重复审核或用户已撤销申请
+        int updated = orderMapper.approveRefund(ordersDB.getId(), LocalDateTime.now());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+        }
+
+        // 待发货订单尚未出库，退款后回滚库存；已发货订单商品已出库，不恢复库存
+        if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())) {
+            orderManager.restoreStock(ordersDB.getId());
+        }
+    }
+
+    /**
+     * 管理端拒绝退款：订单状态不变，恢复商户后续接单、发货操作
+     *
+     * @param ordersRefundRejectDTO 订单id、拒绝原因
+     */
+    @Override
+    public void rejectRefund(OrdersRefundRejectDTO ordersRefundRejectDTO) {
+        Orders ordersDB = orderValidator.requireById(ordersRefundRejectDTO.getId());
+        orderValidator.checkCanHandleRefund(ordersDB);
+        orderValidator.checkRejectReason(ordersRefundRejectDTO.getRejectReason());
+
+        // 条件更新，避免重复审核或用户已撤销申请
+        int updated = orderMapper.rejectRefund(ordersDB.getId(),
+                ordersRefundRejectDTO.getRejectReason().trim());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+        }
+    }
+
+    /**
      * 删除订单：只允许删除已完成、已取消、已退款的订单
      *
      * @param id
