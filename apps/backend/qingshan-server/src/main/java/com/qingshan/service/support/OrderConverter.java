@@ -9,6 +9,7 @@ import com.qingshan.entity.AddressBook;
 import com.qingshan.entity.OrderDetail;
 import com.qingshan.entity.Orders;
 import com.qingshan.model.ResolvedOrderItem;
+import com.qingshan.properties.OrderProperties;
 import com.qingshan.vo.OrderSubmitVO;
 import com.qingshan.vo.OrderVO;
 import com.qingshan.vo.RefundDetailVO;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -38,6 +40,9 @@ public class OrderConverter {
 
     @Autowired
     private OrderStatusHandler orderStatusHandler;
+
+    @Autowired
+    private OrderProperties orderProperties;
 
     /**
      * 组装订单主体
@@ -144,10 +149,12 @@ public class OrderConverter {
             discountAmount = BigDecimal.ZERO;
         }
 
+        Integer appStatus = orderStatusHandler.toAppStatus(orders);
+
         return UserOrderVO.builder()
                 .id(orders.getId())
                 .orderNo(orders.getNumber())
-                .status(orderStatusHandler.toAppStatus(orders))
+                .status(appStatus)
                 .payAmount(orders.getAmount())
                 .payMethod(orders.getPayMethod())
                 .goodsNum(goodsNum)
@@ -156,6 +163,9 @@ public class OrderConverter {
                 .discountAmount(discountAmount)
                 .dispatchAmount(dispatchAmount)
                 .placeTime(orders.getOrderTime())
+                // 待付款状态才返回倒计时，前端据此展示自动取消剩余时间
+                .remainingSeconds(appStatus != null && appStatus == 0
+                        ? remainingSeconds(orders) : null)
                 .payTime(orders.getCheckoutTime())
                 .deliverTime(orders.getShipTime())
                 .address(UserOrderVO.Address.builder()
@@ -171,6 +181,18 @@ public class OrderConverter {
                         .refundNo(orderStatusHandler.refundNo(orders))
                         .build())
                 .build();
+    }
+
+    /**
+     * 待付款订单距离自动取消还剩多少秒，已超时返回 0
+     */
+    private Long remainingSeconds(Orders orders) {
+        if (orders.getOrderTime() == null) {
+            return null;
+        }
+        long elapsed = Duration.between(orders.getOrderTime(), LocalDateTime.now()).getSeconds();
+        long remaining = orderProperties.getTimeoutMinutes() * 60 - elapsed;
+        return Math.max(0L, remaining);
     }
 
     /**

@@ -53,6 +53,9 @@ public class UserOrderVO implements Serializable {
     //下单时间
     private LocalDateTime placeTime;
 
+    //待付款订单剩余支付秒数，其它状态为 null；用于小程序端自动取消倒计时
+    private Long remainingSeconds;
+
     //支付时间
     private LocalDateTime payTime;
 
