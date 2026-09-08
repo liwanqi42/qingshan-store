@@ -26,7 +26,7 @@ public class UserOrderVO implements Serializable {
     //订单号
     private String orderNo;
 
-    //小程序端状态：-1已取消 0待付款 1待发货 2待收货 3已完成 4退款申请 5已退款
+    //小程序端状态：-1已取消 0待付款 1待发货 2待收货 3已完成 4售后中 5售后完成
     private Integer status;
 
     //实付金额

@@ -208,12 +208,13 @@ public class OrderConverter {
     }
 
     /**
-     * 订单 + 退款商品 -> 退款详情
+     * 订单 + 售后商品 -> 售后详情
      */
     public RefundDetailVO toRefundDetailVO(Orders orders, List<RefundDetailVO.GoodsItem> goodsList) {
         return RefundDetailVO.builder()
                 .refundNo(orders.getNumber())
                 .status(orderStatusHandler.toRefundDetailStatus(orders.getRefundStatus()))
+                .refundType(orders.getRefundType())
                 .reason(orders.getRefundReason())
                 .refundAmount(orders.getRefundAmount())
                 .applyTime(formatDateTime(orders.getRefundApplyTime()))

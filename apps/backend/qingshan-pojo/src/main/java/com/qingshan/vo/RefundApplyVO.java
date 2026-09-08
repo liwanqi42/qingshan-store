@@ -18,6 +18,6 @@ public class RefundApplyVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 退款编号，当前直接使用订单号 */
+    /** 售后编号，当前直接使用订单号 */
     private String refundNo;
 }

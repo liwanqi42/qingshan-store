@@ -44,27 +44,31 @@ public class Orders implements Serializable {
     public static final Integer PAY_STATUS_REFUND = 2;
     // endregion
 
-    // region 退款类型
+    // region 售后类型
     /** 1-仅退款 */
     public static final Integer REFUND_TYPE_REFUND_ONLY = 1;
     /** 2-退货退款 */
     public static final Integer REFUND_TYPE_RETURN_REFUND = 2;
+    /** 3-换货 */
+    public static final Integer REFUND_TYPE_EXCHANGE = 3;
+    /** 4-补寄 */
+    public static final Integer REFUND_TYPE_RESEND = 4;
     // endregion
 
-    // region 退款状态
-    /** 0-无退款 */
+    // region 售后状态
+    /** 0-无售后 */
     public static final Integer REFUND_STATUS_NONE = 0;
-    /** 1-退款申请中 */
+    /** 1-售后申请中 */
     public static final Integer REFUND_STATUS_APPLIED = 1;
     /** 2-待买家退货 */
     public static final Integer REFUND_STATUS_WAIT_RETURN = 2;
     /** 3-买家已退货待商家收货 */
     public static final Integer REFUND_STATUS_RETURNED = 3;
-    /** 4-退款完成 */
+    /** 4-售后完成 */
     public static final Integer REFUND_STATUS_COMPLETED = 4;
-    /** 5-退款申请驳回 */
+    /** 5-售后申请驳回 */
     public static final Integer REFUND_STATUS_REJECTED = 5;
-    /** 6-退款关闭 */
+    /** 6-售后关闭 */
     public static final Integer REFUND_STATUS_CLOSED = 6;
     // endregion
 
@@ -151,31 +155,31 @@ public class Orders implements Serializable {
     //发票抬头
     private String invoiceTitle;
 
-    //退款原因
+    //售后原因
     private String refundReason;
 
-    //退款金额
+    //退款金额，换货/补寄为空
     private BigDecimal refundAmount;
 
-    //退款时间
+    //退款/售后完成时间
     private LocalDateTime refundTime;
 
-    //退款类型 1:仅退款 2:退货退款
+    //售后类型 1:仅退款 2:退货退款 3:换货 4:补寄
     private Integer refundType;
 
-    //退款状态 0:无退款 1:退款申请中 2:待买家退货 3:买家已退货待商家收货 4:退款完成 5:退款申请被拒绝 6:退款关闭
+    //售后状态 0:无售后 1:售后申请中 2:待买家退货 3:买家已退货待商家收货 4:售后完成 5:售后申请被拒绝 6:售后关闭
     private Integer refundStatus;
 
-    //退款补充说明
+    //售后补充说明
     private String refundDescription;
 
-    //退款凭证图片，多个以逗号分隔
+    //售后凭证图片，多个以逗号分隔
     private String refundImages;
 
-    //退款申请时间
+    //售后申请时间
     private LocalDateTime refundApplyTime;
 
-    //拒绝退款原因
+    //拒绝售后原因
     private String refundRejectReason;
 
     //退货快递公司

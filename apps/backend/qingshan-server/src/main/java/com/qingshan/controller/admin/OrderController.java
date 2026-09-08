@@ -99,24 +99,24 @@ public class OrderController {
     }
 
     /**
-     * 同意退款
+     * 同意售后
      *
      * @return
      */
     @PutMapping("/refund/approve")
-    @ApiOperation("同意退款")
+    @ApiOperation("同意售后")
     public Result approveRefund(@RequestBody OrdersRefundDTO ordersRefundDTO) {
         orderService.approveRefund(ordersRefundDTO);
         return Result.success();
     }
 
     /**
-     * 拒绝退款
+     * 拒绝售后
      *
      * @return
      */
     @PutMapping("/refund/reject")
-    @ApiOperation("拒绝退款")
+    @ApiOperation("拒绝售后")
     public Result rejectRefund(@RequestBody OrdersRefundRejectDTO ordersRefundRejectDTO) {
         orderService.rejectRefund(ordersRefundRejectDTO);
         return Result.success();

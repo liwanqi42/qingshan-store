@@ -110,26 +110,30 @@ public interface OrderMapper {
                            @Param("since") LocalDateTime since);
 
     /**
-     * 申请售后，只有属于该用户、已支付且未在退款流程中的订单会被更新
+     * 申请售后，只有属于该用户、已支付且未在售后流程中的订单会被更新
+     * 仅退款/退货退款记录退款金额，换货/补寄不退款，退款金额置空
      * @param id 订单id
      * @param userId 用户id
-     * @param reason 退款原因
+     * @param refundType 售后类型
+     * @param reason 售后原因
      * @param applyTime 申请时间
      * @return 更新的行数
      */
-    @Update("update orders set refund_status = 1, refund_type = 1, refund_reason = #{reason}, " +
-            "refund_amount = amount, refund_apply_time = #{applyTime}, refund_time = null, " +
+    @Update("update orders set refund_status = 1, refund_type = #{refundType}, refund_reason = #{reason}, " +
+            "refund_amount = case when #{refundType} in (1, 2) then amount else null end, " +
+            "refund_apply_time = #{applyTime}, refund_time = null, " +
             "refund_reject_reason = null " +
             "where id = #{id} and user_id = #{userId} and pay_status = 1 " +
             "and status in (2, 3, 4, 5) and (refund_status is null or refund_status in (0, 5, 6))")
     int applyRefund(@Param("id") Long id,
                     @Param("userId") Long userId,
+                    @Param("refundType") Integer refundType,
                     @Param("reason") String reason,
                     @Param("applyTime") LocalDateTime applyTime);
 
     /**
-     * 用户撤销退款申请，只有处理中的申请会被撤销
-     * @param number 订单号（即退款编号）
+     * 用户撤销售后申请，只有处理中的申请会被撤销
+     * @param number 订单号（即售后编号）
      * @param userId 用户id
      * @return 更新的行数
      */
@@ -138,18 +142,29 @@ public interface OrderMapper {
     int undoRefund(@Param("number") String number, @Param("userId") Long userId);
 
     /**
-     * 管理端同意退款：只有退款申请中的订单会被更新
+     * 管理端同意仅退款/退货退款：只有退款申请中的订单会被更新
      * @param id 订单id
      * @param refundTime 退款完成时间
      * @return 更新的行数
      */
     @Update("update orders set refund_status = 4, refund_time = #{refundTime}, " +
             "status = 7, pay_status = 2 " +
-            "where id = #{id} and pay_status = 1 and refund_status = 1")
+            "where id = #{id} and pay_status = 1 and refund_status = 1 " +
+            "and (refund_type is null or refund_type in (1, 2))")
     int approveRefund(@Param("id") Long id, @Param("refundTime") LocalDateTime refundTime);
 
     /**
-     * 管理端拒绝退款：只有退款申请中的订单会被更新，订单状态保持不变
+     * 管理端同意换货/补寄：只完成售后，不退款，订单状态和支付状态保持不变
+     * @param id 订单id
+     * @param finishTime 售后完成时间
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 4, refund_time = #{finishTime} " +
+            "where id = #{id} and refund_status = 1 and refund_type in (3, 4)")
+    int completeAfterSales(@Param("id") Long id, @Param("finishTime") LocalDateTime finishTime);
+
+    /**
+     * 管理端拒绝售后申请：只有售后申请中的订单会被更新，订单状态保持不变
      * @param id 订单id
      * @param rejectReason 拒绝原因
      * @return 更新的行数

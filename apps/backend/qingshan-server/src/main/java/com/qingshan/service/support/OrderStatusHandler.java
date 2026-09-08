@@ -128,7 +128,7 @@ public class OrderStatusHandler {
     }
 
     /**
-     * 退款状态 -> 退款详情页状态 0处理中 1退款成功 2已结束
+     * 售后状态 -> 售后详情页状态 0处理中 1已完成 2已结束
      */
     public Integer toRefundDetailStatus(Integer refundStatus) {
         if (refundStatus == null) {
@@ -164,6 +164,16 @@ public class OrderStatusHandler {
      */
     public boolean isRefundedOrRefunding(Orders orders) {
         return hasRefundRecord(orders);
+    }
+
+    /**
+     * 是否为需要退款的售后类型（仅退款、退货退款）
+     * 历史数据没有类型时按需要退款处理
+     */
+    public boolean isMoneyRefund(Integer refundType) {
+        return refundType == null
+                || Orders.REFUND_TYPE_REFUND_ONLY.equals(refundType)
+                || Orders.REFUND_TYPE_RETURN_REFUND.equals(refundType);
     }
 
     /**

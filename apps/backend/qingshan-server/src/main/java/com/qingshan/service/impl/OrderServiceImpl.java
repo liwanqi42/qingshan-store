@@ -282,16 +282,20 @@ public class OrderServiceImpl implements OrderService {
      * 申请售后：支持待发货、待收货、已完成的已支付订单
      *
      * @param refundApplyDTO
-     * @return 退款编号
+     * @return 售后编号
      */
     @Override
     public RefundApplyVO refundApply(RefundApplyDTO refundApplyDTO) {
         Long userId = BaseContext.getCurrentId();
         Orders orders = orderValidator.requireOwnedByNumber(refundApplyDTO.getOrderNo(), userId);
+        // 兼容未传类型的历史客户端，默认按仅退款处理
+        Integer refundType = refundApplyDTO.getRefundType() == null
+                ? Orders.REFUND_TYPE_REFUND_ONLY : refundApplyDTO.getRefundType();
+        orderValidator.checkRefundType(refundType);
         orderValidator.checkRefundReason(refundApplyDTO.getReason());
 
         // 条件更新，避免重复申请或对未支付订单申请
-        int updated = orderMapper.applyRefund(orders.getId(), userId,
+        int updated = orderMapper.applyRefund(orders.getId(), userId, refundType,
                 refundApplyDTO.getReason().trim(), LocalDateTime.now());
         if (updated == 0) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
@@ -328,7 +332,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 管理端同意退款：先抢占退款申请再发起退款，避免并发审核重复退款
+     * 管理端同意售后：仅退款/退货退款发起退款，换货/补寄只完成售后
+     * 先抢占售后申请再处理，避免并发审核重复退款
      *
      * @param ordersRefundDTO 订单id
      */
@@ -338,18 +343,27 @@ public class OrderServiceImpl implements OrderService {
         Orders ordersDB = orderValidator.requireById(ordersRefundDTO.getId());
         orderValidator.checkCanHandleRefund(ordersDB);
 
-        // 条件更新抢占退款申请，避免重复审核或用户已撤销申请后仍发起退款；
-        // 退款失败时抛出异常，订单状态随事务回滚到退款申请中
-        int updated = orderMapper.approveRefund(ordersDB.getId(), LocalDateTime.now());
-        if (updated == 0) {
-            throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+        if (orderStatusHandler.isMoneyRefund(ordersDB.getRefundType())) {
+            // 条件更新抢占退款申请，避免重复审核或用户已撤销申请后仍发起退款；
+            // 退款失败时抛出异常，订单状态随事务回滚到退款申请中
+            int updated = orderMapper.approveRefund(ordersDB.getId(), LocalDateTime.now());
+            if (updated == 0) {
+                throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+            }
+
+            orderManager.refundIfPaid(ordersDB);
+
+            // 待发货订单尚未出库，退款后回滚库存；已发货订单商品已出库，不恢复库存
+            if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())) {
+                orderManager.restoreStock(ordersDB.getId());
+            }
+            return;
         }
 
-        orderManager.refundIfPaid(ordersDB);
-
-        // 待发货订单尚未出库，退款后回滚库存；已发货订单商品已出库，不恢复库存
-        if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())) {
-            orderManager.restoreStock(ordersDB.getId());
+        // 换货/补寄：只完成售后，不发起退款，订单保持已支付状态
+        int updated = orderMapper.completeAfterSales(ordersDB.getId(), LocalDateTime.now());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
         }
     }
 

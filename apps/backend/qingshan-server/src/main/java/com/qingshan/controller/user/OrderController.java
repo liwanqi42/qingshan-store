@@ -109,7 +109,7 @@ public class OrderController {
 
     /**
      * 申请售后
-     * @return 退款编号
+     * @return 售后编号
      */
     @PutMapping("/refund_apply")
     @ApiOperation("申请售后")
@@ -118,23 +118,23 @@ public class OrderController {
     }
 
     /**
-     * 退款详情
-     * @param refundNo 退款编号（订单号）
+     * 售后详情
+     * @param refundNo 售后编号（订单号）
      * @return
      */
     @GetMapping("/refund_detail")
-    @ApiOperation("退款详情")
+    @ApiOperation("售后详情")
     public Result<RefundDetailVO> refundDetail(@RequestParam("refundNo") String refundNo) {
         return Result.success(orderService.refundDetail(refundNo));
     }
 
     /**
-     * 撤销退款申请
-     * @param refundNo 退款编号（订单号）
+     * 撤销售后申请
+     * @param refundNo 售后编号（订单号）
      * @return
      */
     @PutMapping("/refund_undo")
-    @ApiOperation("撤销退款申请")
+    @ApiOperation("撤销售后申请")
     public Result undoRefund(@RequestParam("refundNo") String refundNo) {
         orderService.undoRefund(refundNo);
         return Result.success();

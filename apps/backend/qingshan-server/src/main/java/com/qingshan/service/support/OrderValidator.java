@@ -188,11 +188,23 @@ public class OrderValidator {
     }
 
     /**
-     * 校验退款原因
+     * 校验售后类型：仅退款、退货退款、换货、补寄
+     */
+    public void checkRefundType(Integer refundType) {
+        if (!Orders.REFUND_TYPE_REFUND_ONLY.equals(refundType)
+                && !Orders.REFUND_TYPE_RETURN_REFUND.equals(refundType)
+                && !Orders.REFUND_TYPE_EXCHANGE.equals(refundType)
+                && !Orders.REFUND_TYPE_RESEND.equals(refundType)) {
+            throw new OrderBusinessException("请选择售后类型");
+        }
+    }
+
+    /**
+     * 校验售后原因
      */
     public void checkRefundReason(String reason) {
         if (reason == null || reason.trim().isEmpty()) {
-            throw new OrderBusinessException("请选择退款原因");
+            throw new OrderBusinessException("请选择售后原因");
         }
     }
 

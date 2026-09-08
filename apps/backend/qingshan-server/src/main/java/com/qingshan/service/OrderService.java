@@ -71,32 +71,32 @@ public interface OrderService {
 
     /**
      * 申请售后
-     * @param refundApplyDTO 订单号、退款原因
-     * @return 退款编号
+     * @param refundApplyDTO 订单号、售后类型、售后原因
+     * @return 售后编号
      */
     RefundApplyVO refundApply(RefundApplyDTO refundApplyDTO);
 
     /**
-     * 退款详情
-     * @param refundNo 退款编号（订单号）
-     * @return 退款详情
+     * 售后详情
+     * @param refundNo 售后编号（订单号）
+     * @return 售后详情
      */
     RefundDetailVO refundDetail(String refundNo);
 
     /**
-     * 撤销退款申请
-     * @param refundNo 退款编号（订单号）
+     * 撤销售后申请
+     * @param refundNo 售后编号（订单号）
      */
     void undoRefund(String refundNo);
 
     /**
-     * 管理端同意退款
+     * 管理端同意售后：仅退款/退货退款发起退款，换货/补寄只完成售后
      * @param ordersRefundDTO 订单id
      */
     void approveRefund(OrdersRefundDTO ordersRefundDTO);
 
     /**
-     * 管理端拒绝退款
+     * 管理端拒绝售后
      * @param ordersRefundRejectDTO 订单id、拒绝原因
      */
     void rejectRefund(OrdersRefundRejectDTO ordersRefundRejectDTO);
