@@ -1,0 +1,113 @@
+<view class="container {{manageMode ? 'manage-mode' : ''}}">
+  <!-- 自定义导航栏：返回、搜索订单、筛选、管理 -->
+  <view class="custom-nav" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-content" style="height: {{navBarHeight}}px; padding-right: {{navRightPadding}}px;">
+      <view class="back" bindtap="goBack">‹</view>
+      <view class="search-box">
+        <image class="search-icon" src="/images/icon/search.svg" />
+        <input class="search-input" value="{{keyword}}" placeholder="搜索订单号/商品" placeholder-class="search-placeholder" confirm-type="search" bindinput="onKeywordInput" bindconfirm="doSearch" />
+        <view class="clear" wx:if="{{keyword}}" catchtap="clearSearch">×</view>
+      </view>
+      <view class="nav-action {{timeRange > 0 ? 'active' : ''}}" bindtap="onFilter">筛选</view>
+      <view class="nav-action {{manageMode ? 'active' : ''}}" bindtap="toggleManage">{{manageMode ? '完成' : '管理'}}</view>
+    </view>
+  </view>
+  <view class="nav-tab">
+    <view class="tab-item {{status === -999 ? 'checked' : ''}}" data-status="-999" bindtap="switchStatus">
+      <view class="name">全部</view>
+      <view class="border {{status === -999 ? 'checked' : ''}}"></view>
+    </view>
+    <view class="tab-item {{status === 0 ? 'checked' : ''}}" data-status="0" bindtap="switchStatus">
+      <view class="name">待付款</view>
+      <view class="border {{status === 0 ? 'checked' : ''}}"></view>
+    </view>
+    <view class="tab-item {{status === 1 ? 'checked' : ''}}" data-status="1" bindtap="switchStatus">
+      <view class="name">待发货</view>
+      <view class="border {{status === 1 ? 'checked' : ''}}"></view>
+    </view>
+    <view class="tab-item {{status === 2 ? 'checked' : ''}}" data-status="2" bindtap="switchStatus">
+      <view class="name">待收货</view>
+      <view class="border {{status === 2 ? 'checked' : ''}}"></view>
+    </view>
+    <view class="tab-item {{status === 3 ? 'checked' : ''}}" data-status="3" bindtap="switchStatus">
+      <view class="name">已完成</view>
+      <view class="border {{status === 3 ? 'checked' : ''}}"></view>
+    </view>
+    <view class="tab-item {{status === 4 ? 'checked' : ''}}" data-status="4" bindtap="switchStatus">
+      <view class="name">售后</view>
+      <view class="border {{status === 4 ? 'checked' : ''}}"></view>
+    </view>
+  </view>
+  <view class="empty-order" wx:if="{{orderList.length === 0}}">
+    <image src="/images/order/order-empty.svg" />
+    <view class="hint">暂无相关订单</view>
+  </view>
+  <view class="order-list" wx:if="{{orderList.length > 0}}">
+    <view class="order-item" wx:for="{{orderList}}" wx:key="id">
+      <view class="order-main" bindtap="onOrderTap" data-id="{{item.id}}">
+        <view class="top">
+          <view class="checkbox {{item.checked ? 'checked' : ''}} {{item.deletable ? '' : 'disabled'}}" wx:if="{{manageMode}}" catchtap="toggleSelect" data-id="{{item.id}}">
+            <view class="tick" wx:if="{{item.checked}}"></view>
+          </view>
+          <view class="order-no">订单编号 {{item.orderNo}}<text class="arrow" wx:if="{{!manageMode}}">›</text></view>
+          <view wx:if="{{item.status === -1}}" class="finish">交易关闭</view>
+          <view wx:if="{{item.status === 0}}" class="finish">待付款</view>
+          <view wx:if="{{item.status === 1}}" class="finish">待发货</view>
+          <view wx:if="{{item.status === 2}}" class="finish">待收货</view>
+          <view wx:if="{{item.status === 3}}" class="finish">交易成功</view>
+          <view wx:if="{{item.status === 4}}" class="finish">售后中</view>
+          <view wx:if="{{item.status === 5}}" class="finish">售后完成</view>
+        </view>
+        <view class="goods-list">
+          <view class="goods" wx:for="{{item.goodsList}}" wx:for-item="goodsItem">
+            <image src="{{goodsItem.picture}}" mode="aspectFill" />
+            <view class="info">
+              <view class="title">{{goodsItem.title}}</view>
+              <view class="specs">{{goodsItem.specs}}</view>
+            </view>
+            <view class="amount">
+              <view class="price">￥{{goodsItem.price}}</view>
+              <view class="num">×{{goodsItem.num}}</view>
+            </view>
+          </view>
+        </view>
+        <view class="summary">
+          <text class="date">{{item.placeDate}}</text>
+          <text class="label">实付款</text>
+          <text class="pay">￥{{item.payAmount}}</text>
+        </view>
+      </view>
+      <view class="bottom" wx:if="{{!manageMode}}">
+        <view class="more" id="more-{{item.id}}" wx:if="{{item.status === 0 || item.status === -1 || item.status === 1 || item.status === 2 || item.status === 3 || item.status === 5}}" data-id="{{item.id}}" bindtap="showMoreActions">更多<text class="more-arrow">⌄</text></view>
+        <view class="btn-group">
+          <view class="btn active" wx:if="{{item.status === 0}}" data-id="{{item.id}}" data-order-no="{{item.orderNo}}" bindtap="orderPay">付款</view>
+          <view class="btn active" wx:if="{{item.status === 2}}" data-id="{{item.id}}" bindtap="confirmTakeGoods">确认收货</view>
+          <view class="btn btn-wide" wx:if="{{item.status === 1}}" data-id="{{item.id}}" bindtap="remindToShipTap">催发货</view>
+          <view class="btn" data-id="{{item.id}}" bindtap="addToCart">加入购物车</view>
+          <view class="btn active" data-id="{{item.id}}" bindtap="buyAgain">再买一单</view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <view class="morePlace" wx:if="{{curPage > 1 && !loadingMoreHidden}}">
+    <view class="l"></view>
+    <view>没有更多啦</view>
+    <view class="r"></view>
+  </view>
+  <!-- 管理模式底部操作栏 -->
+  <view class="manage-bar" wx:if="{{manageMode}}">
+    <view class="select-all" bindtap="toggleSelectAll">
+      <view class="checkbox {{allSelected ? 'checked' : ''}}">
+        <view class="tick" wx:if="{{allSelected}}"></view>
+      </view>
+      <text>全选</text>
+    </view>
+    <view class="spacer"></view>
+    <view class="delete-btn {{selectedCount > 0 ? 'active' : ''}}" bindtap="deleteSelected">删除{{selectedCount > 0 ? '(' + selectedCount + ')' : ''}}</view>
+  </view>
+  <!-- “更多”下拉菜单 -->
+  <view class="more-mask" wx:if="{{moreMenuId !== null}}" bindtap="hideMoreMenu" catchtouchmove="hideMoreMenu"></view>
+  <view class="more-menu" wx:if="{{moreMenuId !== null}}" style="left: {{moreMenuLeft}}px; top: {{moreMenuTop}}px; transform: {{moreMenuAbove ? 'translateY(-100%)' : 'none'}};">
+    <view class="more-menu-item" wx:for="{{moreMenuActions}}" wx:key="action" data-action="{{item.action}}" bindtap="onMoreAction">{{item.name}}</view>
+  </view>
+</view>

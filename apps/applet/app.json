@@ -6,6 +6,7 @@
     "pages/goods-details/index",
     "pages/shop-cart/index",
     "pages/settlement/index",
+    "pages/order/index",
     "pages/address/index",
     "pages/address/edit/index",
     "pages/option-address/index",
