@@ -1,4 +1,4 @@
-import { get, post, put } from '../utils/request'
+import { get, post, put, _delete } from '../utils/request'
 
 class Order {
 
@@ -36,7 +36,7 @@ class Order {
   }
 
   async deleteOrder(id) {
-    return post(`/user/order?id=${id}`)
+    return _delete(`/user/order?id=${id}`)
   }
 
   async cancelOrder(id) {
