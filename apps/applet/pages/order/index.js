@@ -37,8 +37,26 @@ Page({
     moreMenuAbove: true
   },
   onLoad(res) {
+    const systemInfo = wx.getSystemInfoSync()
+    let menu = null
+    try {
+      menu = wx.getMenuButtonBoundingClientRect()
+    } catch (e) {
+      menu = null
+    }
+    const statusBarHeight = systemInfo.statusBarHeight || 20
+    // 胶囊按钮信息异常时使用默认值，避免导航栏被挤出屏幕
+    const menuRect = menu && menu.left > 0 && menu.height > 0 ? menu : null
+    // 自定义导航栏与右上角胶囊按钮垂直居中对齐
+    const navBarHeight = menuRect
+      ? menuRect.height + (menuRect.top - statusBarHeight) * 2
+      : 44
+    const navRightPadding = menuRect ? systemInfo.windowWidth - menuRect.left + 8 : 12
     this.setData({
-      status: parseInt(res.status, 10) || 0
+      status: parseInt(res.status, 10) || 0,
+      statusBarHeight: statusBarHeight,
+      navBarHeight: navBarHeight,
+      navRightPadding: navRightPadding
     })
   },
   onShow() {
