@@ -174,13 +174,13 @@ public interface OrderMapper {
     int rejectRefund(@Param("id") Long id, @Param("rejectReason") String rejectReason);
 
     /**
-     * 确认收货，只有属于该用户且已发货/配送中的订单会被更新
+     * 确认收货，只有属于该用户且已派送（配送中）的订单会被更新
      * @param id 订单id
      * @param userId 用户id
      * @return 更新的行数
      */
     @Update("update orders set status = 5, delivery_time = now() " +
-            "where id = #{id} and user_id = #{userId} and status in (3, 4) " +
+            "where id = #{id} and user_id = #{userId} and status = 4 " +
             "and (refund_status is null or refund_status in (0, 5, 6))")
     int confirmGoods(@Param("id") Long id, @Param("userId") Long userId);
 
@@ -207,8 +207,8 @@ public interface OrderMapper {
      */
     @Select("select " +
             "coalesce(sum(case when status = 1 and pay_status = 0 then 1 else 0 end), 0) as waitPay, " +
-            "coalesce(sum(case when status = 2 then 1 else 0 end), 0) as notExpress, " +
-            "coalesce(sum(case when status in (3, 4) then 1 else 0 end), 0) as waitReceive " +
+            "coalesce(sum(case when status in (2, 3) then 1 else 0 end), 0) as notExpress, " +
+            "coalesce(sum(case when status = 4 then 1 else 0 end), 0) as waitReceive " +
             "from orders where user_id = #{userId} " +
             "and (refund_status is null or refund_status not in (1, 2, 3, 4))")
     OrderRemindVO getRemindCount(@Param("userId") Long userId);

@@ -69,19 +69,19 @@ public class OrderStatusHandler {
                     ? (Orders.PAY_STATUS_REFUND.equals(orders.getPayStatus()) ? 5 : 4) : null,
             orders -> Orders.STATUS_CANCELLED.equals(orders.getStatus()) ? -1 : null,
             orders -> Orders.STATUS_COMPLETED.equals(orders.getStatus()) ? 3 : null,
-            orders -> Orders.STATUS_SHIPPED.equals(orders.getStatus())
-                    || Orders.STATUS_IN_TRANSIT.equals(orders.getStatus()) ? 2 : null,
+            orders -> Orders.STATUS_SHIPPED.equals(orders.getStatus()) ? 1 : null,
+            orders -> Orders.STATUS_IN_TRANSIT.equals(orders.getStatus()) ? 2 : null,
             orders -> Orders.STATUS_AWAITING_SHIPMENT.equals(orders.getStatus()) ? 1 : null);
 
     private static Map<Integer, Consumer<OrdersPageQueryDTO>> buildUserStatusFilters() {
         Map<Integer, Consumer<OrdersPageQueryDTO>> filters = new HashMap<>();
         filters.put(0, dto -> dto.setStatuses(toStatusList(Orders.STATUS_PENDING_PAYMENT)));
         filters.put(1, dto -> {
-            dto.setStatuses(toStatusList(Orders.STATUS_AWAITING_SHIPMENT));
+            dto.setStatuses(toStatusList(Orders.STATUS_AWAITING_SHIPMENT, Orders.STATUS_SHIPPED));
             dto.setExcludeRefunding(true);
         });
         filters.put(2, dto -> {
-            dto.setStatuses(toStatusList(Orders.STATUS_SHIPPED, Orders.STATUS_IN_TRANSIT));
+            dto.setStatuses(toStatusList(Orders.STATUS_IN_TRANSIT));
             dto.setExcludeRefunding(true);
         });
         filters.put(3, dto -> {

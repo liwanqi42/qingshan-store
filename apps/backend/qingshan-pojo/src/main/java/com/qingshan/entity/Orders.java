@@ -21,11 +21,11 @@ public class Orders implements Serializable {
     // region 订单状态
     /** 1-待付款 */
     public static final Integer STATUS_PENDING_PAYMENT = 1;
-    /** 2-待发货 */
+    /** 2-待发货（待接单） */
     public static final Integer STATUS_AWAITING_SHIPMENT = 2;
-    /** 3-已发货 */
+    /** 3-已接单（待派送），尚未发货 */
     public static final Integer STATUS_SHIPPED = 3;
-    /** 4-配送中 */
+    /** 4-配送中（已发货） */
     public static final Integer STATUS_IN_TRANSIT = 4;
     /** 5-已完成 */
     public static final Integer STATUS_COMPLETED = 5;
@@ -80,7 +80,7 @@ public class Orders implements Serializable {
     //订单号
     private String number;
 
-    //订单状态 1待付款 2待发货 3已发货 4配送中 5已完成 6已取消 7退款
+    //订单状态 1待付款 2待发货 3已接单待派送 4配送中 5已完成 6已取消 7退款
     private Integer status;
 
     //下单用户id

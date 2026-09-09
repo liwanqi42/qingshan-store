@@ -290,7 +290,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 确认收货：只有已发货、配送中的订单可以确认
+     * 确认收货：只有已派送（配送中）的订单可以确认
      *
      * @param id
      */
@@ -380,8 +380,9 @@ public class OrderServiceImpl implements OrderService {
 
             orderManager.refundIfPaid(ordersDB);
 
-            // 待发货订单尚未出库，退款后回滚库存；已发货订单商品已出库，不恢复库存
-            if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())) {
+            // 待发货/已接单待派送的订单尚未出库，退款后回滚库存；已派送的订单商品已出库，不恢复库存
+            if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())
+                    || Orders.STATUS_SHIPPED.equals(ordersDB.getStatus())) {
                 orderManager.restoreStock(ordersDB.getId());
             }
             return;
@@ -479,7 +480,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 接单（待发货 -> 已发货）
+     * 接单（待发货 -> 已接单待派送）
+     * 接单不代表已发货，发货时间在派送时记录
      * @param ordersConfirmDTO
      */
     @Override
@@ -490,7 +492,6 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = Orders.builder()
                 .id(ordersDB.getId())
                 .status(Orders.STATUS_SHIPPED)
-                .shipTime(LocalDateTime.now())
                 .build();
 
         orderMapper.update(orders);
@@ -558,20 +559,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 派送订单（已发货 -> 配送中）
+     * 派送订单（已接单待派送 -> 配送中），此时商品才真正出库发货
      * @param id
      */
     @Override
     public void delivery(Long id) {
         // 根据id查询订单
         Orders ordersDB = orderValidator.requireById(id);
-        // 校验订单状态为3（已发货），且没有退款记录
+        // 校验订单状态为3（已接单待派送），且没有退款记录
         orderValidator.checkCanDeliver(ordersDB);
 
         Orders orders = new Orders();
         orders.setId(ordersDB.getId());
         // 更新订单状态,状态转为派送中
         orders.setStatus(Orders.STATUS_IN_TRANSIT);
+        orders.setShipTime(LocalDateTime.now());
 
         orderMapper.update(orders);
     }
