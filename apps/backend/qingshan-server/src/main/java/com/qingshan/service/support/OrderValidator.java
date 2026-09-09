@@ -152,30 +152,30 @@ public class OrderValidator {
      * 只有未完成的订单可以取消，已完成/已取消/已退款/退款中的订单不能重复取消
      */
     public void checkCanCancel(Orders orders) {
-        if (!orderStatusHandler.isCancellable(orders.getStatus())
-                || orderStatusHandler.isRefundedOrRefunding(orders)) {
+        if (!orderStatusHandler.isCancellable(orders.getStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+        checkNoRefundRecord(orders);
     }
 
     /**
      * 校验订单状态为已发货，且没有退款记录
      */
     public void checkCanDeliver(Orders orders) {
-        if (!Orders.STATUS_SHIPPED.equals(orders.getStatus())
-                || orderStatusHandler.isRefundedOrRefunding(orders)) {
+        if (!Orders.STATUS_SHIPPED.equals(orders.getStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+        checkNoRefundRecord(orders);
     }
 
     /**
      * 校验订单状态为配送中，且没有退款记录
      */
     public void checkCanComplete(Orders orders) {
-        if (!Orders.STATUS_IN_TRANSIT.equals(orders.getStatus())
-                || orderStatusHandler.isRefundedOrRefunding(orders)) {
+        if (!Orders.STATUS_IN_TRANSIT.equals(orders.getStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+        checkNoRefundRecord(orders);
     }
 
     /**
@@ -239,7 +239,14 @@ public class OrderValidator {
         if (!Orders.STATUS_AWAITING_SHIPMENT.equals(orders.getStatus())) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
-        // 有待处理的退款申请时给出明确提示，避免只报“订单状态错误”
+        checkNoRefundRecord(orders);
+    }
+
+    /**
+     * 有待处理的售后申请时给出明确提示，避免只报“订单状态错误”；
+     * 已退款/售后已完成的订单也不能继续接单、派送、完成
+     */
+    private void checkNoRefundRecord(Orders orders) {
         if (orderStatusHandler.isRefunding(orders)) {
             throw new OrderBusinessException(MessageConstant.ORDER_REFUNDING);
         }
