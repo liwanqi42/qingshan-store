@@ -1,0 +1,156 @@
+<view class="order-detail">
+  <!-- 待付款订单的自动取消倒计时 -->
+  <view class="countdown-card" wx:if="{{countdownText}}">
+    <text class="countdown-text">{{countdownText}}</text>
+  </view>
+
+  <!-- 收货地址 -->
+  <view class="address-card">
+    <image class="address-icon" src="/images/order/address-icon.svg" />
+    <view class="address-info">
+      <view class="status-line">
+        <text class="ship-status {{shipStatus === '已签收' ? 'signed' : ''}}">{{shipStatus}}</text>
+        <text class="address-text">{{orderDetail.address.address}}</text>
+      </view>
+      <view class="contact-line">
+        <text class="name">{{orderDetail.address.contacts}}</text>
+        <text class="phone" wx:if="{{displayMobile}}">86-{{displayMobile}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品信息 -->
+  <view class="goods-card">
+    <view class="goods-list">
+      <navigator wx:for="{{orderDetail.goodsList}}" url="/pages/goods-details/index?id={{goodsItem.goodsId}}" wx:for-item="goodsItem">
+        <view class="goods">
+          <image src="{{goodsItem.picture}}" mode="aspectFill" />
+          <view class="info">
+            <view class="name">{{goodsItem.title}}</view>
+            <view class="specs">{{goodsItem.specs}}</view>
+          </view>
+          <view class="amount">
+            <view class="price">￥{{goodsItem.price}}</view>
+            <view class="num">×{{goodsItem.num}}</view>
+          </view>
+        </view>
+      </navigator>
+    </view>
+    <view class="goods-actions" wx:if="{{refundAllow}}">
+      <view class="action-btn" bindtap="orderRefund">申请售后</view>
+    </view>
+  </view>
+
+  <!-- 实付款，点击展开费用明细 -->
+  <view class="pay-card">
+    <view class="pay-header" bindtap="togglePayDetail">
+      <text class="label">实付款</text>
+      <view class="pay-right">
+        <text class="amount">￥{{orderDetail.payAmount}}</text>
+        <text class="arrow {{payDetailOpen ? 'up' : ''}}">⌄</text>
+      </view>
+    </view>
+    <view class="pay-detail" wx:if="{{payDetailOpen}}">
+      <view class="detail-row">
+        <text>商品总价</text>
+        <text>￥{{orderDetail.goodsAmount}}</text>
+      </view>
+      <view class="detail-row">
+        <text>优惠减扣</text>
+        <text class="minus">-￥{{orderDetail.discountAmount}}</text>
+      </view>
+      <view class="detail-row" wx:if="{{orderDetail.dispatchAmount > 0}}">
+        <text>运费</text>
+        <text>￥{{orderDetail.dispatchAmount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单信息，点击展开 -->
+  <view class="info-card">
+    <view class="info-header" bindtap="toggleOrderInfo">
+      <text class="info-title">订单信息</text>
+      <text class="arrow {{orderInfoOpen ? 'up' : ''}}">⌄</text>
+    </view>
+    <view class="info-detail" wx:if="{{orderInfoOpen}}">
+      <view class="info-row">
+        <text class="label">订单编号</text>
+        <view class="value">
+          <text class="order-no">{{orderDetail.orderNo}}</text>
+          <text class="copy" bindtap="copyOrderNo">复制</text>
+        </view>
+      </view>
+      <view class="info-row">
+        <text class="label">支付方式</text>
+        <text class="value">{{payMethodText}}</text>
+      </view>
+      <view class="info-row">
+        <view class="label">
+          <text>收货信息</text>
+          <image class="eye" src="/images/order/{{showRawContact ? 'eye-open' : 'eye-close'}}.svg" catchtap="toggleContact" />
+        </view>
+        <view class="value receiver">
+          <text class="receiver-text">{{orderDetail.address.contacts}} 86-{{showRawContact ? rawMobile : displayMobile}} {{showRawContact ? orderDetail.address.fullAddress : displayFullAddress}}</text>
+        </view>
+      </view>
+      <view class="info-row">
+        <text class="label">创建时间</text>
+        <text class="value">{{orderDetail.placeTime || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">付款时间</text>
+        <text class="value">{{orderDetail.payTime || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">发货时间</text>
+        <text class="value">{{orderDetail.deliverTime || '-'}}</text>
+      </view>
+      <view class="info-row">
+        <text class="label">成交时间</text>
+        <text class="value">{{orderDetail.finishTime || '-'}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 底部操作栏 -->
+<view class="bottom-bar">
+  <view class="bar-link" bindtap="contactService">客服</view>
+  <view class="bar-link" wx:if="{{showMore}}" bindtap="showMoreActions">更多</view>
+  <view class="spacer"></view>
+  <view class="bar-btn" wx:if="{{orderDetail.status === 4 || orderDetail.status === 5}}" bindtap="goRefundDetail">售后详情</view>
+  <view class="bar-btn active {{payDisabled ? 'disabled' : ''}}" wx:if="{{orderDetail.status === 0}}" data-order-no="{{orderDetail.orderNo}}" bindtap="orderPay">{{payDisabled ? '正在关闭' : '付款'}}</view>
+  <view class="bar-btn active" wx:if="{{orderDetail.status === 2}}" data-id="{{orderDetail.id}}" bindtap="confirmTakeGoods">确认收货</view>
+  <view class="bar-btn bar-btn-wide" wx:if="{{orderDetail.status === 1}}" bindtap="remindToShip">催发货</view>
+  <view class="bar-btn" bindtap="addToCart">加入购物车</view>
+  <view class="bar-btn primary" bindtap="buyAgain">再买一单</view>
+</view>
+
+<!-- 申请售后弹窗 -->
+<view class="shade" wx:if="{{refundPopup}}" bindtap="closePopup">
+  <view class="refound-reason" catchtap="stopPropagation">
+    <view class="title">申请售后</view>
+    <view class="type-section">
+      <view class="section-label">售后类型</view>
+      <view class="type-list">
+        <view class="type-item {{selectType === item.id ? 'checked' : ''}}" wx:for="{{afterSalesTypes}}" wx:key="id" data-id="{{item.id}}" catchtap="selectType">{{item.label}}</view>
+      </view>
+    </view>
+    <view class="type-section">
+      <view class="section-label">售后原因</view>
+    </view>
+    <view class="reason">
+      <view class="item" wx:for="{{refundReason}}">
+        <view>{{item.reason}}</view>
+        <view wx:if="{{selectReason !== item.id}}" class="radio" data-id="{{item.id}}" catchtap="selectReason"></view>
+        <view wx:if="{{selectReason === item.id}}" class="radio checked" data-id="{{item.id}}" catchtap="selectReason">
+          <image src="/images/order/tick.svg" />
+        </view>
+      </view>
+    </view>
+    <view class="popup-btns">
+      <view class="confirmBtn" catchtap="confirmRefund">确定</view>
+      <view class="closeBtn" catchtap="closePopup">取消</view>
+    </view>
+  </view>
+</view>

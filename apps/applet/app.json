@@ -7,6 +7,8 @@
     "pages/shop-cart/index",
     "pages/settlement/index",
     "pages/order/index",
+    "pages/order-details/index",
+    "pages/refund-details/index",
     "pages/address/index",
     "pages/address/edit/index",
     "pages/option-address/index",

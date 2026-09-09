@@ -1,0 +1,51 @@
+<view class="refund-detail">
+  <view class="top" wx:if="{{orderDetail.status === 0}}">
+    <view class="status">请等待商家处理</view>
+    <view class="time">{{countdown}}</view>
+  </view>
+  <view class="top" wx:if="{{orderDetail.status === 1}}">
+    <view class="status">{{isMoneyRefund ? '退款成功' : '售后完成'}}</view>
+    <view class="time">{{orderDetail.refundTime}}</view>
+  </view>
+  <view class="hint" wx:if="{{orderDetail.status === 0}}">
+    <view class="main">您已成功发起售后申请，请耐心等待商家处理</view>
+    <view class="item" wx:if="{{isMoneyRefund}}">· 商家同意或超时未处理，系统将退款给您。</view>
+    <view class="item" wx:else>· 商家同意后将为您安排{{orderDetail.refundType === 3 ? '换货' : '补寄'}}。</view>
+    <view class="btn-group">
+      <view class="item-btn" bindtap="undoRefundApply">撤销申请</view>
+    </view>
+  </view>
+  <view class="goods-info">
+    <view class="title">售后信息</view>
+    <view class="goods-list">
+      <navigator wx:for="{{orderDetail.goodsList}}" url="/pages/goods-details/index?id={{item.goodsId}}">
+        <view class="goods">
+          <view class="image">
+            <image src="{{item.picture}}" />
+          </view>
+          <view class="info">
+            <view class="name">{{item.title}}</view>
+            <view class="specs">{{item.specs}}</view>
+          </view>
+        </view>
+      </navigator>
+    </view>
+    <view class="cast-detail">
+      <view class="cost-item">
+        <view>售后类型：{{refundTypeText}}</view>
+      </view>
+      <view class="cost-item">
+        <view>售后原因：{{orderDetail.reason}}</view>
+      </view>
+      <view class="cost-item" wx:if="{{isMoneyRefund}}">
+        <view>退款金额：￥ {{orderDetail.refundAmount}}</view>
+      </view>
+      <view class="cost-item">
+        <view>申请时间：{{orderDetail.applyTime}}</view>
+      </view>
+      <view class="cost-item">
+        <view>售后编号：{{orderDetail.refundNo}}</view>
+      </view>
+    </view>
+  </view>
+</view>
