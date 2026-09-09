@@ -327,12 +327,17 @@ Page({
         if (!rect) {
           return
         }
+        // 菜单默认在按钮下方展开；下方空间不足时改为向上
+        const systemInfo = wx.getSystemInfoSync()
+        const rpx = systemInfo.windowWidth / 750
+        const menuHeight = actions.length * 88 * rpx
+        const below = systemInfo.windowHeight - rect.bottom >= menuHeight + 10
         this.setData({
           moreMenuId: id,
           moreMenuActions: actions,
           moreMenuLeft: rect.left,
-          moreMenuTop: rect.bottom,
-          moreMenuAbove: false
+          moreMenuTop: below ? rect.bottom : rect.top,
+          moreMenuAbove: !below
         })
       })
       .exec()
