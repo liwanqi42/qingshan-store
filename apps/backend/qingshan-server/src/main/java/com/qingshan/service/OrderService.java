@@ -167,4 +167,10 @@ public interface OrderService {
      * @param id
      */
     void complete(Long id);
+
+    /**
+     * 催发货
+     * @param id
+     */
+    void reminderToShip(Long id);
 }

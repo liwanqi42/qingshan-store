@@ -597,4 +597,22 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.update(orders);
     }
+
+    /**
+     * 催发货：只允许催促自己的、仍处于待发货阶段的订单
+     * @param id
+     */
+    @Override
+    public void reminderToShip(Long id) {
+        Orders ordersDB = orderValidator.requireOwnedById(id, BaseContext.getCurrentId());
+        orderValidator.checkCanRemindShip(ordersDB);
+
+        // type=1来单提醒，type=2登录后待接单提醒，type=3用户催发货
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 3);
+        map.put("orderId", ordersDB.getId());
+        map.put("content", "用户催发货，订单号: " + ordersDB.getNumber());
+
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
+    }
 }

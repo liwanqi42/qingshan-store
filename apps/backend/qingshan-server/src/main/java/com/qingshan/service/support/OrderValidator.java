@@ -179,6 +179,17 @@ public class OrderValidator {
     }
 
     /**
+     * 只有待发货阶段（待接单、已接单待派送）且没有售后处理中的订单可以催发货
+     */
+    public void checkCanRemindShip(Orders orders) {
+        if (!Orders.STATUS_AWAITING_SHIPMENT.equals(orders.getStatus())
+                && !Orders.STATUS_SHIPPED.equals(orders.getStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        checkNoRefundRecord(orders);
+    }
+
+    /**
      * 只允许删除已完成、已取消、已退款的订单
      */
     public void checkCanDelete(Orders orders) {

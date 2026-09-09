@@ -173,4 +173,15 @@ public class OrderController {
     public Result<OrderRemindVO> remind() {
         return Result.success(orderService.getRemindCount4User());
     }
+
+    /**
+     * 催发货
+     * @return
+     */
+    @GetMapping("/reminder/{id}")
+    @ApiOperation("催发货")
+    public Result reminderToShip(@PathVariable("id") Long id){
+        orderService.reminderToShip(id);
+        return Result.success();
+    }
 }
