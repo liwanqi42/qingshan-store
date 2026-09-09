@@ -1,5 +1,10 @@
 package com.qingshan.websocket;
 
+import com.alibaba.fastjson.JSON;
+import com.qingshan.entity.Orders;
+import com.qingshan.mapper.OrderMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -7,12 +12,14 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * WebSocket服务
  */
+@Slf4j
 @Component
 @ServerEndpoint("/ws/{sid}")
 public class WebSocketServer {
@@ -21,12 +28,24 @@ public class WebSocketServer {
     private static final Map<String, Session> sessionMap = new ConcurrentHashMap<>();
 
     /**
+     * 每个连接由WebSocket容器新建实例，Spring注入的依赖需放到静态字段供所有实例共用
+     */
+    private static OrderMapper orderMapper;
+
+    @Autowired
+    public void setOrderMapper(OrderMapper orderMapper) {
+        WebSocketServer.orderMapper = orderMapper;
+    }
+
+    /**
      * 连接建立成功调用的方法
      */
     @OnOpen
     public void onOpen(Session session, @PathParam("sid") String sid) {
-        System.out.println("客户端：" + sid + "建立连接");
+        log.info("客户端：{}建立连接", sid);
         sessionMap.put(sid, session);
+        // 没有员工在线期间支付的订单不会再推送，登录建立连接后补发一次待接单提醒
+        sendPendingOrderNotice(session);
     }
 
     /**
@@ -36,7 +55,7 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMessage(String message, @PathParam("sid") String sid) {
-        System.out.println("收到来自客户端：" + sid + "的信息:" + message);
+        log.info("收到来自客户端：{}的信息:{}", sid, message);
     }
 
     /**
@@ -46,8 +65,28 @@ public class WebSocketServer {
      */
     @OnClose
     public void onClose(@PathParam("sid") String sid) {
-        System.out.println("连接断开:" + sid);
+        log.info("连接断开:{}", sid);
         sessionMap.remove(sid);
+    }
+
+    /**
+     * 向刚建立连接的客户端补发待接单提醒
+     * 消息格式：{"type":2,"count":3,"content":"有3个订单待接单"}
+     */
+    private void sendPendingOrderNotice(Session session) {
+        try {
+            Integer pending = orderMapper.countStatus(Orders.STATUS_AWAITING_SHIPMENT);
+            if (pending == null || pending <= 0) {
+                return;
+            }
+            Map<String, Object> message = new HashMap<>();
+            message.put("type", 2);
+            message.put("count", pending);
+            message.put("content", "有" + pending + "个订单待接单");
+            session.getAsyncRemote().sendText(JSON.toJSONString(message));
+        } catch (Exception e) {
+            log.warn("推送待接单提醒失败", e);
+        }
     }
 
     /**
