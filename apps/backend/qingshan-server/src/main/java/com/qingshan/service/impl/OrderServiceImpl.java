@@ -1,5 +1,6 @@
 package com.qingshan.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -24,6 +25,7 @@ import com.qingshan.utils.PageUtil;
 import com.qingshan.utils.SnowflakeIdGenerator;
 import com.qingshan.utils.WeChatPayUtil;
 import com.qingshan.vo.*;
+import com.qingshan.websocket.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -63,6 +67,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderStatusHandler orderStatusHandler;
+    @Autowired
+    private WebSocketServer webSocketServer;
 
     /**
      * 用户下单
@@ -145,7 +151,25 @@ public class OrderServiceImpl implements OrderService {
             // TODO(wechat-pay): 订单已取消/超时而微信回调仍成功时，必须自动发起退款，并记录 payment_notify_log，
             //   不能只打 warn 后放过（否则用户付了钱但订单是关闭状态）
             log.warn("订单{}当前不是待付款状态，跳过支付状态更新", outTradeNo);
+            return;
         }
+
+        // 只有状态真正变更时才推送来单提醒，避免重复回调/已取消订单误报
+        notifyNewOrder(ordersDB);
+    }
+
+    /**
+     * 通过WebSocket向管理端推送来单提醒
+     *
+     * @param orders 已支付订单
+     */
+    private void notifyNewOrder(Orders orders) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("type", 1);
+        map.put("orderId", orders.getId());
+        map.put("content", "订单号: " + orders.getNumber());
+
+        webSocketServer.sendToAllClient(JSON.toJSONString(map));
     }
 
     /**
@@ -166,6 +190,9 @@ public class OrderServiceImpl implements OrderService {
             // 已取消/已退款的订单不能再支付
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+
+        // 开发环境模拟支付同样要推送来单提醒，方便联调
+        notifyNewOrder(ordersDB);
     }
 
     /**
