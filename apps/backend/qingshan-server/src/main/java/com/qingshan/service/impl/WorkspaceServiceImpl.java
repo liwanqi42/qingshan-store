@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -47,20 +45,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
          * 平均客单价：营业额 / 有效订单数
          * 新增用户：当日新增用户的数量
          */
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", begin);
-        map.put("end", end);
-
         //查询总订单数
-        Integer totalOrderCount = orderMapper.countByMap(map);
+        Integer totalOrderCount = orderMapper.countByCondition(begin, end, null);
 
-        map.put("status", Orders.STATUS_COMPLETED);
         //营业额
-        Double turnover = orderMapper.sumByMap(map);
+        Double turnover = orderMapper.sumByCondition(begin, end, Orders.STATUS_COMPLETED);
         turnover = turnover == null ? 0.0 : turnover;
 
         //有效订单数
-        Integer validOrderCount = orderMapper.countByMap(map);
+        Integer validOrderCount = orderMapper.countByCondition(begin, end, Orders.STATUS_COMPLETED);
 
         //订单完成率
         Double orderCompletionRate = 0.0;
@@ -75,8 +68,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         }
 
         //新增用户数
-        map.remove("status");
-        Integer newUsers = userMapper.countByMap(map);
+        Integer newUsers = userMapper.countByCondition(begin, end);
 
         return BusinessDataVO.builder()
                 .turnover(turnover)
@@ -94,36 +86,28 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public OrderOverViewVO getOrderOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("begin", LocalDateTime.now().with(LocalTime.MIN));
+        LocalDateTime begin = LocalDateTime.now().with(LocalTime.MIN);
 
         //待付款
-        map.put("status", Orders.STATUS_PENDING_PAYMENT);
-        Integer pendingPaymentOrders = orderMapper.countByMap(map);
+        Integer pendingPaymentOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_PENDING_PAYMENT);
 
         //待发货
-        map.put("status", Orders.STATUS_AWAITING_SHIPMENT);
-        Integer awaitingShipmentOrders = orderMapper.countByMap(map);
+        Integer awaitingShipmentOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_AWAITING_SHIPMENT);
 
         //已接单待派送
-        map.put("status", Orders.STATUS_SHIPPED);
-        Integer shippedOrders = orderMapper.countByMap(map);
+        Integer shippedOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_SHIPPED);
 
         //配送中
-        map.put("status", Orders.STATUS_IN_TRANSIT);
-        Integer inTransitOrders = orderMapper.countByMap(map);
+        Integer inTransitOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_IN_TRANSIT);
 
         //已完成
-        map.put("status", Orders.STATUS_COMPLETED);
-        Integer completedOrders = orderMapper.countByMap(map);
+        Integer completedOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_COMPLETED);
 
         //已取消
-        map.put("status", Orders.STATUS_CANCELLED);
-        Integer cancelledOrders = orderMapper.countByMap(map);
+        Integer cancelledOrders = orderMapper.countByCondition(begin, null, Orders.STATUS_CANCELLED);
 
         //全部订单
-        map.remove("status");
-        Integer allOrders = orderMapper.countByMap(map);
+        Integer allOrders = orderMapper.countByCondition(begin, null, null);
 
         return OrderOverViewVO.builder()
                 .pendingPaymentOrders(pendingPaymentOrders)
@@ -143,12 +127,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public SaleOverViewVO getProductOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", StatusConstant.ENABLE);
-        Integer onSale = productMapper.countByMap(map);
-
-        map.put("status", StatusConstant.DISABLE);
-        Integer offSale = productMapper.countByMap(map);
+        Integer onSale = productMapper.countByCondition(StatusConstant.ENABLE, null);
+        Integer offSale = productMapper.countByCondition(StatusConstant.DISABLE, null);
 
         return SaleOverViewVO.builder()
                 .onSale(onSale)
@@ -163,12 +143,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
      */
     @Override
     public SaleOverViewVO getBundleOverView() {
-        Map<String, Object> map = new HashMap<>();
-        map.put("status", StatusConstant.ENABLE);
-        Integer onSale = bundleMapper.countByMap(map);
-
-        map.put("status", StatusConstant.DISABLE);
-        Integer offSale = bundleMapper.countByMap(map);
+        Integer onSale = bundleMapper.countByCondition(StatusConstant.ENABLE, null);
+        Integer offSale = bundleMapper.countByCondition(StatusConstant.DISABLE, null);
 
         return SaleOverViewVO.builder()
                 .onSale(onSale)

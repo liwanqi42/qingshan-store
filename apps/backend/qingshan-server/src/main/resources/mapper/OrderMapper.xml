@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.qingshan.mapper.OrderMapper">
 
-    <select id="countByMap" resultType="java.lang.Integer">
+    <select id="countByCondition" resultType="java.lang.Integer">
         select count(id) from orders
         <where>
             <if test="begin != null">
@@ -18,7 +18,7 @@
         </where>
     </select>
 
-    <select id="sumByMap" resultType="java.lang.Double">
+    <select id="sumByCondition" resultType="java.lang.Double">
         select sum(amount) from orders
         <where>
             <if test="begin != null">

@@ -12,24 +12,31 @@ import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
 
     /**
      * 根据条件统计订单数量
-     * @param map
+     * @param begin
+     * @param end
+     * @param status
      * @return
      */
-    Integer countByMap(Map map);
+    Integer countByCondition(@Param("begin") LocalDateTime begin,
+                             @Param("end") LocalDateTime end,
+                             @Param("status") Integer status);
 
     /**
      * 根据条件统计订单金额
-     * @param map
+     * @param begin
+     * @param end
+     * @param status
      * @return
      */
-    Double sumByMap(Map map);
+    Double sumByCondition(@Param("begin") LocalDateTime begin,
+                          @Param("end") LocalDateTime end,
+                          @Param("status") Integer status);
 
     /**
      * 插入订单数据
