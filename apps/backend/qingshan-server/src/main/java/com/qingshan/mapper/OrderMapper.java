@@ -12,9 +12,25 @@ import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
+
+    /**
+     * 根据条件统计订单数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
+
+    /**
+     * 根据条件统计订单金额
+     * @param map
+     * @return
+     */
+    Double sumByMap(Map map);
+
     /**
      * 插入订单数据
      * @param orders

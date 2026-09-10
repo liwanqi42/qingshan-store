@@ -13,9 +13,17 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface BundleMapper {
+
+    /**
+     * 根据条件统计套装数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
 
     /**
      * 新增套装

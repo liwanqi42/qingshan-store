@@ -60,6 +60,18 @@
         </where>
     </select>
 
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from bundle
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+
     <select id="list" parameterType="Bundle" resultType="Bundle">
         select * from bundle
         <where>

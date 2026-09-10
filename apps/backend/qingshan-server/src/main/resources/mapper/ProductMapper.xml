@@ -42,6 +42,18 @@
     </select>
 
 
+    <select id="countByMap" resultType="java.lang.Integer">
+        select count(id) from product
+        <where>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+
     <delete id="deleteByProductIds">
         delete from product where id in 
         <foreach collection="ids" open="(" close=")" separator="," item="id">

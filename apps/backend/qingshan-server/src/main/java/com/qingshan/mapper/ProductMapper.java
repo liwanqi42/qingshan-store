@@ -13,6 +13,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface ProductMapper {
@@ -24,6 +25,13 @@ public interface ProductMapper {
      */
     @Select("select count(id) from product where category_id = #{categoryId}")
     Integer countByCategoryId(@Param("categoryId") Long categoryId);
+
+    /**
+     * 根据条件统计商品数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
 
     /**
      * 新增商品及样式

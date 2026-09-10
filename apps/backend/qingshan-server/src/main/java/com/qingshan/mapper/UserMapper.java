@@ -4,8 +4,17 @@ import com.qingshan.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.Map;
+
 @Mapper
 public interface UserMapper {
+
+    /**
+     * 根据条件统计用户数量
+     * @param map
+     * @return
+     */
+    Integer countByMap(Map map);
 
     @Select("select * from user where id = #{id}")
     User getById(Long id);
