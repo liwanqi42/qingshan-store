@@ -1,6 +1,7 @@
 package com.qingshan.mapper;
 
 import com.github.pagehelper.Page;
+import com.qingshan.dto.GoodsSalesDTO;
 import com.qingshan.dto.OrdersPageQueryDTO;
 import com.qingshan.entity.Orders;
 import com.qingshan.vo.OrderRemindVO;
@@ -37,6 +38,14 @@ public interface OrderMapper {
     Double sumByCondition(@Param("begin") LocalDateTime begin,
                           @Param("end") LocalDateTime end,
                           @Param("status") Integer status);
+
+    /**
+     * 统计指定时间区间内的销量排名前10
+     * @param begin
+     * @param end
+     * @return
+     */
+    List<GoodsSalesDTO> getSalesTop10(@Param("begin") LocalDateTime begin, @Param("end") LocalDateTime end);
 
     /**
      * 插入订单数据
