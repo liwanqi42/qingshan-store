@@ -9,7 +9,7 @@
         <version>2.7.3</version>
     </parent>
     <groupId>com.qingshan</groupId>
-    <artifactId>qingshan-store</artifactId>
+    <artifactId>backend</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
