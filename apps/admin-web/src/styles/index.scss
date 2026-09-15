@@ -1,0 +1,45 @@
+@import './reset.scss';
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: $font-size-base;
+  color: $text-primary;
+  background-color: $bg-page;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app-container {
+  padding: 20px;
+}
+
+.page-container {
+  padding: 20px;
+  background-color: $bg-white;
+  border-radius: $border-radius-base;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-danger {
+  color: $color-danger;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.mb-10 {
+  margin-bottom: 10px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.el-card {
+  border-radius: $border-radius-base;
+}
