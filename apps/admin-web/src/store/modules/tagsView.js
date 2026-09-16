@@ -1,5 +1,25 @@
+const STORAGE_KEY = 'admin-web-visited-views'
+
+function readVisitedViews() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const views = raw ? JSON.parse(raw) : []
+    return Array.isArray(views) ? views : []
+  } catch (e) {
+    return []
+  }
+}
+
+function persistVisitedViews(views) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(views))
+  } catch (e) {
+    return
+  }
+}
+
 const state = {
-  visitedViews: [],
+  visitedViews: readVisitedViews(),
   cachedViews: []
 }
 
@@ -12,6 +32,7 @@ const mutations = {
       ...view,
       title: view.title || (view.meta && view.meta.title) || '未命名'
     })
+    persistVisitedViews(state.visitedViews)
   },
   ADD_CACHED_VIEW(state, view) {
     if (!view.name || state.cachedViews.includes(view.name)) {
@@ -26,6 +47,7 @@ const mutations = {
     state.visitedViews = state.visitedViews.filter(
       item => item.path !== view.path
     )
+    persistVisitedViews(state.visitedViews)
   },
   DEL_CACHED_VIEW(state, view) {
     if (!view.name) {
@@ -43,6 +65,7 @@ const mutations = {
     state.cachedViews = state.cachedViews.filter(name =>
       cachedNames.includes(name)
     )
+    persistVisitedViews(state.visitedViews)
   },
   DEL_ALL_VIEWS(state) {
     state.visitedViews = state.visitedViews.filter(
@@ -54,6 +77,7 @@ const mutations = {
     state.cachedViews = state.cachedViews.filter(name =>
       cachedNames.includes(name)
     )
+    persistVisitedViews(state.visitedViews)
   }
 }
 
