@@ -43,3 +43,11 @@ body {
 .el-card {
   border-radius: $border-radius-base;
 }
+
+#nprogress .bar {
+  background: $color-primary !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px $color-primary, 0 0 5px $color-primary;
+}
