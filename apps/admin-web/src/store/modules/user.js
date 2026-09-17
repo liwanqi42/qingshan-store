@@ -5,6 +5,7 @@ import {
   setUserInfo,
   clearAuth
 } from '@/utils/auth'
+import { login as loginApi } from '@/api/employee'
 
 const token = getToken()
 const cachedUserInfo = token ? getUserInfo() : null
@@ -50,6 +51,24 @@ const mutations = {
 }
 
 const actions = {
+  login({ dispatch }, loginForm) {
+    return loginApi(loginForm).then(res => {
+      const data = res.data || {}
+
+      if (!data.token) {
+        throw new Error('登录响应缺少 token')
+      }
+
+      return dispatch('setLoginState', {
+        token: data.token,
+        userInfo: {
+          id: data.id,
+          userName: data.userName,
+          name: data.name
+        }
+      }).then(() => data)
+    })
+  },
   setLoginState({ commit }, payload = {}) {
     const { token, userInfo, roles, permissions } = payload
 
