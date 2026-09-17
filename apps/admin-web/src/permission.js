@@ -1,4 +1,5 @@
 import router from './router'
+import store from './store'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -8,7 +9,33 @@ const APP_TITLE = process.env.VUE_APP_TITLE || '青山商店管理后台'
 
 router.beforeEach((to, from, next) => {
   NProgress.start()
-  next()
+
+  const hasToken = store.getters['user/isLoggedIn']
+
+  if (hasToken) {
+    if (to.path === '/login') {
+      const redirect = to.query.redirect
+      const canRedirect =
+        typeof redirect === 'string' &&
+        redirect.startsWith('/') &&
+        !redirect.startsWith('//') &&
+        redirect !== '/login'
+      next(canRedirect ? redirect : '/dashboard')
+      return
+    }
+    next()
+    return
+  }
+
+  if (to.meta && to.meta.notNeedAuth) {
+    next()
+    return
+  }
+
+  next({
+    path: '/login',
+    query: { redirect: to.fullPath }
+  })
 })
 
 router.afterEach(to => {

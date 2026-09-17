@@ -37,7 +37,6 @@
 <script>
 import Hamburger from '../Hamburger/index.vue'
 import Breadcrumb from '../Breadcrumb/index.vue'
-import { removeToken } from '@/utils/auth'
 
 export default {
   name: 'AppNavbar',
@@ -76,7 +75,7 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          removeToken()
+          this.$store.dispatch('user/clearLoginState')
           this.$router.push('/login')
         })
         .catch(() => {})

@@ -14,19 +14,19 @@ export const constantRoutes = [
     path: '/login',
     name: 'Login',
     component: Login,
-    meta: { title: '登录', hidden: true }
+    meta: { title: '登录', hidden: true, notNeedAuth: true }
   },
   {
     path: '/404',
     name: 'NotFound',
     component: NotFound,
-    meta: { title: '404', hidden: true }
+    meta: { title: '404', hidden: true, notNeedAuth: true }
   },
   {
     path: '/401',
     name: 'Unauthorized',
     component: Unauthorized,
-    meta: { title: '401', hidden: true }
+    meta: { title: '401', hidden: true, notNeedAuth: true }
   },
   {
     path: '/redirect',

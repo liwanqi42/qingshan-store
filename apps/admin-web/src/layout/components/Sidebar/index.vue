@@ -20,7 +20,7 @@
         router
       >
         <sidebar-item
-          v-for="route in routes"
+          v-for="route in sidebarRoutes"
           :key="route.path"
           :item="route"
           :base-path="getBasePath(route.path)"
@@ -32,6 +32,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import SidebarItem from './SidebarItem.vue'
 import { isExternal } from '@/utils'
 
@@ -54,10 +55,7 @@ export default {
     }
   },
   computed: {
-    routes() {
-      const rootRoute = this.$router.options.routes.find(route => route.path === '/')
-      return rootRoute && rootRoute.children ? rootRoute.children : []
-    },
+    ...mapGetters('permission', ['sidebarRoutes']),
     activeMenu() {
       const { meta, path } = this.$route
       return (meta && meta.activeMenu) || path
