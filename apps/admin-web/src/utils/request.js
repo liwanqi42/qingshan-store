@@ -1,12 +1,37 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
-import { getToken } from './auth'
+import { getToken, clearAuth } from './auth'
 import { getBaseApi } from './index'
 
 const service = axios.create({
   baseURL: getBaseApi(),
   timeout: 15000
 })
+
+let isHandlingUnauthorized = false
+
+function handleUnauthorized() {
+  if (isHandlingUnauthorized) {
+    return
+  }
+
+  const currentHash = window.location.hash.replace(/^#/, '') || '/'
+
+  if (currentHash.startsWith('/login')) {
+    return
+  }
+
+  isHandlingUnauthorized = true
+  Message.error('登录状态已失效，请重新登录')
+  clearAuth()
+
+  const redirect = encodeURIComponent(currentHash)
+  const target = `${window.location.origin}${window.location.pathname}?expired=1#/login?redirect=${redirect}`
+
+  setTimeout(() => {
+    window.location.replace(target)
+  }, 300)
+}
 
 service.interceptors.request.use(
   config => {
@@ -49,7 +74,8 @@ service.interceptors.response.use(
       const { status, data } = error.response
 
       if (status === 401) {
-        message = '登录状态已失效，请重新登录'
+        handleUnauthorized()
+        return Promise.reject(error)
       } else if (data && data.msg) {
         message = data.msg
       } else if (status === 404) {

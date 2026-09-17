@@ -33,3 +33,19 @@ export function checkRole(userRoles, requiredRoles) {
   }
   return required.some(role => roles.includes(role))
 }
+
+export function checkRouteAccess(route, roles, permissions) {
+  const meta = (route && route.meta) || {}
+
+  if (meta.roles && !checkRole(roles, meta.roles)) {
+    return false
+  }
+  if (
+    meta.permissions &&
+    !checkRole(roles, 'admin') &&
+    !checkPermission(permissions, meta.permissions)
+  ) {
+    return false
+  }
+  return true
+}

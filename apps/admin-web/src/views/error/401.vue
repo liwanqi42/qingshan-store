@@ -19,6 +19,7 @@ export default {
       this.$router.push('/')
     },
     goLogin() {
+      this.$store.dispatch('user/clearLoginState')
       this.$router.push('/login')
     }
   }

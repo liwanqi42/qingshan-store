@@ -1,10 +1,9 @@
 import {
   getToken,
   setToken,
-  removeToken,
   getUserInfo,
   setUserInfo,
-  removeUserInfo
+  clearAuth
 } from '@/utils/auth'
 
 const token = getToken()
@@ -70,8 +69,7 @@ const actions = {
     )
   },
   clearLoginState({ commit }) {
-    removeToken()
-    removeUserInfo()
+    clearAuth()
     commit('RESET_STATE')
   }
 }

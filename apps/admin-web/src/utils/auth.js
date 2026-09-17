@@ -43,3 +43,8 @@ export function setUserInfo(userInfo) {
 export function removeUserInfo() {
   localStorage.removeItem(USER_INFO_KEY)
 }
+
+export function clearAuth() {
+  removeToken()
+  removeUserInfo()
+}

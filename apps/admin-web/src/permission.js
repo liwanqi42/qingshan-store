@@ -1,5 +1,6 @@
 import router from './router'
 import store from './store'
+import { checkRouteAccess } from '@/utils/permission'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -23,6 +24,17 @@ router.beforeEach((to, from, next) => {
       next(canRedirect ? redirect : '/dashboard')
       return
     }
+    const roles = store.getters['user/roles']
+    const permissions = store.getters['user/permissions']
+    const allowed = to.matched.every(route =>
+      checkRouteAccess(route, roles, permissions)
+    )
+
+    if (!allowed) {
+      next('/401')
+      return
+    }
+
     next()
     return
   }

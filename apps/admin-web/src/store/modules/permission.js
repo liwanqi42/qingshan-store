@@ -1,25 +1,9 @@
 import { constantRoutes } from '@/router'
-import { checkPermission, checkRole } from '@/utils/permission'
-
-function hasRouteAccess(route, roles, permissions) {
-  const meta = route.meta || {}
-
-  if (meta.roles && !checkRole(roles, meta.roles)) {
-    return false
-  }
-  if (
-    meta.permissions &&
-    !checkRole(roles, 'admin') &&
-    !checkPermission(permissions, meta.permissions)
-  ) {
-    return false
-  }
-  return true
-}
+import { checkRouteAccess } from '@/utils/permission'
 
 export function filterRoutes(routes, roles, permissions) {
   return routes
-    .filter(route => hasRouteAccess(route, roles, permissions))
+    .filter(route => checkRouteAccess(route, roles, permissions))
     .map(route => {
       if (!route.children) {
         return { ...route }
