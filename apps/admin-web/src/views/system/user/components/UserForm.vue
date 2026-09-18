@@ -4,6 +4,7 @@
     :visible.sync="dialogVisible"
     width="520px"
     append-to-body
+    @closed="handleClosed"
   >
     <el-form
       ref="form"
@@ -173,6 +174,17 @@ export default {
         phone: employee.phone || '',
         sex: String(employee.sex || '1'),
         idNumber: employee.idNumber || ''
+      }
+
+      this.$nextTick(() => {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate()
+        }
+      })
+    },
+    handleClosed() {
+      if (this.$refs.form) {
+        this.$refs.form.clearValidate()
       }
     },
     submit() {

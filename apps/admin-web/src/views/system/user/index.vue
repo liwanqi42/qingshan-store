@@ -172,6 +172,7 @@ export default {
       this.fetchList()
     },
     handleSizeChange(size) {
+      this.page = 1
       this.pageSize = size
       this.fetchList()
     },
@@ -201,11 +202,15 @@ export default {
     },
     handleStatusChange(row) {
       const status = row.status
+      const previousStatus = status === 1 ? 0 : 1
+
       enableOrDisableEmployee(status, row.id)
         .then(() => {
           this.$message.success(status === 1 ? '员工已启用' : '员工已禁用')
         })
-        .catch(() => {})
+        .catch(() => {
+          row.status = previousStatus
+        })
     },
     handleFormSuccess() {
       this.fetchList()
