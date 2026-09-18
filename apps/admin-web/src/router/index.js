@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Layout from '@/layout/index.vue'
 import Login from '@/views/login/index.vue'
 import Dashboard from '@/views/dashboard/index.vue'
+import SystemUser from '@/views/system/user/index.vue'
 import NotFound from '@/views/error/404.vue'
 import Unauthorized from '@/views/error/401.vue'
 import Redirect from '@/views/redirect/index.vue'
@@ -51,6 +52,12 @@ export const constantRoutes = [
         name: 'DashboardView',
         component: Dashboard,
         meta: { title: '工作台', icon: 'el-icon-s-home', affix: true }
+      },
+      {
+        path: 'system/user',
+        name: 'SystemUserView',
+        component: SystemUser,
+        meta: { title: '员工管理', icon: 'el-icon-s-custom' }
       }
     ]
   },

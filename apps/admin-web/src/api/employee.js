@@ -23,3 +23,42 @@ export function editPassword(data) {
     data
   })
 }
+
+export function getEmployeePage(params) {
+  return request({
+    url: '/admin/employee/page',
+    method: 'get',
+    params
+  })
+}
+
+export function addEmployee(data) {
+  return request({
+    url: '/admin/employee',
+    method: 'post',
+    data
+  })
+}
+
+export function updateEmployee(data) {
+  return request({
+    url: '/admin/employee',
+    method: 'put',
+    data
+  })
+}
+
+export function getEmployeeById(id) {
+  return request({
+    url: `/admin/employee/${id}`,
+    method: 'get'
+  })
+}
+
+export function enableOrDisableEmployee(status, id) {
+  return request({
+    url: `/admin/employee/status/${status}`,
+    method: 'post',
+    params: { id }
+  })
+}
