@@ -119,6 +119,19 @@ export default {
       )
     }
   },
+  watch: {
+    'loginForm.username'() {
+      this.errorMessage = ''
+    },
+    'loginForm.password'() {
+      this.errorMessage = ''
+    },
+    rememberMe(value) {
+      if (!value) {
+        localStorage.removeItem(REMEMBER_KEY)
+      }
+    }
+  },
   methods: {
     restoreRememberedUsername() {
       const username = localStorage.getItem(REMEMBER_KEY)
@@ -144,7 +157,6 @@ export default {
           return
         }
 
-        this.persistRememberedUsername()
         this.loading = true
         this.errorMessage = ''
 
@@ -154,6 +166,11 @@ export default {
             password: this.loginForm.password
           })
           .then(() => {
+            this.persistRememberedUsername()
+            this.loginForm.password = ''
+            this.$refs.loginForm.clearValidate()
+            this.errorMessage = ''
+
             const redirect = this.$route.query.redirect
             const target =
               typeof redirect === 'string' &&

@@ -78,6 +78,11 @@ const mutations = {
       cachedNames.includes(name)
     )
     persistVisitedViews(state.visitedViews)
+  },
+  RESET_VIEWS(state) {
+    state.visitedViews = []
+    state.cachedViews = []
+    sessionStorage.removeItem(STORAGE_KEY)
   }
 }
 
@@ -98,6 +103,9 @@ const actions = {
   },
   delAllViews({ commit }) {
     commit('DEL_ALL_VIEWS')
+  },
+  resetViews({ commit }) {
+    commit('RESET_VIEWS')
   }
 }
 

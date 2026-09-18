@@ -73,7 +73,10 @@ const actions = {
     })
   },
   logout({ dispatch }) {
-    return logoutApi().finally(() => dispatch('clearLoginState'))
+    return logoutApi().finally(() => {
+      dispatch('clearLoginState')
+      dispatch('tagsView/resetViews', null, { root: true })
+    })
   },
   setLoginState({ commit }, payload = {}) {
     const { token, userInfo, roles, permissions } = payload

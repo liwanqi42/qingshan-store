@@ -155,8 +155,11 @@ export default {
           newPassword: this.form.newPassword
         })
           .then(() => {
-            this.$message.success('密码修改成功')
+            this.$message.success('密码修改成功，请重新登录')
             this.dialogVisible = false
+            this.$store.dispatch('user/clearLoginState')
+            this.$store.dispatch('tagsView/resetViews')
+            this.$router.replace('/login')
           })
           .catch(() => {})
           .finally(() => {
