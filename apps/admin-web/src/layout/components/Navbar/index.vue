@@ -14,7 +14,7 @@
       >
         <span class="user-dropdown">
           <i class="el-icon-user-solid user-avatar" />
-          <span class="user-name">{{ userName }}</span>
+          <span class="user-name">{{ name || '管理员' }}</span>
           <i class="el-icon-arrow-down" />
         </span>
         <el-dropdown-menu slot="dropdown">
@@ -31,18 +31,22 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <password-dialog :visible.sync="passwordDialogVisible" />
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import Hamburger from '../Hamburger/index.vue'
 import Breadcrumb from '../Breadcrumb/index.vue'
+import PasswordDialog from '../PasswordDialog.vue'
 
 export default {
   name: 'AppNavbar',
   components: {
     Hamburger,
-    Breadcrumb
+    Breadcrumb,
+    PasswordDialog
   },
   props: {
     collapsed: {
@@ -52,8 +56,11 @@ export default {
   },
   data() {
     return {
-      userName: '管理员'
+      passwordDialogVisible: false
     }
+  },
+  computed: {
+    ...mapGetters('user', ['name'])
   },
   methods: {
     toggleSidebar() {
@@ -61,7 +68,7 @@ export default {
     },
     handleCommand(command) {
       if (command === 'password') {
-        this.$message.info('修改密码功能将在登录模块中完善')
+        this.passwordDialogVisible = true
         return
       }
       if (command === 'logout') {
@@ -75,8 +82,12 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          this.$store.dispatch('user/clearLoginState')
-          this.$router.push('/login')
+          this.$store
+            .dispatch('user/logout')
+            .catch(() => {})
+            .finally(() => {
+              this.$router.push('/login')
+            })
         })
         .catch(() => {})
     }

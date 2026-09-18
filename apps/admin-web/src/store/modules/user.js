@@ -5,7 +5,10 @@ import {
   setUserInfo,
   clearAuth
 } from '@/utils/auth'
-import { login as loginApi } from '@/api/employee'
+import {
+  login as loginApi,
+  logout as logoutApi
+} from '@/api/employee'
 
 const token = getToken()
 const cachedUserInfo = token ? getUserInfo() : null
@@ -68,6 +71,9 @@ const actions = {
         }
       }).then(() => data)
     })
+  },
+  logout({ dispatch }) {
+    return logoutApi().finally(() => dispatch('clearLoginState'))
   },
   setLoginState({ commit }, payload = {}) {
     const { token, userInfo, roles, permissions } = payload

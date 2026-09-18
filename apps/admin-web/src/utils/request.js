@@ -62,8 +62,14 @@ service.interceptors.response.use(
     }
 
     const message = res.msg || '请求失败'
-    Message.error(message)
-    return Promise.reject(new Error(message))
+    const error = new Error(message)
+    error.bizMessage = message
+
+    if (!response.config.skipErrorMessage) {
+      Message.error(message)
+    }
+
+    return Promise.reject(error)
   },
   error => {
     let message = '请求失败，请稍后重试'
@@ -89,7 +95,12 @@ service.interceptors.response.use(
       message = '网络异常，请检查网络连接'
     }
 
-    Message.error(message)
+    error.bizMessage = message
+
+    if (!error.config || !error.config.skipErrorMessage) {
+      Message.error(message)
+    }
+
     return Promise.reject(error)
   }
 )

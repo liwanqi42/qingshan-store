@@ -10,6 +10,14 @@
         <h2>欢迎登录</h2>
         <p>青山商店管理后台</p>
       </div>
+      <el-alert
+        v-if="errorMessage"
+        :title="errorMessage"
+        type="error"
+        :closable="false"
+        show-icon
+        class="login-error"
+      />
       <el-form
         ref="loginForm"
         :model="loginForm"
@@ -95,7 +103,8 @@ export default {
         password: [{ validator: validatePassword, trigger: 'blur' }]
       },
       rememberMe: false,
-      loading: false
+      loading: false,
+      errorMessage: ''
     }
   },
   mounted() {
@@ -137,6 +146,7 @@ export default {
 
         this.persistRememberedUsername()
         this.loading = true
+        this.errorMessage = ''
 
         this.$store
           .dispatch('user/login', {
@@ -153,7 +163,11 @@ export default {
                 : '/dashboard'
             this.$router.replace(target)
           })
-          .catch(() => {})
+          .catch(error => {
+            this.errorMessage =
+              (error && (error.bizMessage || error.message)) ||
+              '登录失败，请稍后重试'
+          })
           .finally(() => {
             this.loading = false
           })
