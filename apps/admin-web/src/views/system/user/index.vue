@@ -53,7 +53,7 @@
         <el-table-column prop="phone" label="手机号" min-width="130" />
         <el-table-column label="性别" width="80">
           <template slot-scope="{ row }">
-            {{ formatSex(row.sex) }}
+            <dict-tag type="employee_sex" :value="row.sex" />
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
@@ -118,12 +118,14 @@ import {
 } from '@/api/employee'
 import UserForm from './components/UserForm.vue'
 import UserDetail from './components/UserDetail.vue'
+import DictTag from '@/components/DictTag/index.vue'
 
 export default {
   name: 'SystemUserView',
   components: {
     UserForm,
-    UserDetail
+    UserDetail,
+    DictTag
   },
   data() {
     return {
@@ -214,11 +216,6 @@ export default {
     },
     handleFormSuccess() {
       this.fetchList()
-    },
-    formatSex(sex) {
-      if (sex === '1' || sex === 1) return '男'
-      if (sex === '0' || sex === 0) return '女'
-      return sex || '-'
     },
     formatDateTime(value) {
       if (!value) return '-'
