@@ -3,6 +3,7 @@ import Login from '@/views/login/index.vue'
 import Dashboard from '@/views/dashboard/index.vue'
 import SystemUser from '@/views/system/user/index.vue'
 import SystemMenu from '@/views/system/menu/index.vue'
+import SystemRole from '@/views/system/role/index.vue'
 import NotFound from '@/views/error/404.vue'
 import Unauthorized from '@/views/error/401.vue'
 import Redirect from '@/views/redirect/index.vue'
@@ -63,6 +64,16 @@ export const constantRoutes = [
         meta: {
           title: '菜单管理',
           icon: 'el-icon-s-grid',
+          roles: ['admin']
+        }
+      },
+      {
+        path: 'system/role',
+        name: 'SystemRoleView',
+        component: SystemRole,
+        meta: {
+          title: '角色管理',
+          icon: 'el-icon-s-check',
           roles: ['admin']
         }
       }

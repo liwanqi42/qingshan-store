@@ -5,6 +5,7 @@ import tagsView from './modules/tagsView'
 import user from './modules/user'
 import permission from './modules/permission'
 import menu from './modules/menu'
+import role from './modules/role'
 
 Vue.use(Vuex)
 
@@ -14,6 +15,7 @@ export default new Vuex.Store({
     tagsView,
     user,
     permission,
-    menu
+    menu,
+    role
   }
 })
