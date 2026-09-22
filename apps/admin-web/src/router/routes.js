@@ -1,6 +1,7 @@
 import Layout from '@/layout/index.vue'
 import Login from '@/views/login/index.vue'
 import Dashboard from '@/views/dashboard/index.vue'
+import Statistics from '@/views/statistics/index.vue'
 import SystemUser from '@/views/system/user/index.vue'
 import SystemMenu from '@/views/system/menu/index.vue'
 import SystemRole from '@/views/system/role/index.vue'
@@ -51,6 +52,16 @@ export const constantRoutes = [
         name: 'DashboardView',
         component: Dashboard,
         meta: { title: '工作台', icon: 'el-icon-s-home', affix: true }
+      },
+      {
+        path: 'statistics',
+        name: 'StatisticsView',
+        component: Statistics,
+        meta: {
+          title: '数据统计',
+          icon: 'el-icon-s-data',
+          roles: ['admin']
+        }
       },
       {
         path: 'system/user',

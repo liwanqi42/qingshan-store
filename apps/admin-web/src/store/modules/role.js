@@ -9,6 +9,7 @@ function getDefaultRoles() {
       status: 1,
       menuPaths: [
         'DashboardView',
+        'StatisticsView',
         'SystemUserView',
         'SystemMenuView',
         'SystemRoleView',
