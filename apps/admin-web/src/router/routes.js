@@ -2,6 +2,9 @@ import Layout from '@/layout/index.vue'
 import Login from '@/views/login/index.vue'
 import Dashboard from '@/views/dashboard/index.vue'
 import Statistics from '@/views/statistics/index.vue'
+import CategoryView from '@/views/category/index.vue'
+import ProductView from '@/views/product/index.vue'
+import BundleView from '@/views/bundle/index.vue'
 import SystemUser from '@/views/system/user/index.vue'
 import SystemMenu from '@/views/system/menu/index.vue'
 import SystemRole from '@/views/system/role/index.vue'
@@ -62,6 +65,24 @@ export const constantRoutes = [
           icon: 'el-icon-s-data',
           roles: ['admin']
         }
+      },
+      {
+        path: 'category',
+        name: 'CategoryView',
+        component: CategoryView,
+        meta: { title: '分类管理', icon: 'el-icon-menu', roles: ['admin'] }
+      },
+      {
+        path: 'product',
+        name: 'ProductView',
+        component: ProductView,
+        meta: { title: '商品管理', icon: 'el-icon-s-goods', roles: ['admin'] }
+      },
+      {
+        path: 'bundle',
+        name: 'BundleView',
+        component: BundleView,
+        meta: { title: '套餐管理', icon: 'el-icon-box', roles: ['admin'] }
       },
       {
         path: 'system/user',
