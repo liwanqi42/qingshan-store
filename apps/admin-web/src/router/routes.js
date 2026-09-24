@@ -1,19 +1,35 @@
-import Layout from '@/layout/index.vue'
-import Login from '@/views/login/index.vue'
-import Dashboard from '@/views/dashboard/index.vue'
-import Statistics from '@/views/statistics/index.vue'
-import CategoryView from '@/views/category/index.vue'
-import ProductView from '@/views/product/index.vue'
-import BundleView from '@/views/bundle/index.vue'
-import OrderView from '@/views/order/index.vue'
-import ShopView from '@/views/shop/index.vue'
-import SystemUser from '@/views/system/user/index.vue'
-import SystemMenu from '@/views/system/menu/index.vue'
-import SystemRole from '@/views/system/role/index.vue'
-import SystemDict from '@/views/system/dict/index.vue'
-import NotFound from '@/views/error/404.vue'
-import Unauthorized from '@/views/error/401.vue'
-import Redirect from '@/views/redirect/index.vue'
+const Layout = () =>
+  import(/* webpackChunkName: "layout" */ '@/layout/index.vue')
+const Login = () =>
+  import(/* webpackChunkName: "login" */ '@/views/login/index.vue')
+const Dashboard = () =>
+  import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/index.vue')
+const Statistics = () =>
+  import(/* webpackChunkName: "statistics" */ '@/views/statistics/index.vue')
+const CategoryView = () =>
+  import(/* webpackChunkName: "category" */ '@/views/category/index.vue')
+const ProductView = () =>
+  import(/* webpackChunkName: "product" */ '@/views/product/index.vue')
+const BundleView = () =>
+  import(/* webpackChunkName: "bundle" */ '@/views/bundle/index.vue')
+const OrderView = () =>
+  import(/* webpackChunkName: "order" */ '@/views/order/index.vue')
+const ShopView = () =>
+  import(/* webpackChunkName: "shop" */ '@/views/shop/index.vue')
+const SystemUser = () =>
+  import(/* webpackChunkName: "system-user" */ '@/views/system/user/index.vue')
+const SystemMenu = () =>
+  import(/* webpackChunkName: "system-menu" */ '@/views/system/menu/index.vue')
+const SystemRole = () =>
+  import(/* webpackChunkName: "system-role" */ '@/views/system/role/index.vue')
+const SystemDict = () =>
+  import(/* webpackChunkName: "system-dict" */ '@/views/system/dict/index.vue')
+const NotFound = () =>
+  import(/* webpackChunkName: "error" */ '@/views/error/404.vue')
+const Unauthorized = () =>
+  import(/* webpackChunkName: "error" */ '@/views/error/401.vue')
+const Redirect = () =>
+  import(/* webpackChunkName: "redirect" */ '@/views/redirect/index.vue')
 
 export const constantRoutes = [
   {
