@@ -5,6 +5,8 @@ import Statistics from '@/views/statistics/index.vue'
 import CategoryView from '@/views/category/index.vue'
 import ProductView from '@/views/product/index.vue'
 import BundleView from '@/views/bundle/index.vue'
+import OrderView from '@/views/order/index.vue'
+import ShopView from '@/views/shop/index.vue'
 import SystemUser from '@/views/system/user/index.vue'
 import SystemMenu from '@/views/system/menu/index.vue'
 import SystemRole from '@/views/system/role/index.vue'
@@ -67,6 +69,12 @@ export const constantRoutes = [
         }
       },
       {
+        path: 'order',
+        name: 'OrderView',
+        component: OrderView,
+        meta: { title: '订单管理', icon: 'el-icon-s-order', roles: ['admin'] }
+      },
+      {
         path: 'category',
         name: 'CategoryView',
         component: CategoryView,
@@ -119,6 +127,12 @@ export const constantRoutes = [
           icon: 'el-icon-collection',
           roles: ['admin']
         }
+      },
+      {
+        path: 'shop',
+        name: 'ShopView',
+        component: ShopView,
+        meta: { title: '店铺设置', icon: 'el-icon-s-shop', roles: ['admin'] }
       }
     ]
   },

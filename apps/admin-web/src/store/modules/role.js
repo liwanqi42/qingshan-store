@@ -10,13 +10,15 @@ function getDefaultRoles() {
       menuPaths: [
         'DashboardView',
         'StatisticsView',
+        'OrderView',
         'CategoryView',
         'ProductView',
         'BundleView',
         'SystemUserView',
         'SystemMenuView',
         'SystemRoleView',
-        'SystemDictView'
+        'SystemDictView',
+        'ShopView'
       ]
     },
     {
