@@ -80,8 +80,8 @@
 <script>
 const STATUS_MAP = {
   1: { label: '待付款', type: 'info' },
-  2: { label: '待发货', type: 'warning' },
-  3: { label: '已接单', type: 'success' },
+  2: { label: '待接单', type: 'warning' },
+  3: { label: '待发货', type: 'warning' },
   4: { label: '配送中', type: 'success' },
   5: { label: '已完成', type: 'info' },
   6: { label: '已取消', type: 'danger' },

@@ -138,8 +138,8 @@ export default {
       const data = this.orderData || {}
       return [
         { label: '待付款', value: data.pendingPaymentOrders || 0 },
-        { label: '待发货', value: data.awaitingShipmentOrders || 0 },
-        { label: '已发货', value: data.shippedOrders || 0 },
+        { label: '待接单', value: data.awaitingShipmentOrders || 0 },
+        { label: '待发货', value: data.shippedOrders || 0 },
         { label: '配送中', value: data.inTransitOrders || 0 },
         { label: '已完成', value: data.completedOrders || 0 },
         { label: '已取消', value: data.cancelledOrders || 0 },

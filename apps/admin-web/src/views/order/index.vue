@@ -6,7 +6,7 @@
         :class="{ active: queryForm.status === 2 }"
         @click="handleStatClick(2)"
       >
-        <span class="stat-label">待发货</span>
+        <span class="stat-label">待接单</span>
         <strong class="stat-value">{{ stats.pendingShipment || 0 }}</strong>
       </div>
       <div
@@ -14,7 +14,7 @@
         :class="{ active: queryForm.status === 3 }"
         @click="handleStatClick(3)"
       >
-        <span class="stat-label">待派送</span>
+        <span class="stat-label">待发货</span>
         <strong class="stat-value">{{ stats.shipped || 0 }}</strong>
       </div>
       <div
@@ -109,49 +109,67 @@
             {{ formatDateTime(row.orderTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="170" fixed="right">
+        <el-table-column label="操作" width="210" fixed="right">
           <template slot-scope="{ row }">
             <el-button type="text" size="small" @click="handleDetail(row)">
               详情
             </el-button>
-            <el-dropdown trigger="click" @command="command => handleCommand(command, row)">
-              <el-button type="text" size="small">
-                操作<i class="el-icon-arrow-down" />
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item v-if="row.status === 2" command="confirm">
-                  接单
-                </el-dropdown-item>
-                <el-dropdown-item v-if="row.status === 2" command="reject">
-                  拒单
-                </el-dropdown-item>
-                <el-dropdown-item v-if="row.status === 3" command="delivery">
-                  派送
-                </el-dropdown-item>
-                <el-dropdown-item v-if="row.status === 4" command="complete">
-                  完成
-                </el-dropdown-item>
-                <el-dropdown-item
-                  v-if="[1, 2, 3].includes(row.status)"
-                  command="cancel"
-                >
-                  取消订单
-                </el-dropdown-item>
-                <el-dropdown-item
-                  v-if="row.refundStatus === 1"
-                  command="refundApprove"
-                  divided
-                >
-                  同意售后
-                </el-dropdown-item>
-                <el-dropdown-item
-                  v-if="row.refundStatus === 1"
-                  command="refundReject"
-                >
-                  拒绝售后
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
+            <el-button
+              v-if="row.status === 2 && !hasRefundRecord(row)"
+              type="text"
+              size="small"
+              @click="handleCommand('confirm', row)"
+            >
+              接单
+            </el-button>
+            <el-button
+              v-if="row.status === 2 && !hasRefundRecord(row)"
+              type="text"
+              size="small"
+              @click="handleCommand('reject', row)"
+            >
+              拒单
+            </el-button>
+            <el-button
+              v-if="row.status === 3 && !hasRefundRecord(row)"
+              type="text"
+              size="small"
+              @click="handleCommand('delivery', row)"
+            >
+              派送
+            </el-button>
+            <el-button
+              v-if="row.status === 4 && !hasRefundRecord(row)"
+              type="text"
+              size="small"
+              @click="handleCommand('complete', row)"
+            >
+              完成
+            </el-button>
+            <el-button
+              v-if="[1, 2, 3].includes(row.status) && !hasRefundRecord(row)"
+              type="text"
+              size="small"
+              @click="handleCommand('cancel', row)"
+            >
+              取消订单
+            </el-button>
+            <el-button
+              v-if="row.refundStatus === 1"
+              type="text"
+              size="small"
+              @click="handleCommand('refundApprove', row)"
+            >
+              同意售后
+            </el-button>
+            <el-button
+              v-if="row.refundStatus === 1"
+              type="text"
+              size="small"
+              @click="handleCommand('refundReject', row)"
+            >
+              拒绝售后
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -193,8 +211,8 @@ import OrderDetail from './components/OrderDetail.vue'
 
 const STATUS_MAP = {
   1: { label: '待付款', type: 'info' },
-  2: { label: '待发货', type: 'warning' },
-  3: { label: '已接单', type: 'success' },
+  2: { label: '待接单', type: 'warning' },
+  3: { label: '待发货', type: 'warning' },
   4: { label: '配送中', type: 'success' },
   5: { label: '已完成', type: 'info' },
   6: { label: '已取消', type: 'danger' },
@@ -304,6 +322,9 @@ export default {
     handleCurrentChange(page) {
       this.page = page
       this.fetchList()
+    },
+    hasRefundRecord(row) {
+      return [1, 2, 3, 4].includes(row.refundStatus)
     },
     handleDetail(row) {
       this.detailOrder = { ...row }

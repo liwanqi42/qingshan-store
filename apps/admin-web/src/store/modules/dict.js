@@ -21,8 +21,8 @@ function getDefaultDicts() {
       items: [
         { label: '待付款', value: '1', tagType: 'info', sort: 1 },
         { label: '待接单', value: '2', tagType: 'warning', sort: 2 },
-        { label: '已接单', value: '3', tagType: 'success', sort: 3 },
-        { label: '派送中', value: '4', tagType: 'success', sort: 4 },
+        { label: '待发货', value: '3', tagType: 'warning', sort: 3 },
+        { label: '配送中', value: '4', tagType: 'success', sort: 4 },
         { label: '已完成', value: '5', tagType: 'info', sort: 5 },
         { label: '已取消', value: '6', tagType: 'danger', sort: 6 }
       ]
