@@ -129,7 +129,7 @@ export const constantRoutes = [
         name: 'SystemRoleView',
         component: SystemRole,
         meta: {
-          title: '角色管理',
+          title: '权限管理',
           icon: 'el-icon-s-check',
           roles: ['admin']
         }
