@@ -7,10 +7,12 @@ import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
 import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
+import com.qingshan.entity.Role;
 import com.qingshan.properties.JwtProperties;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.EmployeeService;
+import com.qingshan.service.RoleService;
 import com.qingshan.service.support.LoginRateLimiter;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.EmployeeLoginVO;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +38,8 @@ public class EmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private RoleService roleService;
     @Autowired
     private JwtProperties jwtProperties;
     @Autowired
@@ -64,6 +69,9 @@ public class EmployeeController {
             throw e;
         }
 
+        //登录成功后，加载角色与菜单权限
+        Role role = roleService.requireEnabledByCode(employee.getRoleCode());
+
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
@@ -77,6 +85,12 @@ public class EmployeeController {
                 .userName(employee.getUsername())
                 .name(employee.getName())
                 .token(token)
+                .roleCode(role.getCode())
+                .roles(Collections.singletonList(role.getCode()))
+                .permissions(Role.CODE_ADMIN.equals(role.getCode())
+                        ? Collections.singletonList("*")
+                        : Collections.emptyList())
+                .menuPaths(roleService.resolveMenuPaths(role))
                 .build();
 
         return Result.success(employeeLoginVO);
@@ -101,6 +115,7 @@ public class EmployeeController {
     @PostMapping
     @ApiOperation("新增员工")
     public Result save(@RequestBody EmployeeDTO employeeDTO){
+        roleService.checkCurrentAdmin();
         employeeService.save(employeeDTO);
         return Result.success();
     }
@@ -126,6 +141,7 @@ public class EmployeeController {
     @PostMapping("/status/{status}")
     @ApiOperation("启用和禁用员工账户")
     public Result enableOrDisable(@PathVariable Integer status, long id){
+        roleService.checkCurrentAdmin();
         log.info("启用禁用员工账户: {}, {}", status, id);
         employeeService.enableOrDisable(status, id);
         return Result.success();
@@ -151,6 +167,7 @@ public class EmployeeController {
     @PutMapping
     @ApiOperation("修改员工信息")
     public Result update(@RequestBody EmployeeDTO employeeDTO){
+        roleService.checkCurrentAdmin();
         employeeService.update(employeeDTO);
         return Result.success();
     }

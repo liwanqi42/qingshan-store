@@ -10,13 +10,16 @@ import com.qingshan.dto.EmployeeLoginDTO;
 import com.qingshan.dto.EmployeePageQueryDTO;
 import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
+import com.qingshan.entity.Role;
 import com.qingshan.exception.AccountLockedException;
 import com.qingshan.exception.AccountNotFoundException;
+import com.qingshan.exception.BaseException;
 import com.qingshan.exception.PasswordEditFailedException;
 import com.qingshan.exception.PasswordErrorException;
 import com.qingshan.mapper.EmployeeMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.EmployeeService;
+import com.qingshan.service.RoleService;
 import com.qingshan.utils.PageUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
+
+    @Autowired
+    private RoleService roleService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -76,7 +82,10 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new AccountLockedException(MessageConstant.ACCOUNT_LOCKED);
         }
 
-        //3、返回实体对象
+        //3、校验角色是否存在且已启用
+        roleService.requireEnabledByCode(employee.getRoleCode());
+
+        //4、返回实体对象
         return employee;
     }
 
@@ -90,6 +99,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //对象属性拷贝
         BeanUtils.copyProperties(employeeDTO, employee);
+
+        //设置角色，默认普通员工
+        String roleCode = employee.getRoleCode();
+        if (!StringUtils.hasText(roleCode)) {
+            roleCode = Role.CODE_EMPLOYEE;
+        }
+        roleService.requireEnabledByCode(roleCode);
+        employee.setRoleCode(roleCode);
 
         //设置账户状态，默认正常状态
         employee.setStatus(StatusConstant.ENABLE);
@@ -171,6 +188,17 @@ public class EmployeeServiceImpl implements EmployeeService {
         //前端回显的是脱敏后的身份证号，含*时不更新该字段，避免覆盖数据库中的真实数据
         if (employee.getIdNumber() != null && employee.getIdNumber().contains("*")) {
             employee.setIdNumber(null);
+        }
+
+        //校验角色；管理员账号不允许改成其他角色，避免自锁
+        if (StringUtils.hasText(employee.getRoleCode())) {
+            Employee existing = employeeMapper.getById(employee.getId());
+            if (existing != null
+                    && "admin".equals(existing.getUsername())
+                    && !employee.getRoleCode().equals(existing.getRoleCode())) {
+                throw new BaseException(MessageConstant.ADMIN_EMPLOYEE_ROLE_IMMUTABLE);
+            }
+            roleService.requireEnabledByCode(employee.getRoleCode());
         }
 
         employeeMapper.update(employee);

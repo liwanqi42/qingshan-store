@@ -23,6 +23,7 @@ DROP TABLE IF EXISTS `shopping_cart`;
 DROP TABLE IF EXISTS `address_book`;
 DROP TABLE IF EXISTS `user`;
 DROP TABLE IF EXISTS `employee`;
+DROP TABLE IF EXISTS `sys_role`;
 DROP TABLE IF EXISTS `product_image`;
 DROP TABLE IF EXISTS `product_sku`;
 DROP TABLE IF EXISTS `product_attr`;
@@ -307,6 +308,27 @@ INSERT INTO `product_image` (`id`,`product_id`,`url`,`type`,`sort`) VALUES
     (47,73,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/228856c9-8a89-4821-b002-9d1e4e4fa636.jpg',1,3);
 
 -- ------------------------------------------------------------
+-- 角色与菜单权限
+-- ------------------------------------------------------------
+CREATE TABLE `sys_role` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '角色名称',
+  `code` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '角色编码',
+  `status` int NOT NULL DEFAULT '1' COMMENT '状态 0:禁用，1:启用',
+  `menu_paths` text CHARACTER SET utf8mb3 COLLATE utf8mb3_bin COMMENT '可访问的路由名称，逗号分隔，* 表示全部',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='角色与菜单权限';
+
+INSERT INTO `sys_role` (`id`,`name`,`code`,`status`,`menu_paths`,`create_time`,`update_time`) VALUES
+    (1,'超级管理员','admin',1,'DashboardView,StatisticsView,OrderView,CategoryView,ProductView,BundleView,SystemUserView,SystemMenuView,SystemRoleView,SystemDictView,ShopView','2022-02-15 15:51:20','2022-02-15 15:51:20'),
+    (2,'普通员工','employee',1,'DashboardView,SystemUserView','2022-02-15 15:51:20','2022-02-15 15:51:20');
+
+-- ------------------------------------------------------------
 -- 员工信息
 -- ------------------------------------------------------------
 CREATE TABLE `employee` (
@@ -317,6 +339,7 @@ CREATE TABLE `employee` (
   `phone` varchar(11) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '手机号',
   `sex` varchar(2) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '性别',
   `id_number` varchar(18) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '身份证号',
+  `role_code` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT 'employee' COMMENT '角色编码',
   `status` int NOT NULL DEFAULT '1' COMMENT '状态 0:禁用，1:启用',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
@@ -327,8 +350,8 @@ CREATE TABLE `employee` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='员工信息';
 
 -- 默认密码 123456（BCrypt），生产环境首次登录后必须立即修改
-INSERT INTO `employee` (`id`,`name`,`username`,`password`,`phone`,`sex`,`id_number`,`status`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
-    (1,'管理员','admin','$2a$10$1AvxBUOmDSE6tpzpP5p3fusX/B9125r3cm1uz.Y.owUAt3L8Bo6va','13812312312','1','110101199001010047',1,'2022-02-15 15:51:20','2022-02-17 09:16:20',10,1);
+INSERT INTO `employee` (`id`,`name`,`username`,`password`,`phone`,`sex`,`id_number`,`role_code`,`status`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
+    (1,'管理员','admin','$2a$10$1AvxBUOmDSE6tpzpP5p3fusX/B9125r3cm1uz.Y.owUAt3L8Bo6va','13812312312','1','110101199001010047','admin',1,'2022-02-15 15:51:20','2022-02-17 09:16:20',10,1);
 
 -- ------------------------------------------------------------
 -- 用户信息

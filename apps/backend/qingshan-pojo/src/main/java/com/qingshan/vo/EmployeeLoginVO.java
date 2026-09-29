@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Builder
@@ -27,5 +28,17 @@ public class EmployeeLoginVO implements Serializable {
 
     @ApiModelProperty("jwt令牌")
     private String token;
+
+    @ApiModelProperty("角色编码")
+    private String roleCode;
+
+    @ApiModelProperty("角色列表")
+    private List<String> roles;
+
+    @ApiModelProperty("按钮权限标识列表")
+    private List<String> permissions;
+
+    @ApiModelProperty("可访问的路由名称列表，* 表示全部")
+    private List<String> menuPaths;
 
 }

@@ -23,6 +23,17 @@ public class MessageConstant {
     public static final String UPLOAD_SIZE_EXCEEDED = "图片大小不能超过5MB";
     public static final String BUNDLE_ENABLE_FAILED = "捆绑包内包含未上架商品，无法上架";
     public static final String PASSWORD_EDIT_FAILED = "密码修改失败";
+    public static final String ROLE_NAME_REQUIRED = "请输入角色名称";
+    public static final String ROLE_CODE_REQUIRED = "请输入角色编码";
+    public static final String ROLE_CODE_INVALID = "角色编码需以字母开头，只能包含字母、数字和下划线";
+    public static final String ROLE_CODE_EXISTS = "角色编码已存在";
+    public static final String ROLE_CODE_IMMUTABLE = "角色编码不可修改";
+    public static final String ROLE_NOT_FOUND = "角色不存在";
+    public static final String ROLE_UNAVAILABLE = "角色不存在或已停用，请联系管理员";
+    public static final String ROLE_IN_USE = "该角色下还有员工，不能删除";
+    public static final String ADMIN_ROLE_PROTECTED = "内置管理员角色不能删除或禁用";
+    public static final String ADMIN_EMPLOYEE_ROLE_IMMUTABLE = "管理员账号不能修改角色";
+    public static final String NO_PERMISSION = "无权限执行该操作";
     public static final String PRODUCT_ON_SALE = "上架中的商品不能删除";
     public static final String BUNDLE_ON_SALE = "上架中的捆绑包不能删除";
     public static final String PRODUCT_BE_RELATED_BY_BUNDLE = "当前商品关联了捆绑包,不能删除";

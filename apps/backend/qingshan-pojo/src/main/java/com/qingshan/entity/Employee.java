@@ -30,6 +30,9 @@ public class Employee implements Serializable {
 
     private String idNumber;
 
+    /** 角色编码 */
+    private String roleCode;
+
     private Integer status;
 
 //    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

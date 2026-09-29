@@ -19,4 +19,7 @@ public class EmployeeDTO implements Serializable {
 
     private String idNumber;
 
+    /** 角色编码 */
+    private String roleCode;
+
 }
