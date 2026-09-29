@@ -26,8 +26,9 @@ router.beforeEach((to, from, next) => {
     }
     const roles = store.getters['user/roles']
     const permissions = store.getters['user/permissions']
+    const menuPaths = store.getters['user/menuPaths']
     const allowed = to.matched.every(route =>
-      checkRouteAccess(route, roles, permissions)
+      checkRouteAccess(route, roles, permissions, menuPaths)
     )
 
     if (!allowed) {

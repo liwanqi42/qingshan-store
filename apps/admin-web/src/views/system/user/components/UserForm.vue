@@ -34,6 +34,20 @@
           clearable
         />
       </el-form-item>
+      <el-form-item label="角色" prop="roleCode">
+        <el-select
+          v-model="form.roleCode"
+          placeholder="请选择角色"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="role in roleOptions"
+            :key="role.code"
+            :label="role.name"
+            :value="role.code"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item label="性别" prop="sex">
         <el-radio-group v-model="form.sex">
           <el-radio label="1">男</el-radio>
@@ -63,6 +77,7 @@
 
 <script>
 import { addEmployee, updateEmployee } from '@/api/employee'
+import { getRoleList } from '@/api/role'
 import {
   isValidUsername,
   isValidPhone,
@@ -123,11 +138,13 @@ export default {
     }
 
     return {
+      roleOptions: [],
       form: {
         id: undefined,
         username: '',
         name: '',
         phone: '',
+        roleCode: 'employee',
         sex: '1',
         idNumber: ''
       },
@@ -138,6 +155,7 @@ export default {
           { min: 2, max: 20, message: '姓名长度为 2-20 个字符', trigger: 'blur' }
         ],
         phone: [{ validator: validatePhone, trigger: 'blur' }],
+        roleCode: [{ required: true, message: '请选择角色', trigger: 'change' }],
         sex: [{ required: true, message: '请选择性别', trigger: 'change' }],
         idNumber: [{ validator: validateIdNumber, trigger: 'blur' }]
       },
@@ -172,15 +190,24 @@ export default {
         username: employee.username || '',
         name: employee.name || '',
         phone: employee.phone || '',
+        roleCode: employee.roleCode || 'employee',
         sex: String(employee.sex || '1'),
         idNumber: employee.idNumber || ''
       }
+      this.fetchRoles()
 
       this.$nextTick(() => {
         if (this.$refs.form) {
           this.$refs.form.clearValidate()
         }
       })
+    },
+    fetchRoles() {
+      getRoleList({ status: 1 })
+        .then(res => {
+          this.roleOptions = res.data || []
+        })
+        .catch(() => {})
     },
     handleClosed() {
       if (this.$refs.form) {

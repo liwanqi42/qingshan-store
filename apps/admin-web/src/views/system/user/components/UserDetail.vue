@@ -16,6 +16,9 @@
         <el-descriptions-item label="手机号">
           {{ maskPhone(employee.phone) || '-' }}
         </el-descriptions-item>
+        <el-descriptions-item label="角色">
+          {{ roleName || employee.roleCode || '-' }}
+        </el-descriptions-item>
         <el-descriptions-item label="性别">
           {{ formatSex(employee.sex) }}
         </el-descriptions-item>
@@ -51,6 +54,10 @@ export default {
     employee: {
       type: Object,
       default: null
+    },
+    roleName: {
+      type: String,
+      default: ''
     }
   },
   computed: {

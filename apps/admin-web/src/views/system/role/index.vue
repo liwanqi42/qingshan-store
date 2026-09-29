@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-alert
-      title="当前为本地角色配置，保存后立即生效；后端角色接口接入后可替换为持久化接口。"
+      title="角色与菜单权限保存到后端；员工在「员工管理」中选择角色，下次登录后按角色显示菜单。"
       type="info"
       :closable="false"
       show-icon
@@ -21,7 +21,7 @@
         </div>
       </div>
 
-      <el-table :data="roles" border stripe>
+      <el-table v-loading="loading" :data="roles" border stripe>
         <el-table-column prop="name" label="角色名称" min-width="140" />
         <el-table-column prop="code" label="角色编码" min-width="140" />
         <el-table-column label="菜单权限" width="100">
@@ -80,7 +80,12 @@
           <el-input v-model="form.name" placeholder="请输入角色名称" clearable />
         </el-form-item>
         <el-form-item label="角色编码" prop="code">
-          <el-input v-model="form.code" placeholder="如 admin" clearable />
+          <el-input
+            v-model="form.code"
+            :disabled="Boolean(form.id)"
+            placeholder="如 admin"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="状态">
           <el-switch
@@ -94,7 +99,9 @@
       </el-form>
       <span slot="footer">
         <el-button @click="formVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitRole">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="submitRole">
+          保存
+        </el-button>
       </span>
     </el-dialog>
 
@@ -121,8 +128,15 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import { constantRoutes } from '@/router/routes'
+import {
+  getRoleList,
+  addRole,
+  updateRole,
+  deleteRole,
+  enableOrDisableRole,
+  resetRoles
+} from '@/api/role'
 
 export default {
   name: 'SystemRoleView',
@@ -147,13 +161,15 @@ export default {
     }
 
     return {
+      loading: false,
+      saving: false,
+      roles: [],
       formVisible: false,
       form: {
         id: undefined,
         name: '',
         code: '',
-        status: 1,
-        menuPaths: []
+        status: 1
       },
       rules: {
         name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -164,14 +180,29 @@ export default {
     }
   },
   computed: {
-    ...mapState('role', ['roles']),
     menuTreeData() {
       const root = constantRoutes.find(route => route.path === '/')
       const children = root && root.children ? root.children : []
       return this.buildMenuTree(children)
     }
   },
+  created() {
+    // 清理旧版本保存在前端的角色配置
+    localStorage.removeItem('admin-web-roles')
+    this.fetchRoles()
+  },
   methods: {
+    fetchRoles() {
+      this.loading = true
+      getRoleList()
+        .then(res => {
+          this.roles = res.data || []
+        })
+        .catch(() => {})
+        .finally(() => {
+          this.loading = false
+        })
+    },
     buildMenuTree(routes) {
       return routes.map(route => ({
         key: route.name || route.path,
@@ -186,8 +217,7 @@ export default {
         id: undefined,
         name: '',
         code: '',
-        status: 1,
-        menuPaths: []
+        status: 1
       }
       this.formVisible = true
       this.$nextTick(() => {
@@ -201,8 +231,7 @@ export default {
         id: row.id,
         name: row.name,
         code: row.code,
-        status: row.status,
-        menuPaths: row.menuPaths || []
+        status: row.status
       }
       this.formVisible = true
       this.$nextTick(() => {
@@ -213,14 +242,26 @@ export default {
     },
     submitRole() {
       this.$refs.roleForm.validate(valid => {
-        if (!valid) {
+        if (!valid || this.saving) {
           return
         }
 
+        this.saving = true
         const isEdit = Boolean(this.form.id)
-        this.$store.dispatch('role/saveRole', { ...this.form })
-        this.formVisible = false
-        this.$message.success(isEdit ? '角色修改成功' : '角色新增成功')
+        const action = isEdit
+          ? updateRole({ ...this.form })
+          : addRole({ ...this.form })
+
+        action
+          .then(() => {
+            this.$message.success(isEdit ? '角色修改成功' : '角色新增成功')
+            this.formVisible = false
+            this.fetchRoles()
+          })
+          .catch(() => {})
+          .finally(() => {
+            this.saving = false
+          })
       })
     },
     handleFormClosed() {
@@ -229,8 +270,15 @@ export default {
       }
     },
     handleStatusChange(row, status) {
-      this.$store.dispatch('role/saveRole', { ...row, status })
-      this.$message.success(status === 1 ? '角色已启用' : '角色已禁用')
+      const previousStatus = row.status
+      row.status = status
+      enableOrDisableRole(status, row.id)
+        .then(() => {
+          this.$message.success(status === 1 ? '角色已启用' : '角色已禁用')
+        })
+        .catch(() => {
+          row.status = previousStatus
+        })
     },
     handleAssign(row) {
       this.currentRole = row
@@ -249,12 +297,16 @@ export default {
       const halfChecked = this.$refs.menuTree.getHalfCheckedKeys()
       const menuPaths = Array.from(new Set([...checked, ...halfChecked]))
 
-      this.$store.dispatch('role/saveRoleMenus', {
+      updateRole({
         id: this.currentRole.id,
         menuPaths
       })
-      this.permissionVisible = false
-      this.$message.success('菜单权限已保存')
+        .then(() => {
+          this.permissionVisible = false
+          this.$message.success('菜单权限已保存，员工下次登录后生效')
+          this.fetchRoles()
+        })
+        .catch(() => {})
     },
     handleDelete(row) {
       if (row.code === 'admin') {
@@ -267,20 +319,28 @@ export default {
         type: 'warning'
       })
         .then(() => {
-          this.$store.dispatch('role/deleteRole', row.id)
-          this.$message.success('角色已删除')
+          deleteRole(row.id)
+            .then(() => {
+              this.$message.success('角色已删除')
+              this.fetchRoles()
+            })
+            .catch(() => {})
         })
         .catch(() => {})
     },
     handleReset() {
-      this.$confirm('确定恢复默认角色配置吗？', '提示', {
+      this.$confirm('确定恢复内置角色的默认菜单权限吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
         .then(() => {
-          this.$store.dispatch('role/resetRoles')
-          this.$message.success('已恢复默认角色配置')
+          resetRoles()
+            .then(() => {
+              this.$message.success('已恢复默认角色配置')
+              this.fetchRoles()
+            })
+            .catch(() => {})
         })
         .catch(() => {})
     }

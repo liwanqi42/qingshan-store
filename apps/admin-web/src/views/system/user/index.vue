@@ -51,6 +51,11 @@
         <el-table-column prop="name" label="姓名" min-width="100" />
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="phone" label="手机号" min-width="130" />
+        <el-table-column label="角色" width="120">
+          <template slot-scope="{ row }">
+            {{ roleName(row.roleCode) }}
+          </template>
+        </el-table-column>
         <el-table-column label="性别" width="80">
           <template slot-scope="{ row }">
             <dict-tag type="employee_sex" :value="row.sex" />
@@ -59,6 +64,7 @@
         <el-table-column label="状态" width="100">
           <template slot-scope="{ row }">
             <el-switch
+              v-if="isAdmin"
               v-model="row.status"
               :active-value="1"
               :inactive-value="0"
@@ -66,6 +72,9 @@
               inactive-color="#f56c6c"
               @change="handleStatusChange(row)"
             />
+            <el-tag v-else :type="row.status === 1 ? 'success' : 'danger'" size="mini">
+              {{ row.status === 1 ? '启用' : '禁用' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" min-width="170">
@@ -75,7 +84,12 @@
         </el-table-column>
         <el-table-column label="操作" width="140" fixed="right">
           <template slot-scope="{ row }">
-            <el-button type="text" size="small" @click="handleEdit(row)">
+            <el-button
+              v-if="isAdmin"
+              type="text"
+              size="small"
+              @click="handleEdit(row)"
+            >
               编辑
             </el-button>
             <el-button type="text" size="small" @click="handleDetail(row)">
@@ -106,16 +120,19 @@
     <user-detail
       :visible.sync="detailVisible"
       :employee="detailEmployee"
+      :role-name="detailRoleName"
     />
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import {
   getEmployeePage,
   enableOrDisableEmployee,
   getEmployeeById
 } from '@/api/employee'
+import { getRoleList } from '@/api/role'
 import UserForm from './components/UserForm.vue'
 import UserDetail from './components/UserDetail.vue'
 import DictTag from '@/components/DictTag/index.vue'
@@ -140,13 +157,44 @@ export default {
       formVisible: false,
       editingEmployee: null,
       detailVisible: false,
-      detailEmployee: null
+      detailEmployee: null,
+      roleMap: {}
+    }
+  },
+  computed: {
+    ...mapGetters('user', ['roles']),
+    isAdmin() {
+      return this.roles.includes('admin')
+    },
+    detailRoleName() {
+      return this.detailEmployee
+        ? this.roleName(this.detailEmployee.roleCode)
+        : ''
     }
   },
   created() {
+    this.fetchRoles()
     this.fetchList()
   },
   methods: {
+    fetchRoles() {
+      getRoleList()
+        .then(res => {
+          const map = {}
+          const roles = res.data || []
+          roles.forEach(role => {
+            map[role.code] = role.name
+          })
+          this.roleMap = map
+        })
+        .catch(() => {})
+    },
+    roleName(code) {
+      if (!code) {
+        return '-'
+      }
+      return this.roleMap[code] || code
+    },
     fetchList() {
       this.loading = true
       getEmployeePage({

@@ -1,16 +1,16 @@
 import { constantRoutes } from '@/router/routes'
 import { checkRouteAccess } from '@/utils/permission'
 
-export function filterRoutes(routes, roles, permissions) {
+export function filterRoutes(routes, roles, permissions, menuPaths) {
   return routes
-    .filter(route => checkRouteAccess(route, roles, permissions))
+    .filter(route => checkRouteAccess(route, roles, permissions, menuPaths))
     .map(route => {
       if (!route.children) {
         return { ...route }
       }
       return {
         ...route,
-        children: filterRoutes(route.children, roles, permissions)
+        children: filterRoutes(route.children, roles, permissions, menuPaths)
       }
     })
     .filter(route => !route.children || route.children.length > 0)
@@ -57,8 +57,9 @@ const getters = {
   sidebarRoutes: (state, getters, rootState) => {
     const roles = rootState.user ? rootState.user.roles : []
     const permissions = rootState.user ? rootState.user.permissions : []
+    const menuPaths = rootState.user ? rootState.user.menuPaths : []
     const settings = rootState.menu ? rootState.menu.settings : {}
-    const routes = filterRoutes(constantRoutes, roles, permissions)
+    const routes = filterRoutes(constantRoutes, roles, permissions, menuPaths)
     const rootRoute = routes.find(route => route.path === '/')
     const children = rootRoute && rootRoute.children ? rootRoute.children : []
 
