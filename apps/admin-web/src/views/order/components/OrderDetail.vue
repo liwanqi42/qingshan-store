@@ -51,6 +51,34 @@
         <el-descriptions-item v-if="order.refundReason" label="售后原因">
           {{ order.refundReason }}
         </el-descriptions-item>
+        <el-descriptions-item v-if="order.refundType" label="售后类型">
+          {{ refundTypeLabel(order.refundType) }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          v-if="order.refundAmount !== null && order.refundAmount !== undefined"
+          label="退款金额"
+        >
+          ¥{{ formatMoney(order.refundAmount) }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="order.refundApplyTime" label="申请时间">
+          {{ formatDateTime(order.refundApplyTime) }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="order.refundTime" label="售后完成时间">
+          {{ formatDateTime(order.refundTime) }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="order.refundRejectReason" label="拒绝原因">
+          {{ order.refundRejectReason }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          v-if="order.returnExpressCompany || order.returnTrackingNumber"
+          label="退货物流"
+        >
+          {{ order.returnExpressCompany || '-' }}
+          {{ order.returnTrackingNumber || '' }}
+        </el-descriptions-item>
+        <el-descriptions-item v-if="order.returnTime" label="退货时间">
+          {{ formatDateTime(order.returnTime) }}
+        </el-descriptions-item>
       </el-descriptions>
 
       <div class="items-title">订单商品</div>
@@ -97,6 +125,13 @@ const REFUND_MAP = {
   6: '售后关闭'
 }
 
+const REFUND_TYPE_MAP = {
+  1: '仅退款',
+  2: '退货退款',
+  3: '换货',
+  4: '补寄'
+}
+
 export default {
   name: 'OrderDetail',
   props: {
@@ -128,6 +163,9 @@ export default {
     },
     refundStatusLabel(status) {
       return REFUND_MAP[status] || '-'
+    },
+    refundTypeLabel(type) {
+      return REFUND_TYPE_MAP[type] || '-'
     },
     payMethodLabel(method) {
       const map = { 1: '微信支付', 2: '支付宝', 3: '银行卡' }

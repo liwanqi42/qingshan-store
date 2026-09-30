@@ -109,7 +109,7 @@
             {{ formatDateTime(row.orderTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="210" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template slot-scope="{ row }">
             <el-button type="text" size="small" @click="handleDetail(row)">
               详情
@@ -170,6 +170,14 @@
             >
               拒绝售后
             </el-button>
+            <el-button
+              v-if="row.refundStatus === 3"
+              type="text"
+              size="small"
+              @click="handleCommand('refundReceive', row)"
+            >
+              确认收货
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -204,6 +212,7 @@ import {
   cancelOrder,
   approveRefund,
   rejectRefund,
+  receiveRefund,
   deliveryOrder,
   completeOrder
 } from '@/api/order'
@@ -393,7 +402,13 @@ export default {
             refundAmount: row.refundAmount || row.amount,
             remark
           }).then(() => {
-            this.$message.success('已同意售后')
+            const isMoneyRefund = !row.refundType || [1, 2].includes(row.refundType)
+            const isShipped = row.status === 4 || row.status === 5
+            this.$message.success(
+              isMoneyRefund && isShipped
+                ? '已同意售后，等待买家退货'
+                : (isMoneyRefund ? '已同意售后并退款' : '已同意售后')
+            )
             this.refreshAll()
           }).catch(() => {})
         })
@@ -404,6 +419,19 @@ export default {
             this.refreshAll()
           }).catch(() => {})
         })
+      } else if (command === 'refundReceive') {
+        this.$confirm('确认已收到买家退回的商品？确认后将立即退款给买家。', '确认收货', {
+          type: 'warning'
+        })
+          .then(() => {
+            receiveRefund({ id: row.id })
+              .then(() => {
+                this.$message.success('已确认收货并退款')
+                this.refreshAll()
+              })
+              .catch(() => {})
+          })
+          .catch(() => {})
       }
     },
     promptAction(message, title, callback) {

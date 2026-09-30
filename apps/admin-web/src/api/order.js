@@ -62,6 +62,14 @@ export function rejectRefund(data) {
   })
 }
 
+export function receiveRefund(data) {
+  return request({
+    url: '/admin/order/refund/receive',
+    method: 'put',
+    data
+  })
+}
+
 export function deliveryOrder(id) {
   return request({
     url: `/admin/order/delivery/${id}`,
