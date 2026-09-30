@@ -90,10 +90,24 @@ public interface OrderService {
     void undoRefund(String refundNo);
 
     /**
-     * 管理端同意售后：仅退款/退货退款发起退款，换货/补寄只完成售后
+     * 管理端同意售后：
+     * 未发货订单的仅退款直接退款；已发货订单的退货退款进入待买家退货；
+     * 换货/补寄只完成售后
      * @param ordersRefundDTO 订单id
      */
     void approveRefund(OrdersRefundDTO ordersRefundDTO);
+
+    /**
+     * 买家填写退货物流
+     * @param ordersLogisticsDTO 订单id、退货快递公司、退货物流单号
+     */
+    void refundReturn(OrdersLogisticsDTO ordersLogisticsDTO);
+
+    /**
+     * 管理端确认收到退货并退款
+     * @param ordersRefundDTO 订单id
+     */
+    void receiveRefund(OrdersRefundDTO ordersRefundDTO);
 
     /**
      * 管理端拒绝售后

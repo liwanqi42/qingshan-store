@@ -306,7 +306,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 申请售后：支持待发货、待收货、已完成的已支付订单
+     * 申请售后：支持待发货、待收货、已完成的已支付订单。
+     * 未发货只能仅退款，已发货只能退货退款/换货/补寄
      *
      * @param refundApplyDTO
      * @return 售后编号
@@ -315,10 +316,13 @@ public class OrderServiceImpl implements OrderService {
     public RefundApplyVO refundApply(RefundApplyDTO refundApplyDTO) {
         Long userId = BaseContext.getCurrentId();
         Orders orders = orderValidator.requireOwnedByNumber(refundApplyDTO.getOrderNo(), userId);
-        // 兼容未传类型的历史客户端，默认按仅退款处理
+        // 兼容未传类型的历史客户端：未发货按仅退款，已发货按退货退款
         Integer refundType = refundApplyDTO.getRefundType() == null
-                ? Orders.REFUND_TYPE_REFUND_ONLY : refundApplyDTO.getRefundType();
+                ? (orderStatusHandler.isShipped(orders.getStatus())
+                    ? Orders.REFUND_TYPE_RETURN_REFUND : Orders.REFUND_TYPE_REFUND_ONLY)
+                : refundApplyDTO.getRefundType();
         orderValidator.checkRefundType(refundType);
+        orderValidator.checkRefundTypeAllowed(orders, refundType);
         orderValidator.checkRefundReason(refundApplyDTO.getReason());
 
         // 条件更新，避免重复申请或对未支付订单申请
@@ -359,7 +363,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 管理端同意售后：仅退款/退货退款发起退款，换货/补寄只完成售后
+     * 管理端同意售后：
+     * 未发货的仅退款直接退款；已发货的退货退款进入待买家退货；
+     * 换货/补寄只完成售后
      * 先抢占售后申请再处理，避免并发审核重复退款
      *
      * @param ordersRefundDTO 订单id
@@ -371,6 +377,16 @@ public class OrderServiceImpl implements OrderService {
         orderValidator.checkCanHandleRefund(ordersDB);
 
         if (orderStatusHandler.isMoneyRefund(ordersDB.getRefundType())) {
+            // 已发货：先等待买家寄回商品，商家确认收货后才退款
+            if (orderStatusHandler.isShipped(ordersDB.getStatus())) {
+                int updated = orderMapper.agreeReturnRefund(ordersDB.getId());
+                if (updated == 0) {
+                    throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
+                }
+                return;
+            }
+
+            // 未发货：同意后直接退款。
             // 条件更新抢占退款申请，避免重复审核或用户已撤销申请后仍发起退款；
             // 退款失败时抛出异常，订单状态随事务回滚到退款申请中
             int updated = orderMapper.approveRefund(ordersDB.getId(), LocalDateTime.now());
@@ -380,11 +396,8 @@ public class OrderServiceImpl implements OrderService {
 
             orderManager.refundIfPaid(ordersDB);
 
-            // 待发货/已接单待派送的订单尚未出库，退款后回滚库存；已派送的订单商品已出库，不恢复库存
-            if (Orders.STATUS_AWAITING_SHIPMENT.equals(ordersDB.getStatus())
-                    || Orders.STATUS_SHIPPED.equals(ordersDB.getStatus())) {
-                orderManager.restoreStock(ordersDB.getId());
-            }
+            // 待发货/已接单待派送的订单尚未出库，退款后回滚库存
+            orderManager.restoreStock(ordersDB.getId());
             return;
         }
 
@@ -393,6 +406,48 @@ public class OrderServiceImpl implements OrderService {
         if (updated == 0) {
             throw new OrderBusinessException(MessageConstant.REFUND_NOT_PENDING);
         }
+    }
+
+    /**
+     * 买家填写退货物流：待买家退货 -> 买家已退货待商家收货
+     *
+     * @param ordersLogisticsDTO 订单id、退货快递公司、退货物流单号
+     */
+    @Override
+    public void refundReturn(OrdersLogisticsDTO ordersLogisticsDTO) {
+        Long userId = BaseContext.getCurrentId();
+        Orders orders = orderValidator.requireOwnedById(ordersLogisticsDTO.getId(), userId);
+        orderValidator.checkCanSubmitReturn(orders);
+        orderValidator.checkReturnLogistics(ordersLogisticsDTO);
+
+        int updated = orderMapper.submitReturnLogistics(orders.getId(), userId,
+                ordersLogisticsDTO.getExpressCompany().trim(),
+                ordersLogisticsDTO.getTrackingNumber().trim(), LocalDateTime.now());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_WAIT_RETURN);
+        }
+    }
+
+    /**
+     * 管理端确认收到退货并退款：买家已退货待商家收货 -> 售后完成/已退款。
+     * 先条件更新抢占，再发起退款；退款失败时事务回滚，订单仍停留在待商家收货
+     *
+     * @param ordersRefundDTO 订单id
+     */
+    @Override
+    @Transactional
+    public void receiveRefund(OrdersRefundDTO ordersRefundDTO) {
+        Orders ordersDB = orderValidator.requireById(ordersRefundDTO.getId());
+        orderValidator.checkCanReceiveRefund(ordersDB);
+
+        int updated = orderMapper.receiveRefund(ordersDB.getId(), LocalDateTime.now());
+        if (updated == 0) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_RETURNED);
+        }
+
+        orderManager.refundIfPaid(ordersDB);
+        // 商品已退回商家，恢复库存
+        orderManager.restoreStock(ordersDB.getId());
     }
 
     /**

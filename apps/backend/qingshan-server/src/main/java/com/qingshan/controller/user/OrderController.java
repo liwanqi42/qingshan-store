@@ -1,5 +1,6 @@
 package com.qingshan.controller.user;
 
+import com.qingshan.dto.OrdersLogisticsDTO;
 import com.qingshan.dto.OrdersPaymentDTO;
 import com.qingshan.dto.OrdersSubmitDTO;
 import com.qingshan.dto.RefundApplyDTO;
@@ -115,6 +116,18 @@ public class OrderController {
     @ApiOperation("申请售后")
     public Result<RefundApplyVO> refundApply(@RequestBody RefundApplyDTO refundApplyDTO) {
         return Result.success(orderService.refundApply(refundApplyDTO));
+    }
+
+    /**
+     * 填写退货物流
+     * @param ordersLogisticsDTO 订单id、退货快递公司、退货物流单号
+     * @return
+     */
+    @PutMapping("/refund_return")
+    @ApiOperation("填写退货物流")
+    public Result refundReturn(@RequestBody OrdersLogisticsDTO ordersLogisticsDTO) {
+        orderService.refundReturn(ordersLogisticsDTO);
+        return Result.success();
     }
 
     /**

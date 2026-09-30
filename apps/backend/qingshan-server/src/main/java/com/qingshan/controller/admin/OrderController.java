@@ -111,6 +111,18 @@ public class OrderController {
     }
 
     /**
+     * 确认收到退货并退款
+     *
+     * @return
+     */
+    @PutMapping("/refund/receive")
+    @ApiOperation("确认收到退货并退款")
+    public Result receiveRefund(@RequestBody OrdersRefundDTO ordersRefundDTO) {
+        orderService.receiveRefund(ordersRefundDTO);
+        return Result.success();
+    }
+
+    /**
      * 拒绝售后
      *
      * @return

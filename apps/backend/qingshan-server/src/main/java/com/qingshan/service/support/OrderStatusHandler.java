@@ -177,6 +177,15 @@ public class OrderStatusHandler {
     }
 
     /**
+     * 商品是否已经出库发货：配送中、已完成。
+     * 注意 STATUS_SHIPPED(3) 表示已接单待派送，商品尚未出库，不算已发货。
+     */
+    public boolean isShipped(Integer status) {
+        return Orders.STATUS_IN_TRANSIT.equals(status)
+                || Orders.STATUS_COMPLETED.equals(status);
+    }
+
+    /**
      * 可取消的订单状态：待付款、待发货、已发货、配送中
      */
     public boolean isCancellable(Integer status) {

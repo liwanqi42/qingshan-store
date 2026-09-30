@@ -43,6 +43,11 @@ public class MessageConstant {
     public static final String ORDER_REFUNDING = "该订单正在售后处理中，请先处理售后申请";
     public static final String REFUND_NOT_PENDING = "该订单没有待处理的售后申请";
     public static final String REFUND_REJECT_REASON_REQUIRED = "请填写拒绝售后原因";
+    public static final String REFUND_TYPE_ONLY_BEFORE_SHIP = "商品未发货，仅支持仅退款";
+    public static final String REFUND_TYPE_RETURN_AFTER_SHIP = "商品已发货，请选择退货退款、换货或补寄";
+    public static final String REFUND_NOT_WAIT_RETURN = "该订单当前不在待买家退货状态";
+    public static final String REFUND_NOT_RETURNED = "买家尚未退货，不能确认收货";
+    public static final String REFUND_RETURN_LOGISTICS_REQUIRED = "请填写退货快递公司和物流单号";
     public static final String TIMEOUT_CANCEL_REASON = "超时未支付，系统自动取消";
     public static final String PRODUCT_STYLE_OFF_SHELF = "该商品样式已下架";
     public static final String BUNDLE_NOT_FOUND = "套装不存在";

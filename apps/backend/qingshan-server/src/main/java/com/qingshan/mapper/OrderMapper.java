@@ -164,13 +164,14 @@ public interface OrderMapper {
                     @Param("applyTime") LocalDateTime applyTime);
 
     /**
-     * 用户撤销售后申请，只有处理中的申请会被撤销
+     * 用户撤销售后申请：只有申请中、待买家退货的申请可以撤销；
+     * 买家已寄回商品（状态3）后不能撤销，需等待商家收货退款
      * @param number 订单号（即售后编号）
      * @param userId 用户id
      * @return 更新的行数
      */
     @Update("update orders set refund_status = 6 " +
-            "where number = #{number} and user_id = #{userId} and refund_status in (1, 2, 3)")
+            "where number = #{number} and user_id = #{userId} and refund_status in (1, 2)")
     int undoRefund(@Param("number") String number, @Param("userId") Long userId);
 
     /**
@@ -184,6 +185,46 @@ public interface OrderMapper {
             "where id = #{id} and pay_status = 1 and refund_status = 1 " +
             "and (refund_type is null or refund_type in (1, 2))")
     int approveRefund(@Param("id") Long id, @Param("refundTime") LocalDateTime refundTime);
+
+    /**
+     * 管理端同意已发货订单的退款：进入待买家退货，不立即退款
+     * @param id 订单id
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 2 " +
+            "where id = #{id} and pay_status = 1 and refund_status = 1 " +
+            "and (refund_type is null or refund_type in (1, 2)) and status in (4, 5)")
+    int agreeReturnRefund(@Param("id") Long id);
+
+    /**
+     * 买家填写退货物流：待买家退货 -> 买家已退货待商家收货
+     * @param id 订单id
+     * @param userId 用户id
+     * @param expressCompany 退货快递公司
+     * @param trackingNumber 退货物流单号
+     * @param returnTime 退货时间
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 3, return_express_company = #{expressCompany}, " +
+            "return_tracking_number = #{trackingNumber}, return_time = #{returnTime} " +
+            "where id = #{id} and user_id = #{userId} and pay_status = 1 and refund_status = 2")
+    int submitReturnLogistics(@Param("id") Long id,
+                              @Param("userId") Long userId,
+                              @Param("expressCompany") String expressCompany,
+                              @Param("trackingNumber") String trackingNumber,
+                              @Param("returnTime") LocalDateTime returnTime);
+
+    /**
+     * 管理端确认收到退货并退款：买家已退货待商家收货 -> 售后完成/已退款
+     * @param id 订单id
+     * @param refundTime 退款完成时间
+     * @return 更新的行数
+     */
+    @Update("update orders set refund_status = 4, refund_time = #{refundTime}, " +
+            "status = 7, pay_status = 2 " +
+            "where id = #{id} and pay_status = 1 and refund_status = 3 " +
+            "and (refund_type is null or refund_type in (1, 2))")
+    int receiveRefund(@Param("id") Long id, @Param("refundTime") LocalDateTime refundTime);
 
     /**
      * 管理端同意换货/补寄：只完成售后，不退款，订单状态和支付状态保持不变

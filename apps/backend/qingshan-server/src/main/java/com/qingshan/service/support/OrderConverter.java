@@ -213,12 +213,18 @@ public class OrderConverter {
     public RefundDetailVO toRefundDetailVO(Orders orders, List<RefundDetailVO.GoodsItem> goodsList) {
         return RefundDetailVO.builder()
                 .refundNo(orders.getNumber())
+                .orderId(orders.getId())
                 .status(orderStatusHandler.toRefundDetailStatus(orders.getRefundStatus()))
+                .refundStatus(orders.getRefundStatus())
                 .refundType(orders.getRefundType())
                 .reason(orders.getRefundReason())
                 .refundAmount(orders.getRefundAmount())
                 .applyTime(formatDateTime(orders.getRefundApplyTime()))
                 .refundTime(formatDateTime(orders.getRefundTime()))
+                .returnExpressCompany(orders.getReturnExpressCompany())
+                .returnTrackingNumber(orders.getReturnTrackingNumber())
+                .returnTime(formatDateTime(orders.getReturnTime()))
+                .rejectReason(orders.getRefundRejectReason())
                 .goodsList(goodsList)
                 .build();
     }

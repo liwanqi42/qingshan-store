@@ -2,6 +2,7 @@ package com.qingshan.service.support;
 
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.constant.NumConstant;
+import com.qingshan.dto.OrdersLogisticsDTO;
 import com.qingshan.entity.AddressBook;
 import com.qingshan.entity.OrderDetail;
 import com.qingshan.entity.Orders;
@@ -207,6 +208,53 @@ public class OrderValidator {
                 && !Orders.REFUND_TYPE_EXCHANGE.equals(refundType)
                 && !Orders.REFUND_TYPE_RESEND.equals(refundType)) {
             throw new OrderBusinessException("请选择售后类型");
+        }
+    }
+
+    /**
+     * 按发货状态校验售后类型：
+     * 未发货只能仅退款（同意后直接退款）；
+     * 已发货只能退货退款/换货/补寄（退货退款需要先寄回商品再退款）
+     */
+    public void checkRefundTypeAllowed(Orders orders, Integer refundType) {
+        if (!orderStatusHandler.isShipped(orders.getStatus())) {
+            if (!Orders.REFUND_TYPE_REFUND_ONLY.equals(refundType)) {
+                throw new OrderBusinessException(MessageConstant.REFUND_TYPE_ONLY_BEFORE_SHIP);
+            }
+            return;
+        }
+        if (Orders.REFUND_TYPE_REFUND_ONLY.equals(refundType)) {
+            throw new OrderBusinessException(MessageConstant.REFUND_TYPE_RETURN_AFTER_SHIP);
+        }
+    }
+
+    /**
+     * 只有待买家退货的订单可以填写退货物流
+     */
+    public void checkCanSubmitReturn(Orders orders) {
+        if (!Orders.REFUND_STATUS_WAIT_RETURN.equals(orders.getRefundStatus())) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_WAIT_RETURN);
+        }
+    }
+
+    /**
+     * 校验退货物流信息
+     */
+    public void checkReturnLogistics(OrdersLogisticsDTO ordersLogisticsDTO) {
+        String expressCompany = ordersLogisticsDTO.getExpressCompany();
+        String trackingNumber = ordersLogisticsDTO.getTrackingNumber();
+        if (expressCompany == null || expressCompany.trim().isEmpty()
+                || trackingNumber == null || trackingNumber.trim().isEmpty()) {
+            throw new OrderBusinessException(MessageConstant.REFUND_RETURN_LOGISTICS_REQUIRED);
+        }
+    }
+
+    /**
+     * 只有买家已退货、待商家收货的订单可以确认收货并退款
+     */
+    public void checkCanReceiveRefund(Orders orders) {
+        if (!Orders.REFUND_STATUS_RETURNED.equals(orders.getRefundStatus())) {
+            throw new OrderBusinessException(MessageConstant.REFUND_NOT_RETURNED);
         }
     }
 
