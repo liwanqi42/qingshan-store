@@ -111,6 +111,59 @@ page {
 .cast-detail .actual {
   font-size: 24rpx;
 }
+/* 填写退货物流弹窗 */
+.shade {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.return-popup {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: #ffffff;
+  font-size: 24rpx;
+}
+.return-popup .title {
+  padding: 20rpx;
+  font-size: 28rpx;
+  text-align: center;
+}
+.return-popup .form-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  border-top: 1px solid #F5F5F5;
+}
+.return-popup .label {
+  width: 140rpx;
+  color: #666666;
+}
+.return-popup .input {
+  flex: 1;
+  height: 60rpx;
+  font-size: 24rpx;
+}
+.popup-btns {
+  display: flex;
+}
+.confirmBtn,
+.closeBtn {
+  width: 50%;
+  height: 80rpx;
+  color: #ffffff;
+  background-color: #EB4D50;
+  text-align: center;
+  line-height: 80rpx;
+}
+.closeBtn {
+  background-color: black;
+}
 .navigator-hover {
   background-color: #ffffff;
   opacity: 1

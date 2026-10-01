@@ -57,6 +57,30 @@ const STATUS_TITLE = {
   5: '售后完成'
 }
 
+// 未发货只能仅退款，同意后直接退款
+const AFTER_SALES_TYPES_BEFORE_SHIP = [
+  {
+    id: 1,
+    label: '仅退款'
+  }
+]
+
+// 已发货只能退货退款/换货/补寄，退货退款需寄回商品后退款
+const AFTER_SALES_TYPES_AFTER_SHIP = [
+  {
+    id: 2,
+    label: '退货退款'
+  },
+  {
+    id: 3,
+    label: '换货'
+  },
+  {
+    id: 4,
+    label: '补寄'
+  }
+]
+
 Page({
   data: {
     orderNo: '',
@@ -76,21 +100,8 @@ Page({
     payMethodText: '',
     // 从订单列表点击“申请售后”进入时自动打开售后弹窗
     refundRequested: false,
-    // 售后类型：2退货退款 3换货 4补寄
-    afterSalesTypes: [
-      {
-        id: 2,
-        label: '退货退款'
-      },
-      {
-        id: 3,
-        label: '换货'
-      },
-      {
-        id: 4,
-        label: '补寄'
-      }
-    ],
+    // 售后类型：未发货仅退款；已发货退货退款/换货/补寄
+    afterSalesTypes: AFTER_SALES_TYPES_AFTER_SHIP,
     refundReason: [
       {
         id: 1,
@@ -154,6 +165,9 @@ Page({
       displayFullAddress: maskAddress(res.address.fullAddress, res.address.address),
       payMethodText: PAY_METHOD[res.payMethod] || '-',
       refundAllow: refundAllow,
+      // 未发货（待发货）只能仅退款，已发货（待收货/已完成）走退货退款等流程
+      afterSalesTypes: status === 1
+        ? AFTER_SALES_TYPES_BEFORE_SHIP : AFTER_SALES_TYPES_AFTER_SHIP,
       // 有任意“更多”操作时才显示更多入口
       showMore: status === 0 || status === 2 || status === 3
         || status === -1 || status === 5 || refundAllow

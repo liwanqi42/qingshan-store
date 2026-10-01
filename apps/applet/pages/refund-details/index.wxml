@@ -1,19 +1,32 @@
 <view class="refund-detail">
   <view class="top" wx:if="{{orderDetail.status === 0}}">
-    <view class="status">请等待商家处理</view>
-    <view class="time">{{countdown}}</view>
+    <view class="status" wx:if="{{refundStatus === 2}}">商家已同意退货退款，请寄回商品</view>
+    <view class="status" wx:elif="{{refundStatus === 3}}">买家已退货，等待商家确认收货</view>
+    <view class="status" wx:else>请等待商家处理</view>
+    <view class="time" wx:if="{{refundStatus === 1}}">{{countdown}}</view>
   </view>
-  <view class="top" wx:if="{{orderDetail.status === 1}}">
+  <view class="top" wx:elif="{{orderDetail.status === 1}}">
     <view class="status">{{isMoneyRefund ? '退款成功' : '售后完成'}}</view>
     <view class="time">{{orderDetail.refundTime}}</view>
   </view>
+  <view class="top" wx:elif="{{orderDetail.status === 2}}">
+    <view class="status">{{refundStatus === 5 ? '售后申请被拒绝' : '售后已关闭'}}</view>
+  </view>
   <view class="hint" wx:if="{{orderDetail.status === 0}}">
-    <view class="main">您已成功发起售后申请，请耐心等待商家处理</view>
-    <view class="item" wx:if="{{isMoneyRefund}}">· 商家同意或超时未处理，系统将退款给您。</view>
-    <view class="item" wx:else>· 商家同意后将为您安排{{orderDetail.refundType === 3 ? '换货' : '补寄'}}。</view>
+    <view class="main" wx:if="{{refundStatus === 2}}">商家已同意退货退款，请寄回商品并填写退货物流</view>
+    <view class="main" wx:elif="{{refundStatus === 3}}">退货物流已提交，请等待商家收货并确认退款</view>
+    <view class="main" wx:else>您已成功发起售后申请，请耐心等待商家处理</view>
+    <view class="item" wx:if="{{refundStatus === 1 && isMoneyRefund}}">· 商品未发货时，商家同意后直接退款；已发货则需寄回商品后退款。</view>
+    <view class="item" wx:if="{{refundStatus === 1 && !isMoneyRefund}}">· 商家同意后将为您安排{{orderDetail.refundType === 3 ? '换货' : '补寄'}}。</view>
+    <view class="item" wx:if="{{refundStatus === 2}}">· 请填写退货快递公司和物流单号，商家收到货后将退款给您。</view>
+    <view class="item" wx:if="{{refundStatus === 3}}">· 商家确认收到退货后将立即退款。</view>
     <view class="btn-group">
-      <view class="item-btn" bindtap="undoRefundApply">撤销申请</view>
+      <view class="item-btn" wx:if="{{refundStatus === 1}}" bindtap="undoRefundApply">撤销申请</view>
+      <view class="item-btn" wx:if="{{refundStatus === 2}}" bindtap="openReturnPopup">填写退货物流</view>
     </view>
+  </view>
+  <view class="hint" wx:if="{{orderDetail.status === 2 && orderDetail.rejectReason}}">
+    <view class="item">拒绝原因：{{orderDetail.rejectReason}}</view>
   </view>
   <view class="goods-info">
     <view class="title">售后信息</view>
@@ -43,8 +56,33 @@
       <view class="cost-item">
         <view>申请时间：{{orderDetail.applyTime}}</view>
       </view>
+      <view class="cost-item" wx:if="{{orderDetail.returnExpressCompany}}">
+        <view>退货物流：{{orderDetail.returnExpressCompany}} {{orderDetail.returnTrackingNumber}}</view>
+      </view>
+      <view class="cost-item" wx:if="{{orderDetail.returnTime}}">
+        <view>退货时间：{{orderDetail.returnTime}}</view>
+      </view>
       <view class="cost-item">
         <view>售后编号：{{orderDetail.refundNo}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 填写退货物流弹窗 -->
+  <view class="shade" wx:if="{{returnPopup}}" bindtap="closeReturnPopup">
+    <view class="return-popup" catchtap="stopPropagation">
+      <view class="title">填写退货物流</view>
+      <view class="form-item">
+        <view class="label">快递公司</view>
+        <input class="input" value="{{returnCompany}}" placeholder="请输入快递公司" bindinput="onReturnCompanyInput" />
+      </view>
+      <view class="form-item">
+        <view class="label">物流单号</view>
+        <input class="input" value="{{returnTracking}}" placeholder="请输入物流单号" bindinput="onReturnTrackingInput" />
+      </view>
+      <view class="popup-btns">
+        <view class="confirmBtn" catchtap="submitReturnLogistics">{{returnSubmitting ? '提交中...' : '确定'}}</view>
+        <view class="closeBtn" catchtap="closeReturnPopup">取消</view>
       </view>
     </view>
   </view>

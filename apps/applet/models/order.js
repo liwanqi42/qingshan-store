@@ -57,7 +57,7 @@ class Order {
     return post(`/user/order/repetition/${id}`)
   }
 
-  // 售后类型：2退货退款 3换货 4补寄
+  // 售后类型：未发货仅退款(1)；已发货退货退款(2)、换货(3)、补寄(4)
   async refundApply(orderNo, refundType, reason) {
     return put('/user/order/refund_apply', {
       orderNo, refundType, reason
@@ -66,6 +66,13 @@ class Order {
 
   async refundDetail(refundNo) {
     return get(`/user/order/refund_detail?refundNo=${refundNo}`)
+  }
+
+  // 待买家退货时填写退货物流，对应后端 OrderController：PUT /user/order/refund_return
+  async refundReturn(id, expressCompany, trackingNumber) {
+    return put('/user/order/refund_return', {
+      id, expressCompany, trackingNumber
+    })
   }
 
   async undoOrderRefund(refundNo) {
