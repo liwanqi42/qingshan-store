@@ -4,8 +4,8 @@
 <mapper namespace="com.qingshan.mapper.ProductMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into product (name, category_id, price, image, description, status, stock, create_time, update_time, create_user, update_user)
-        values (#{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status}, COALESCE(#{stock}, 0), #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+        insert into product (product_code, name, category_id, price, image, description, status, stock, create_time, update_time, create_user, update_user)
+        values (#{productCode}, #{name}, #{categoryId}, #{price}, #{image}, #{description}, #{status}, COALESCE(#{stock}, 0), #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
     </insert>
 
     <select id="pageQuery" resultType="com.qingshan.vo.ProductVO">
@@ -13,6 +13,16 @@
         from product d
         left outer join category c on d.category_id = c.id
         <where>
+            <if test="code != null and code != ''">
+                and (
+                    d.product_code like concat('%', #{code}, '%')
+                    or exists (
+                        select 1 from product_sku s
+                        where s.product_id = d.id
+                          and s.sku_code like concat('%', #{code}, '%')
+                    )
+                )
+            </if>
             <if test="name != null and name != ''">
                 and d.name like concat('%', #{name}, '%')
             </if>
@@ -64,6 +74,9 @@
     <update id="update">
         update product
         <set>
+            <if test="productCode != null">
+                product_code = #{productCode},
+            </if>
             <if test="name != null">
                 name = #{name},
             </if>

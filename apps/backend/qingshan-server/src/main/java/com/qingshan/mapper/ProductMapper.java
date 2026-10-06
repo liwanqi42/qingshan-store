@@ -56,6 +56,18 @@ public interface ProductMapper {
     Product getById(Long id);
 
     /**
+     * 统计商品编号被占用的数量，修改时排除自身
+     * @param productCode 商品编号
+     * @param excludeId 需要排除的商品id，新增时传null
+     * @return 占用的数量
+     */
+    @Select("<script>"
+            + "select count(id) from product where product_code = #{productCode}"
+            + "<if test='excludeId != null'> and id != #{excludeId}</if>"
+            + "</script>")
+    int countByProductCode(@Param("productCode") String productCode, @Param("excludeId") Long excludeId);
+
+    /**
      * 根据id删除商品数据
      * @param id
      */

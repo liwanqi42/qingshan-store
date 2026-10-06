@@ -16,6 +16,8 @@ import java.util.List;
 public class ProductDTO implements Serializable {
 
     private Long id;
+    //商品编号，SKU编号为“商品编号-序号”
+    private String productCode;
     //商品名称
     private String name;
     //商品分类id

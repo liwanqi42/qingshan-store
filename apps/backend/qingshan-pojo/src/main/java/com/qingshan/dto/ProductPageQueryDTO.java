@@ -14,6 +14,9 @@ public class ProductPageQueryDTO implements Serializable {
     //商品名称
     private String name;
 
+    //商品编号或SKU编号
+    private String code;
+
     //分类id
     private Long categoryId;
 

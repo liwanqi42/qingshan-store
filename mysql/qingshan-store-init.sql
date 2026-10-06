@@ -66,6 +66,7 @@ INSERT INTO `category` (`id`,`type`,`name`,`image`,`sort`,`status`,`create_time`
 -- ------------------------------------------------------------
 CREATE TABLE `product` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `product_code` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '商品编号，SKU编号为“商品编号-序号”',
   `name` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '商品名称',
   `category_id` bigint NOT NULL COMMENT '商品分类id',
   `price` decimal(10,2) DEFAULT NULL COMMENT '商品价格',
@@ -80,35 +81,36 @@ CREATE TABLE `product` (
   `update_user` bigint DEFAULT NULL COMMENT '修改人',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_product_name` (`name`),
+  UNIQUE KEY `uk_product_code` (`product_code`),
   KEY `idx_category_id` (`category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='商品';
 
-INSERT INTO `product` (`id`,`name`,`category_id`,`price`,`image`,`description`,`status`,`stock`,`sales`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
-    (46,'无线蓝牙耳机',11,199.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/556a2d16-01d9-4452-9045-a2545e4baa0d.jpg','蓝牙5.3，入耳式，长续航',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (47,'快充充电宝',11,129.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/703ed3f2-1330-4ddd-94ea-10d708eeff83.jpg','10000mAh容量，支持快充',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (48,'手机支架',11,29.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/d992e39c-d2e9-4179-a3f6-20d2c5e73565.jpg','桌面可调节手机支架',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (49,'保温杯',12,79.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/ae72a4bb-6af5-4ed3-ad44-d33e0abbbd7f.jpg','304不锈钢，长效保温',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (50,'抽纸',12,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','原生木浆，柔软亲肤',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (51,'洗衣液',20,39.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','深层洁净，清新香味',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (52,'玻璃水杯',21,25.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','耐热玻璃水杯',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (53,'不粘锅',21,159.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','家用不粘炒锅',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (54,'纯棉T恤',14,59.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','纯棉舒适短袖T恤',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (55,'运动鞋',18,299.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','轻便透气运动鞋',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (56,'双肩背包',14,129.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','大容量通勤双肩包',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (57,'雨伞',12,39.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','防风折叠晴雨伞',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (58,'护眼台灯',19,69.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','多档调光护眼台灯',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (59,'笔记本',19,9.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','简约横线笔记本',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (60,'中性笔',19,12.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','黑色0.5mm中性笔',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (61,'面霜',15,89.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','保湿滋润面霜',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (62,'洗发水',15,49.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','控油清爽洗发水',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (63,'牙膏',15,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','清新薄荷牙膏',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (64,'坚果礼盒',16,99.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','混合坚果礼盒',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (65,'矿泉水',16,24.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','550ml整箱矿泉水',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (66,'蓝牙音箱',11,149.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','便携无线蓝牙音箱',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (67,'数据线',11,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','快充数据线',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (68,'收纳箱',12,59.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','可折叠家用收纳箱',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (69,'宠物玩具',21,29.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','耐咬宠物互动玩具',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
-    (73,'小熊软糖',16,18.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/4298533e-9eee-4802-aecd-049cc163eddd.jpg','大众口味的小熊软糖。',1,87,0,'2026-10-20 16:47:40','2026-10-20 16:47:40',1,1);
+INSERT INTO `product` (`id`,`product_code`,`name`,`category_id`,`price`,`image`,`description`,`status`,`stock`,`sales`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
+    (46,'1001','无线蓝牙耳机',11,199.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/556a2d16-01d9-4452-9045-a2545e4baa0d.jpg','蓝牙5.3，入耳式，长续航',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (47,'1002','快充充电宝',11,129.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/703ed3f2-1330-4ddd-94ea-10d708eeff83.jpg','10000mAh容量，支持快充',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (48,'1003','手机支架',11,29.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/d992e39c-d2e9-4179-a3f6-20d2c5e73565.jpg','桌面可调节手机支架',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (49,'1004','保温杯',12,79.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/ae72a4bb-6af5-4ed3-ad44-d33e0abbbd7f.jpg','304不锈钢，长效保温',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (50,'1005','抽纸',12,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','原生木浆，柔软亲肤',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (51,'1006','洗衣液',20,39.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','深层洁净，清新香味',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (52,'1007','玻璃水杯',21,25.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','耐热玻璃水杯',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (53,'1008','不粘锅',21,159.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','家用不粘炒锅',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (54,'1009','纯棉T恤',14,59.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','纯棉舒适短袖T恤',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (55,'1010','运动鞋',18,299.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','轻便透气运动鞋',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (56,'1011','双肩背包',14,129.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','大容量通勤双肩包',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (57,'1012','雨伞',12,39.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','防风折叠晴雨伞',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (58,'1013','护眼台灯',19,69.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','多档调光护眼台灯',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (59,'1014','笔记本',19,9.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','简约横线笔记本',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (60,'1015','中性笔',19,12.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','黑色0.5mm中性笔',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (61,'1016','面霜',15,89.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','保湿滋润面霜',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (62,'1017','洗发水',15,49.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','控油清爽洗发水',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (63,'1018','牙膏',15,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','清新薄荷牙膏',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (64,'1019','坚果礼盒',16,99.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','混合坚果礼盒',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (65,'1020','矿泉水',16,24.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','550ml整箱矿泉水',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (66,'1021','蓝牙音箱',11,149.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','便携无线蓝牙音箱',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (67,'1022','数据线',11,19.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','快充数据线',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (68,'1023','收纳箱',12,59.00,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','可折叠家用收纳箱',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (69,'1024','宠物玩具',21,29.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/0e9cacfb-528e-4361-ac55-835478f13705.png','耐咬宠物互动玩具',1,100,0,'2024-01-01 10:00:00','2024-01-01 10:00:00',1,1),
+    (73,'1025','小熊软糖',16,18.90,'https://qingshan-store.oss-cn-beijing.aliyuncs.com/4298533e-9eee-4802-aecd-049cc163eddd.jpg','大众口味的小熊软糖。',1,87,0,'2026-10-20 16:47:40','2026-10-20 16:47:40',1,1);
 
 -- ------------------------------------------------------------
 -- 商品属性/规格
@@ -262,6 +264,17 @@ INSERT INTO `product_sku` (`id`,`product_id`,`sku_code`,`attrs`,`price`,`stock`,
 (88,73,'P73-007','{"颜色":"红色","大小":"中"}',18.90,9,NULL,1,'2026-10-20 21:00:00','2026-10-20 21:00:00'),
 (89,73,'P73-008','{"颜色":"红色","大小":"大"}',18.90,9,NULL,1,'2026-10-20 21:00:00','2026-10-20 21:00:00'),
 (90,73,'P73-009','{"颜色":"红色","大小":"超大"}',18.90,9,NULL,1,'2026-10-20 21:00:00','2026-10-20 21:00:00');
+
+-- SKU编号统一为“商品编号-序号”，示例：1001-1、1001-2
+UPDATE `product_sku` s
+JOIN `product` p ON p.id = s.product_id
+JOIN (
+    SELECT a.id, COUNT(b.id) + 1 AS seq
+    FROM `product_sku` a
+    LEFT JOIN `product_sku` b ON b.product_id = a.product_id AND b.id < a.id
+    GROUP BY a.id
+) t ON t.id = s.id
+SET s.sku_code = CONCAT(p.product_code, '-', t.seq);
 
 -- ------------------------------------------------------------
 -- 商品图片

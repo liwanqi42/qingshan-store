@@ -9,10 +9,10 @@
       :disabled="disabled || loading"
       accept="image/*"
     >
-      <div v-if="value" class="image-preview">
+      <div v-if="value" class="image-preview" :style="boxStyle">
         <img :src="value" alt="preview" />
       </div>
-      <div v-else class="upload-placeholder">
+      <div v-else class="upload-placeholder" :style="boxStyle">
         <i class="el-icon-plus" />
         <span>上传图片</span>
       </div>
@@ -46,11 +46,23 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+    size: {
+      type: Number,
+      default: 120
     }
   },
   data() {
     return {
       loading: false
+    }
+  },
+  computed: {
+    boxStyle() {
+      return {
+        width: this.size + 'px',
+        height: this.size + 'px'
+      }
     }
   },
   methods: {
@@ -101,8 +113,6 @@ export default {
 
 .image-preview,
 .upload-placeholder {
-  width: 120px;
-  height: 120px;
   border: 1px dashed $border-color;
   border-radius: $border-radius-base;
   cursor: pointer;

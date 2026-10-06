@@ -21,6 +21,9 @@ public class Product implements Serializable {
 
     private Long id;
 
+    //商品编号，SKU编号为“商品编号-序号”
+    private String productCode;
+
     //商品名称
     private String name;
 

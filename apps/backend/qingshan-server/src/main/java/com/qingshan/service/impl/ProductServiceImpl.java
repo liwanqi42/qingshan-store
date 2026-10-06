@@ -32,8 +32,10 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -67,6 +69,10 @@ public class ProductServiceImpl implements ProductService {
         Product product = new Product();
         BeanUtils.copyProperties(productDTO, product);
 
+        //商品编号由管理员填写，SKU编号以商品编号为前缀
+        String productCode = normalizeProductCode(productDTO.getProductCode(), null);
+        product.setProductCode(productCode);
+
         //未单独指定封面时，使用样式图中的第一张作为封面
         List<String> images = normalizeStyleImages(productDTO);
         List<String> detailImages = normalizeImageList(productDTO.getDetailImages());
@@ -96,8 +102,8 @@ public class ProductServiceImpl implements ProductService {
             productAttrsMapper.insertBatch(attrs);
         }
 
-        //保存每个规格组合的SKU（独立价格与库存）
-        saveSkus(productId, skuList);
+        //保存每个规格组合的SKU（独立价格与库存），编号为“商品编号-序号”
+        saveSkus(productId, productCode, skuList);
     }
 
     /**
@@ -184,8 +190,17 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public void updateWithAtrr(ProductDTO productDTO) {
+        Product existingProduct = productMapper.getById(productDTO.getId());
+        if (existingProduct == null) {
+            throw new ProductStyleBusinessException("商品不存在");
+        }
+
         Product product = new Product();
         BeanUtils.copyProperties(productDTO,product);
+
+        //商品编号由管理员填写，修改后同步更新其下SKU编号前缀
+        String productCode = normalizeProductCode(productDTO.getProductCode(), productDTO.getId());
+        product.setProductCode(productCode);
 
         List<String> images = normalizeStyleImages(productDTO);
         List<String> detailImages = normalizeImageList(productDTO.getDetailImages());
@@ -193,7 +208,7 @@ public class ProductServiceImpl implements ProductService {
             product.setImage(images.get(0));
         }
 
-        //SKU整体替换；未传skuList时保留原有SKU
+        //未传skuList时保留原有SKU
         List<ProductSku> skuList = normalizeSkus(productDTO.getSkuList(), productDTO.getPrice());
         if (skuList != null && !skuList.isEmpty()) {
             product.setStock(sumStock(skuList));
@@ -210,8 +225,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         if (skuList != null) {
-            productSkuMapper.deleteByProductId(productDTO.getId());
-            saveSkus(productDTO.getId(), skuList);
+            //按id增量维护，保留已有SKU的id与编号，避免购物车/订单关联失效
+            saveOrUpdateSkus(productDTO.getId(), existingProduct.getProductCode(), productCode, skuList);
         }
 
         //样式图整体替换；未传图片相关字段时保留原样式图
@@ -334,21 +349,119 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 保存商品SKU
+     * 校验商品编号：必填、格式合法且唯一
+     * @param productCode 商品编号
+     * @param excludeId 修改时排除自身id，新增传null
+     * @return 去除首尾空白后的商品编号
+     */
+    private String normalizeProductCode(String productCode, Long excludeId) {
+        String value = trimToNull(productCode);
+        if (value == null) {
+            throw new ProductStyleBusinessException("商品编号不能为空");
+        }
+        if (value.length() > 32) {
+            throw new ProductStyleBusinessException("商品编号不能超过32个字符");
+        }
+        if (!value.matches("[0-9A-Za-z_-]+")) {
+            throw new ProductStyleBusinessException("商品编号只能包含字母、数字、下划线和中划线");
+        }
+        if (productMapper.countByProductCode(value, excludeId) > 0) {
+            throw new ProductStyleBusinessException("商品编号已存在：" + value);
+        }
+        return value;
+    }
+
+    /**
+     * 保存商品SKU，编号规则：商品编号-序号（如 3132-1）
      * @param productId 商品id
+     * @param productCode 商品编号
      * @param skuList SKU列表
      */
-    private void saveSkus(Long productId, List<ProductSku> skuList) {
+    private void saveSkus(Long productId, String productCode, List<ProductSku> skuList) {
         if (skuList == null || skuList.isEmpty()) {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        for (ProductSku sku : skuList) {
+        for (int i = 0; i < skuList.size(); i++) {
+            ProductSku sku = skuList.get(i);
             sku.setId(null);
             sku.setProductId(productId);
+            sku.setSkuCode(productCode + "-" + (i + 1));
             sku.setCreateTime(now);
             sku.setUpdateTime(now);
             productSkuMapper.insert(sku);
+        }
+    }
+
+    /**
+     * 增量保存商品SKU：已有SKU保留id和编号，新增SKU续排编号，被移除的SKU删除
+     * @param productId 商品id
+     * @param oldProductCode 修改前的商品编号
+     * @param productCode 修改后的商品编号
+     * @param skuList 前端提交的SKU列表
+     */
+    private void saveOrUpdateSkus(Long productId, String oldProductCode, String productCode, List<ProductSku> skuList) {
+        List<ProductSku> existingList = productSkuMapper.listByProductId(productId);
+        Map<Long, ProductSku> existingById = new HashMap<>();
+        int maxSuffix = 0;
+        for (ProductSku existing : existingList) {
+            existingById.put(existing.getId(), existing);
+            Integer suffix = parseSkuSuffix(existing.getSkuCode(), oldProductCode);
+            if (suffix != null && suffix > maxSuffix) {
+                maxSuffix = suffix;
+            }
+        }
+
+        int nextSuffix = maxSuffix + 1;
+        LocalDateTime now = LocalDateTime.now();
+        List<Long> keepIds = new ArrayList<>();
+        for (ProductSku sku : skuList) {
+            ProductSku existing = sku.getId() == null ? null : existingById.get(sku.getId());
+            if (existing != null) {
+                Integer suffix = parseSkuSuffix(existing.getSkuCode(), oldProductCode);
+                if (suffix == null) {
+                    suffix = nextSuffix++;
+                }
+                sku.setId(existing.getId());
+                sku.setProductId(productId);
+                sku.setSkuCode(productCode + "-" + suffix);
+                sku.setCreateTime(existing.getCreateTime());
+                sku.setUpdateTime(now);
+                productSkuMapper.update(sku);
+            } else {
+                sku.setId(null);
+                sku.setProductId(productId);
+                sku.setSkuCode(productCode + "-" + (nextSuffix++));
+                sku.setCreateTime(now);
+                sku.setUpdateTime(now);
+                productSkuMapper.insert(sku);
+            }
+            keepIds.add(sku.getId());
+        }
+
+        //删除本次提交中已移除的SKU
+        productSkuMapper.deleteByProductIdExcludingIds(productId, keepIds);
+    }
+
+    /**
+     * 解析SKU编号中的序号部分
+     * @param skuCode SKU编号
+     * @param productCode 商品编号
+     * @return 序号，无法解析时返回null
+     */
+    private Integer parseSkuSuffix(String skuCode, String productCode) {
+        if (skuCode == null || productCode == null) {
+            return null;
+        }
+        String prefix = productCode + "-";
+        if (!skuCode.startsWith(prefix)) {
+            return null;
+        }
+        try {
+            int suffix = Integer.parseInt(skuCode.substring(prefix.length()));
+            return suffix > 0 ? suffix : null;
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

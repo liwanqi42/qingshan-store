@@ -3,6 +3,14 @@
     <el-card shadow="never">
       <div class="toolbar">
         <el-form :inline="true" :model="queryForm" class="search-form" @submit.native.prevent>
+          <el-form-item label="商品编号">
+            <el-input
+              v-model="queryForm.code"
+              placeholder="商品编号或SKU编号"
+              clearable
+              @keyup.enter.native="handleSearch"
+            />
+          </el-form-item>
           <el-form-item label="商品名称">
             <el-input
               v-model="queryForm.name"
@@ -67,6 +75,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
+        <el-table-column prop="productCode" label="商品编号" width="110" />
         <el-table-column prop="name" label="商品名称" min-width="140" />
         <el-table-column prop="categoryName" label="分类" min-width="110" />
         <el-table-column label="价格" width="100">
@@ -141,6 +150,7 @@ export default {
   data() {
     return {
       queryForm: {
+        code: '',
         name: '',
         categoryId: '',
         status: ''
@@ -171,6 +181,7 @@ export default {
     fetchList() {
       this.loading = true
       getProductPage({
+        code: this.queryForm.code.trim(),
         name: this.queryForm.name.trim(),
         categoryId: this.queryForm.categoryId || undefined,
         status:
@@ -193,7 +204,7 @@ export default {
       this.fetchList()
     },
     handleReset() {
-      this.queryForm = { name: '', categoryId: '', status: '' }
+      this.queryForm = { code: '', name: '', categoryId: '', status: '' }
       this.page = 1
       this.fetchList()
     },

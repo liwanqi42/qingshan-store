@@ -47,6 +47,28 @@ public interface ProductSkuMapper {
     void insert(ProductSku sku);
 
     /**
+     * 修改SKU，保留原有id与编号
+     * @param sku SKU信息
+     */
+    @Update("update product_sku set sku_code = #{skuCode}, attrs = #{attrs}, price = #{price}, "
+            + "stock = #{stock}, image = #{image}, status = #{status}, update_time = #{updateTime} "
+            + "where id = #{id} and product_id = #{productId}")
+    void update(ProductSku sku);
+
+    /**
+     * 删除商品下不在保留列表中的SKU
+     * @param productId 商品id
+     * @param ids 需要保留的SKU id列表，为空时删除全部
+     */
+    @Delete("<script>"
+            + "delete from product_sku where product_id = #{productId}"
+            + "<if test='ids != null and ids.size() > 0'> and id not in "
+            + "<foreach collection='ids' open='(' close=')' separator=',' item='id'>#{id}</foreach>"
+            + "</if>"
+            + "</script>")
+    void deleteByProductIdExcludingIds(@Param("productId") Long productId, @Param("ids") List<Long> ids);
+
+    /**
      * 扣减 SKU 库存，库存不足时不更新（返回0）
      * @param id SKU id
      * @param number 扣减数量

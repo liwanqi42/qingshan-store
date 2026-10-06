@@ -22,6 +22,8 @@ public class ProductVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    //商品编号，SKU编号为“商品编号-序号”
+    private String productCode;
     //商品名称
     private String name;
     //分类id
