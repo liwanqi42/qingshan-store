@@ -17,7 +17,7 @@
           <el-form-item label="商品编号" prop="productCode">
             <el-input
               v-model="form.productCode"
-              placeholder="如 3132，SKU 编号自动生成为 3132-1"
+              placeholder="如 3132，SKU 编号为“商品编号-序号”，如 3132-1"
               clearable
             />
           </el-form-item>
@@ -79,28 +79,40 @@
             :key="group.key"
             class="spec-group"
           >
-            <el-input
-              v-model="group.name"
-              class="spec-name"
-              placeholder="规格名，如颜色"
-              clearable
-            />
-            <el-select
-              v-model="group.values"
-              class="spec-values"
-              multiple
-              filterable
-              allow-create
-              default-first-option
-              placeholder="输入规格值后按回车，如黑色"
-            >
-              <el-option
-                v-for="value in group.values"
-                :key="value"
-                :label="value"
-                :value="value"
+            <div class="spec-field">
+              <span class="spec-field-label">规格名</span>
+              <el-input
+                v-model="group.name"
+                class="spec-name"
+                placeholder="如：颜色"
+                clearable
               />
-            </el-select>
+            </div>
+            <div class="spec-field spec-field-values">
+              <span class="spec-field-label">规格值</span>
+              <div class="spec-values">
+                <el-tag
+                  v-for="value in group.values"
+                  :key="value"
+                  size="small"
+                  class="spec-value-tag"
+                  closable
+                  @close="removeSpecValue(index, value)"
+                >
+                  {{ value }}
+                </el-tag>
+                <el-input
+                  v-model="group.inputValue"
+                  class="spec-value-input"
+                  size="small"
+                  placeholder="输入规格值后按回车，如黑色"
+                  @keydown.enter.native="addSpecValue(index, $event)"
+                  @blur.native="addSpecValue(index)"
+                  @compositionstart.native="group.composing = true"
+                  @compositionend.native="group.composing = false"
+                />
+              </div>
+            </div>
             <el-button
               type="text"
               size="mini"
@@ -115,21 +127,29 @@
               添加规格
             </el-button>
             <span class="field-tip">
-              修改规格会自动按规格组合刷新 SKU；无规格商品保留一个默认 SKU
+              一种规格（如颜色、尺码）占一行，同一规格下可添加多个规格值
             </span>
           </div>
           <div v-if="specIncomplete" class="spec-warning">
             请补全规格名和规格值，补全后会自动生成 SKU 组合
+          </div>
+          <div v-else-if="singleValueSpecWarning" class="spec-warning">
+            每个规格目前只有 1 个规格值，只会生成 1 个 SKU。如果这些值属于同一种规格，
+            请合并到一行：规格名填「颜色」，规格值依次添加黑色、灰色、白色。
+          </div>
+          <div v-else-if="skuCombinationCount" class="spec-summary">
+            当前将生成 {{ skuCombinationCount }} 个 SKU 组合
           </div>
         </div>
       </el-form-item>
 
       <el-form-item label="SKU 列表">
         <el-table :data="skuList" border size="mini" class="sku-table">
-          <el-table-column label="编号" width="120">
-            <template slot-scope="{ row }">
-              <span v-if="row.skuCode">{{ row.skuCode }}</span>
-              <span v-else class="placeholder-text">保存后生成</span>
+          <el-table-column label="编号" width="170">
+            <template slot-scope="{ row, $index }">
+              <span :class="{ 'placeholder-text': !form.productCode.trim() }">
+                {{ displaySkuCode(row, $index) }}
+              </span>
             </template>
           </el-table-column>
           <el-table-column label="规格" min-width="120">
@@ -274,6 +294,10 @@ export default {
       specGroups: [],
       skuList: [],
       specIncomplete: false,
+      // 上次同步时的规格快照，用于判断是新增/删除规格值还是规格结构变化
+      specSnapshot: [],
+      // 表单回填期间不触发SKU自动生成，避免把已删除的SKU重新生成出来
+      formLoading: false,
       rules: {
         productCode: [
           { required: true, message: '请输入商品编号', trigger: 'blur' },
@@ -300,6 +324,30 @@ export default {
       set(value) {
         this.$emit('update:visible', value)
       }
+    },
+    completeSpecGroups() {
+      return this.activeSpecGroups().filter(
+        group =>
+          group.name &&
+          group.name.trim() &&
+          Array.isArray(group.values) &&
+          group.values.length
+      )
+    },
+    skuCombinationCount() {
+      if (!this.completeSpecGroups.length) {
+        return 0
+      }
+      return this.completeSpecGroups.reduce(
+        (total, group) => total * group.values.length,
+        1
+      )
+    },
+    singleValueSpecWarning() {
+      return (
+        this.completeSpecGroups.length > 1 &&
+        this.completeSpecGroups.every(group => group.values.length === 1)
+      )
     }
   },
   watch: {
@@ -311,8 +359,25 @@ export default {
     specGroups: {
       deep: true,
       handler() {
+        if (this.formLoading) {
+          return
+        }
         this.syncSkus()
       }
+    },
+    'form.price'(value, oldValue) {
+      if (this.formLoading) {
+        return
+      }
+      // 商品价格作为SKU默认价格：未单独定价的SKU跟随商品价格变化
+      const next = Number(value || 0)
+      const previous = Number(oldValue || 0)
+      this.skuList.forEach(sku => {
+        const price = Number(sku.price || 0)
+        if (price === 0 || price === previous) {
+          sku.price = next
+        }
+      })
     }
   },
   methods: {
@@ -338,6 +403,7 @@ export default {
     },
     fillForm(data) {
       const product = data || {}
+      this.formLoading = true
       this.form = {
         id: product.id,
         productCode: product.productCode || '',
@@ -358,7 +424,9 @@ export default {
         .map(attr => ({
           key: nextSpecKey(),
           name: attr.name || '',
-          values: parseAttrValues(attr.attrValues)
+          values: parseAttrValues(attr.attrValues),
+          inputValue: '',
+          composing: false
         }))
         .filter(group => group.name || group.values.length)
 
@@ -381,6 +449,12 @@ export default {
       if (!this.skuList.length) {
         this.skuList = [this.createDefaultSku()]
       }
+
+      // 记录当前规格，后续只有用户修改规格时才增量增删SKU
+      this.specSnapshot = this.buildSpecSnapshot(this.activeSpecGroups())
+      this.$nextTick(() => {
+        this.formLoading = false
+      })
     },
     createDefaultSku() {
       return {
@@ -400,7 +474,7 @@ export default {
         Object.keys(attrs).forEach(name => {
           let group = groups.find(item => item.name === name)
           if (!group) {
-            group = { key: nextSpecKey(), name, values: [] }
+            group = { key: nextSpecKey(), name, values: [], inputValue: '', composing: false }
             groups.push(group)
           }
           const value = attrs[name]
@@ -412,20 +486,98 @@ export default {
       return groups
     },
     addSpecGroup() {
-      this.specGroups.push({ key: nextSpecKey(), name: '', values: [] })
+      this.specGroups.push({
+        key: nextSpecKey(),
+        name: '',
+        values: [],
+        inputValue: '',
+        composing: false
+      })
     },
     removeSpecGroup(index) {
       this.specGroups.splice(index, 1)
     },
     removeSku(index) {
+      const groups = this.activeSpecGroups()
+      if (!groups.length && this.skuList.length === 1) {
+        this.$message.warning('无规格商品至少保留一个 SKU')
+        return
+      }
       this.skuList.splice(index, 1)
+      // 删除后规格值若已没有对应SKU，同步从规格中移除，避免再次修改规格时被重新生成
+      if (groups.length) {
+        this.pruneUnusedSpecValues(groups)
+      }
     },
-    syncSkus() {
-      const groups = this.specGroups.filter(
+    activeSpecGroups() {
+      return this.specGroups.filter(
         group =>
           (group.name && group.name.trim()) ||
           (Array.isArray(group.values) && group.values.length)
       )
+    },
+    buildSpecSnapshot(groups) {
+      return groups.map(group => ({
+        key: group.key,
+        name: (group.name || '').trim(),
+        values: Array.isArray(group.values) ? group.values.slice() : []
+      }))
+    },
+    addSpecValue(index, event) {
+      const group = this.specGroups[index]
+      if (!group) {
+        return
+      }
+      // 中文输入法确认候选词时的回车不当作添加规格值
+      if (event && (event.isComposing || event.keyCode === 229)) {
+        return
+      }
+      if (group.composing) {
+        return
+      }
+      const raw = (group.inputValue || '').trim()
+      if (!raw) {
+        return
+      }
+      raw
+        .split(/[,，、\n]/)
+        .map(value => value.trim())
+        .filter(Boolean)
+        .forEach(value => {
+          if (group.values.indexOf(value) === -1) {
+            group.values.push(value)
+          }
+        })
+      group.inputValue = ''
+    },
+    removeSpecValue(index, value) {
+      const group = this.specGroups[index]
+      if (!group) {
+        return
+      }
+      group.values = group.values.filter(item => item !== value)
+    },
+    pruneUnusedSpecValues(groups) {
+      groups.forEach(group => {
+        const name = (group.name || '').trim()
+        if (!name) {
+          return
+        }
+        const used = {}
+        this.skuList.forEach(sku => {
+          const attrs = parseAttrs(sku.attrs)
+          if (attrs[name] !== undefined && attrs[name] !== null) {
+            used[attrs[name]] = true
+          }
+        })
+        const nextValues = group.values.filter(value => used[value])
+        if (nextValues.length !== group.values.length) {
+          group.values = nextValues
+        }
+      })
+    },
+    syncSkus() {
+      const groups = this.activeSpecGroups()
 
       // 有规格尚未填写完整时先不刷新，避免误清空已维护的价格库存
       const incomplete = groups.some(
@@ -447,22 +599,71 @@ export default {
         if (!hasDefaultSku) {
           this.skuList = [this.createDefaultSku()]
         }
+        this.specSnapshot = []
         return
       }
 
       const normalizedGroups = groups.map(group => ({
+        key: group.key,
         name: group.name.trim(),
-        values: group.values
+        values: group.values.slice()
       }))
+      const previous = this.specSnapshot
+
+      // 规格名修改时，同步调整已有SKU的属性键，保留编号与价格库存
+      this.renameAttrsInSkus(normalizedGroups, previous)
+
+      const structural =
+        previous.length !== normalizedGroups.length ||
+        normalizedGroups.some((group, index) => {
+          const prev = previous[index]
+          return !prev || prev.key !== group.key || prev.name !== group.name
+        })
+
+      if (structural) {
+        // 增删规格组/修改规格名：按当前规格重新组合SKU
+        this.rebuildSkus(normalizedGroups)
+      } else {
+        // 只增删规格值：只增删受影响的SKU，已删除的SKU不会重新生成
+        this.applySpecValueChanges(normalizedGroups, previous)
+      }
+
+      this.specSnapshot = normalizedGroups
+    },
+    renameAttrsInSkus(groups, previous) {
+      if (!previous.length) {
+        return
+      }
+      groups.forEach(group => {
+        const prev = previous.find(item => item.key === group.key)
+        if (!prev || !prev.name || prev.name === group.name) {
+          return
+        }
+        this.skuList.forEach(sku => {
+          const attrs = parseAttrs(sku.attrs)
+          if (!Object.prototype.hasOwnProperty.call(attrs, prev.name)) {
+            return
+          }
+          const nextAttrs = {}
+          Object.keys(attrs).forEach(name => {
+            nextAttrs[name === prev.name ? group.name : name] = attrs[name]
+          })
+          sku.attrs = nextAttrs
+        })
+      })
+    },
+    rebuildSkus(groups) {
       const existingBySignature = {}
       this.skuList.forEach(sku => {
-        if (sku.id) {
-          existingBySignature[this.comboSignature(sku.attrs, normalizedGroups)] = sku
+        const attrs = parseAttrs(sku.attrs)
+        if (!Object.keys(attrs).length) {
+          return
         }
+        existingBySignature[this.comboSignature(attrs, groups)] = sku
       })
 
       let combos = [[]]
-      normalizedGroups.forEach(group => {
+      groups.forEach(group => {
         const next = []
         combos.forEach(prefix => {
           group.values.forEach(value => {
@@ -474,35 +675,94 @@ export default {
 
       this.skuList = combos.map(values => {
         const attrs = {}
-        normalizedGroups.forEach((group, index) => {
+        groups.forEach((group, index) => {
           attrs[group.name] = values[index]
         })
-        const signature = values.join('|~|')
-        const existing = existingBySignature[signature]
+        const existing = existingBySignature[values.join('|~|')]
         if (existing) {
           return { ...existing, attrs }
         }
-        return {
-          id: undefined,
-          skuCode: '',
-          attrs,
-          price: Number(this.form.price || 0),
-          stock: 0,
-          image: '',
-          status: 1
-        }
+        return this.createSku(attrs)
       })
+    },
+    applySpecValueChanges(groups, previous) {
+      const removedValues = groups.map((group, index) => {
+        const prevValues = previous[index] ? previous[index].values : []
+        return prevValues.filter(value => group.values.indexOf(value) === -1)
+      })
+
+      // 删除规格值：移除包含该值的SKU
+      if (removedValues.some(values => values.length)) {
+        this.skuList = this.skuList.filter(sku => {
+          const attrs = parseAttrs(sku.attrs)
+          return !groups.some(
+            (group, index) => removedValues[index].indexOf(attrs[group.name]) > -1
+          )
+        })
+      }
+
+      // 新增规格值：为新增值与其余规格值的组合补充SKU
+      const addedValues = groups.map((group, index) => {
+        const prevValues = previous[index] ? previous[index].values : []
+        return group.values.filter(value => prevValues.indexOf(value) === -1)
+      })
+      const existingSignatures = {}
+      this.skuList.forEach(sku => {
+        existingSignatures[this.comboSignature(parseAttrs(sku.attrs), groups)] = true
+      })
+
+      const additions = []
+      groups.forEach((group, groupIndex) => {
+        addedValues[groupIndex].forEach(value => {
+          let combos = [{ [group.name]: value }]
+          groups.forEach((other, otherIndex) => {
+            if (otherIndex === groupIndex) {
+              return
+            }
+            const next = []
+            combos.forEach(combo => {
+              other.values.forEach(otherValue => {
+                next.push({ ...combo, [other.name]: otherValue })
+              })
+            })
+            combos = next
+          })
+          combos.forEach(combo => {
+            const attrs = {}
+            groups.forEach(item => {
+              attrs[item.name] = combo[item.name]
+            })
+            const signature = this.comboSignature(attrs, groups)
+            if (existingSignatures[signature]) {
+              return
+            }
+            existingSignatures[signature] = true
+            additions.push(this.createSku(attrs))
+          })
+        })
+      })
+
+      if (additions.length) {
+        this.skuList = this.skuList.concat(additions)
+      }
+    },
+    createSku(attrs) {
+      return {
+        id: undefined,
+        skuCode: '',
+        attrs,
+        price: Number(this.form.price || 0),
+        stock: 0,
+        image: '',
+        status: 1
+      }
     },
     comboSignature(attrs, groups) {
       const parsed = parseAttrs(attrs)
       return groups.map(group => parsed[group.name] || '').join('|~|')
     },
     validateSpecs() {
-      const groups = this.specGroups.filter(
-        group =>
-          (group.name && group.name.trim()) ||
-          (Array.isArray(group.values) && group.values.length)
-      )
+      const groups = this.activeSpecGroups()
       if (!groups.length) {
         return true
       }
@@ -537,6 +797,14 @@ export default {
         return '默认规格'
       }
       return entries.map(([key, item]) => `${key}:${item}`).join('，')
+    },
+    displaySkuCode(row, index) {
+      const productCode = (this.form.productCode || '').trim()
+      if (!productCode) {
+        return row.skuCode || '保存后生成'
+      }
+      // 与后端保持一致：商品编号-序号，如 5090-1、5090-2
+      return `${productCode}-${index + 1}`
     },
     submit() {
       this.$refs.form.validate(valid => {
@@ -628,19 +896,54 @@ export default {
 
 .spec-group {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   margin-bottom: 8px;
 }
 
+.spec-field {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.spec-field-values {
+  flex: 1;
+  min-width: 0;
+}
+
+.spec-field-label {
+  flex-shrink: 0;
+  color: $text-secondary;
+  font-size: 12px;
+  line-height: 32px;
+}
+
 .spec-name {
-  width: 150px;
+  width: 130px;
   flex-shrink: 0;
 }
 
+.spec-group > .danger-text {
+  margin-top: 6px;
+}
+
 .spec-values {
+  display: flex;
   flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+}
+
+.spec-value-tag {
+  margin: 0;
+}
+
+.spec-value-input {
+  width: 220px;
 }
 
 .spec-actions {
@@ -651,6 +954,12 @@ export default {
 .spec-warning {
   margin-top: 6px;
   color: $color-danger;
+  font-size: 12px;
+}
+
+.spec-summary {
+  margin-top: 6px;
+  color: $text-secondary;
   font-size: 12px;
 }
 

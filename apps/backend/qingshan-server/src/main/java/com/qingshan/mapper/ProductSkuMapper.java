@@ -56,6 +56,14 @@ public interface ProductSkuMapper {
     void update(ProductSku sku);
 
     /**
+     * 仅修改SKU编号，用于批量重排编号时先落到临时编号，避免唯一键冲突
+     * @param id SKU id
+     * @param skuCode 临时编号
+     */
+    @Update("update product_sku set sku_code = #{skuCode} where id = #{id}")
+    void updateSkuCode(@Param("id") Long id, @Param("skuCode") String skuCode);
+
+    /**
      * 删除商品下不在保留列表中的SKU
      * @param productId 商品id
      * @param ids 需要保留的SKU id列表，为空时删除全部

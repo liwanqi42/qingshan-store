@@ -226,7 +226,7 @@ public class ProductServiceImpl implements ProductService {
 
         if (skuList != null) {
             //按id增量维护，保留已有SKU的id与编号，避免购物车/订单关联失效
-            saveOrUpdateSkus(productDTO.getId(), existingProduct.getProductCode(), productCode, skuList);
+            saveOrUpdateSkus(productDTO.getId(), productCode, skuList);
         }
 
         //样式图整体替换；未传图片相关字段时保留原样式图
@@ -372,7 +372,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 保存商品SKU，编号规则：商品编号-序号（如 3132-1）
+     * 保存商品SKU，编号规则：商品编号-序号（如 3132-1、3132-2）
      * @param productId 商品id
      * @param productCode 商品编号
      * @param skuList SKU列表
@@ -386,7 +386,7 @@ public class ProductServiceImpl implements ProductService {
             ProductSku sku = skuList.get(i);
             sku.setId(null);
             sku.setProductId(productId);
-            sku.setSkuCode(productCode + "-" + (i + 1));
+            sku.setSkuCode(buildSkuCode(productCode, i + 1));
             sku.setCreateTime(now);
             sku.setUpdateTime(now);
             productSkuMapper.insert(sku);
@@ -394,44 +394,42 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 增量保存商品SKU：已有SKU保留id和编号，新增SKU续排编号，被移除的SKU删除
+     * 增量保存商品SKU：已有SKU保留id，编号按“商品编号-序号”重新生成，被移除的SKU删除
      * @param productId 商品id
-     * @param oldProductCode 修改前的商品编号
      * @param productCode 修改后的商品编号
      * @param skuList 前端提交的SKU列表
      */
-    private void saveOrUpdateSkus(Long productId, String oldProductCode, String productCode, List<ProductSku> skuList) {
+    private void saveOrUpdateSkus(Long productId, String productCode, List<ProductSku> skuList) {
         List<ProductSku> existingList = productSkuMapper.listByProductId(productId);
         Map<Long, ProductSku> existingById = new HashMap<>();
-        int maxSuffix = 0;
         for (ProductSku existing : existingList) {
             existingById.put(existing.getId(), existing);
-            Integer suffix = parseSkuSuffix(existing.getSkuCode(), oldProductCode);
-            if (suffix != null && suffix > maxSuffix) {
-                maxSuffix = suffix;
+        }
+
+        // 先把保留的已有SKU改成临时编号，避免新旧编号在唯一键上互相占用
+        for (ProductSku sku : skuList) {
+            if (sku.getId() != null && existingById.containsKey(sku.getId())) {
+                productSkuMapper.updateSkuCode(sku.getId(), "TMP-" + sku.getId());
             }
         }
 
-        int nextSuffix = maxSuffix + 1;
         LocalDateTime now = LocalDateTime.now();
         List<Long> keepIds = new ArrayList<>();
-        for (ProductSku sku : skuList) {
+        for (int i = 0; i < skuList.size(); i++) {
+            ProductSku sku = skuList.get(i);
+            String skuCode = buildSkuCode(productCode, i + 1);
             ProductSku existing = sku.getId() == null ? null : existingById.get(sku.getId());
             if (existing != null) {
-                Integer suffix = parseSkuSuffix(existing.getSkuCode(), oldProductCode);
-                if (suffix == null) {
-                    suffix = nextSuffix++;
-                }
                 sku.setId(existing.getId());
                 sku.setProductId(productId);
-                sku.setSkuCode(productCode + "-" + suffix);
+                sku.setSkuCode(skuCode);
                 sku.setCreateTime(existing.getCreateTime());
                 sku.setUpdateTime(now);
                 productSkuMapper.update(sku);
             } else {
                 sku.setId(null);
                 sku.setProductId(productId);
-                sku.setSkuCode(productCode + "-" + (nextSuffix++));
+                sku.setSkuCode(skuCode);
                 sku.setCreateTime(now);
                 sku.setUpdateTime(now);
                 productSkuMapper.insert(sku);
@@ -444,25 +442,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /**
-     * 解析SKU编号中的序号部分
-     * @param skuCode SKU编号
+     * 生成SKU编号：商品编号-序号，如 5090-1、5090-2
      * @param productCode 商品编号
-     * @return 序号，无法解析时返回null
+     * @param index 该商品下SKU的顺序号，从1开始
+     * @return SKU编号
      */
-    private Integer parseSkuSuffix(String skuCode, String productCode) {
-        if (skuCode == null || productCode == null) {
-            return null;
-        }
-        String prefix = productCode + "-";
-        if (!skuCode.startsWith(prefix)) {
-            return null;
-        }
-        try {
-            int suffix = Integer.parseInt(skuCode.substring(prefix.length()));
-            return suffix > 0 ? suffix : null;
-        } catch (NumberFormatException e) {
-            return null;
-        }
+    private String buildSkuCode(String productCode, int index) {
+        return productCode + "-" + index;
     }
 
     /**
