@@ -14,6 +14,7 @@ import com.qingshan.entity.User;
 import com.qingshan.exception.OrderBusinessException;
 import com.qingshan.mapper.OrderDetailMapper;
 import com.qingshan.mapper.OrderMapper;
+import com.qingshan.mapper.ProductMapper;
 import com.qingshan.mapper.UserMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.OrderService;
@@ -46,6 +47,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private ProductMapper productMapper;
 
     @Autowired
     private UserMapper userMapper;
@@ -140,6 +144,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param outTradeNo
      */
+    @Transactional
     public void paySuccess(String outTradeNo) {
         // 根据订单号查询订单
         Orders ordersDB = orderValidator.requireByNumber(outTradeNo);
@@ -153,6 +158,9 @@ public class OrderServiceImpl implements OrderService {
             log.warn("订单{}当前不是待付款状态，跳过支付状态更新", outTradeNo);
             return;
         }
+
+        // 支付成功后累加商品销量
+        changeProductSales(ordersDB.getId(), 1);
 
         // 只有状态真正变更时才推送来单提醒，避免重复回调/已取消订单误报
         notifyNewOrder(ordersDB);
@@ -173,12 +181,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
+     * 调整订单内商品的销量：支付成功时累加，退款/取消后扣减
+     * @param orderId 订单id
+     * @param delta 变化量，1 表示累加、-1 表示扣减
+     */
+    private void changeProductSales(Long orderId, int delta) {
+        for (OrderDetail detail : orderDetailMapper.listByOrderId(orderId)) {
+            if (detail.getProductId() == null || detail.getNumber() == null || detail.getNumber() <= 0) {
+                continue;
+            }
+            productMapper.addSales(detail.getProductId(), delta * detail.getNumber());
+        }
+    }
+
+    /**
      * 模拟支付成功（仅开发环境使用）
      *
      * TODO(wechat-pay): 接入真实微信支付后删除该方法，支付结果由 PayNotifyController 回调 paySuccess() 更新
      * @param orderNumber
      */
     @Override
+    @Transactional
     public void mockPay(String orderNumber) {
         Orders ordersDB = orderValidator.requireOwnedByNumber(orderNumber, BaseContext.getCurrentId());
         // 幂等：已支付的订单直接返回，重复点击不报错
@@ -190,6 +213,9 @@ public class OrderServiceImpl implements OrderService {
             // 已取消/已退款的订单不能再支付
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+
+        // 支付成功后累加商品销量
+        changeProductSales(ordersDB.getId(), 1);
 
         // 开发环境模拟支付同样要推送来单提醒，方便联调
         notifyNewOrder(ordersDB);
@@ -398,6 +424,9 @@ public class OrderServiceImpl implements OrderService {
 
             // 待发货/已接单待派送的订单尚未出库，退款后回滚库存
             orderManager.restoreStock(ordersDB.getId());
+
+            // 退款后扣减销量
+            changeProductSales(ordersDB.getId(), -1);
             return;
         }
 
@@ -448,6 +477,9 @@ public class OrderServiceImpl implements OrderService {
         orderManager.refundIfPaid(ordersDB);
         // 商品已退回商家，恢复库存
         orderManager.restoreStock(ordersDB.getId());
+
+        // 退款后扣减销量
+        changeProductSales(ordersDB.getId(), -1);
     }
 
     /**
@@ -581,6 +613,11 @@ public class OrderServiceImpl implements OrderService {
 
         // 回滚下单时占用的库存
         orderManager.restoreStock(ordersDB.getId());
+
+        // 已支付订单退款后扣减销量
+        if (paid) {
+            changeProductSales(ordersDB.getId(), -1);
+        }
     }
 
     /**
@@ -611,6 +648,11 @@ public class OrderServiceImpl implements OrderService {
 
         // 回滚下单时占用的库存
         orderManager.restoreStock(ordersDB.getId());
+
+        // 已支付订单退款后扣减销量
+        if (paid) {
+            changeProductSales(ordersDB.getId(), -1);
+        }
     }
 
     /**

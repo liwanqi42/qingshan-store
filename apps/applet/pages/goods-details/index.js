@@ -316,61 +316,57 @@ Page({
       buyNum: buyNum
     })
   },
-  // 无库存的选项置灰
+  // 无库存的选项置灰：只参考“其他规格”的已选值，同一规格内可直接切换
   updateOptionalSpecAttr() {
     const selectSpecs = this.data.selectSpecs
-    // 提取匹配的SKU
-    const matchSkuList = []
-    const skuList = this.data.goodsDetail.skuList
-    for (let i = 0; i < skuList.length; i++) {
-      const sku = skuList[i]
-      const specs = JSON.parse(sku.specs)
-      let match = true
-      if (sku.stock <= 0) {
-        match = false
-      }
-      for (let j = 0; j < specs.length; j++) {
-        const skuSpec = specs[j]
-        if (selectSpecs[skuSpec.keyId] === 0) {
-          continue
-        }
-        if (selectSpecs[skuSpec.keyId] !== skuSpec.valueId) {
-          match = false
-        }
-      }
-      if (sku.stock <= 0) {
-        match = false
-      }
-      if (match) {
-        matchSkuList.push(sku)
-      }
-    }
-    // 计算选项的状态
+    const skuList = this.data.goodsDetail.skuList || []
     const selectSpecAttr = this.data.selectSpecAttr
-    for (let i in selectSpecAttr) {
-      selectSpecAttr[i] = false
+    for (let key in selectSpecAttr) {
+      selectSpecAttr[key] = false
     }
-    let unrestricted = false
-    for (let i = 0; i < matchSkuList.length; i++) {
-      const specs = JSON.parse(matchSkuList[i].specs)
-      // 后端暂无 SKU 规格映射，空规格表示所有规格组合都可用
-      if (specs.length === 0) {
-        unrestricted = true
+    for (let key in selectSpecAttr) {
+      const separator = key.indexOf('-')
+      const specId = Number(key.slice(0, separator))
+      const attrId = Number(key.slice(separator + 1))
+      // 当前已选中的值始终可点，便于取消或直接切换到其他值
+      if (selectSpecs[specId] === attrId) {
+        selectSpecAttr[key] = true
         continue
       }
-      for (let j = 0; j < specs.length; j++) {
-        const key = specs[j].keyId + '-' + specs[j].valueId
-        selectSpecAttr[key] = true
-      }
-    }
-    if (unrestricted) {
-      for (let i in selectSpecAttr) {
-        selectSpecAttr[i] = true
-      }
+      selectSpecAttr[key] = skuList.some(sku =>
+        this.skuSupportsAttr(sku, specId, attrId, selectSpecs)
+      )
     }
     this.setData({
       selectSpecAttr: selectSpecAttr
     })
+  },
+  // 判断SKU是否有库存且包含指定规格值，同时满足其他规格的已选值
+  skuSupportsAttr(sku, specId, attrId, selectSpecs) {
+    if (sku.stock <= 0) {
+      return false
+    }
+    const specs = JSON.parse(sku.specs)
+    // 后端暂无 SKU 规格映射，空规格表示所有规格组合都可用
+    if (specs.length === 0) {
+      return true
+    }
+    let matched = false
+    for (let i = 0; i < specs.length; i++) {
+      const skuSpec = specs[i]
+      if (skuSpec.keyId === specId) {
+        if (skuSpec.valueId !== attrId) {
+          return false
+        }
+        matched = true
+        continue
+      }
+      const curAttrId = selectSpecs[skuSpec.keyId]
+      if (curAttrId && curAttrId !== skuSpec.valueId) {
+        return false
+      }
+    }
+    return matched
   },
   // 加载默认收货地址
   async loadDefaultAddress() {

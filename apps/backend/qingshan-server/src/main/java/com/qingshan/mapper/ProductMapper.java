@@ -107,4 +107,13 @@ public interface ProductMapper {
      */
     @Update("update product set stock = stock + #{number} where id = #{id}")
     int restoreStock(@Param("id") Long id, @Param("number") Integer number);
+
+    /**
+     * 调整销量：支付成功时累加，退款/取消时扣减，最低为0
+     * @param id 商品id
+     * @param delta 变化量，正数累加、负数扣减
+     * @return 更新的行数
+     */
+    @Update("update product set sales = greatest(sales + #{delta}, 0) where id = #{id}")
+    int addSales(@Param("id") Long id, @Param("delta") Integer delta);
 }

@@ -389,7 +389,7 @@ Page({
     }
     return matchSku
   },
-  // 无库存的规格组合置灰
+  // 无库存的规格组合置灰：只参考“其他规格”的已选值，同一规格内可直接切换
   updateAddOnSpecAttr() {
     const specList = this.data.addOnDetail.specList || []
     const skuList = this.data.addOnDetail.skuList || []
@@ -407,46 +407,58 @@ Page({
         selectSpecAttr[key] = true
       }
     } else {
-      for (let i = 0; i < skuList.length; i++) {
-        const sku = skuList[i]
-        if (sku.stock <= 0) {
+      for (let key in selectSpecAttr) {
+        const separator = key.indexOf('-')
+        const specId = Number(key.slice(0, separator))
+        const attrId = Number(key.slice(separator + 1))
+        // 当前已选中的值始终可点，便于取消或直接切换到其他值
+        if (selectSpecs[specId] === attrId) {
+          selectSpecAttr[key] = true
           continue
         }
-        let specs = []
-        try {
-          specs = JSON.parse(sku.specs)
-        } catch (e) {
-          specs = []
-        }
-        if (!Array.isArray(specs)) {
-          specs = []
-        }
-        // 空规格SKU表示所有规格组合都可用
-        if (specs.length === 0) {
-          for (let key in selectSpecAttr) {
-            selectSpecAttr[key] = true
-          }
-          continue
-        }
-        let match = true
-        for (let j = 0; j < specs.length; j++) {
-          const curAttrId = selectSpecs[specs[j].keyId]
-          if (curAttrId !== 0 && curAttrId !== specs[j].valueId) {
-            match = false
-            break
-          }
-        }
-        if (!match) {
-          continue
-        }
-        for (let j = 0; j < specs.length; j++) {
-          selectSpecAttr[specs[j].keyId + '-' + specs[j].valueId] = true
-        }
+        selectSpecAttr[key] = skuList.some(sku =>
+          this.addOnSkuSupportsAttr(sku, specId, attrId, selectSpecs)
+        )
       }
     }
     this.setData({
       addOnSelectSpecAttr: selectSpecAttr
     })
+  },
+  // 判断SKU是否有库存且包含指定规格值，同时满足其他规格的已选值
+  addOnSkuSupportsAttr(sku, specId, attrId, selectSpecs) {
+    if (sku.stock <= 0) {
+      return false
+    }
+    let specs = []
+    try {
+      specs = JSON.parse(sku.specs)
+    } catch (e) {
+      specs = []
+    }
+    if (!Array.isArray(specs)) {
+      specs = []
+    }
+    // 空规格SKU表示所有规格组合都可用
+    if (specs.length === 0) {
+      return true
+    }
+    let matched = false
+    for (let i = 0; i < specs.length; i++) {
+      const skuSpec = specs[i]
+      if (skuSpec.keyId === specId) {
+        if (skuSpec.valueId !== attrId) {
+          return false
+        }
+        matched = true
+        continue
+      }
+      const curAttrId = selectSpecs[skuSpec.keyId]
+      if (curAttrId && curAttrId !== skuSpec.valueId) {
+        return false
+      }
+    }
+    return matched
   },
   // 确认选择随手买商品规格并加入商品清单
   confirmAddOn() {
