@@ -18,6 +18,7 @@ import Sidebar from './components/Sidebar/index.vue'
 import Navbar from './components/Navbar/index.vue'
 import TagsView from './components/TagsView/index.vue'
 import AppMain from './components/AppMain.vue'
+import { connectWebSocket, closeWebSocket } from '@/utils/websocket'
 
 export default {
   name: 'AppLayout',
@@ -26,6 +27,13 @@ export default {
     Navbar,
     TagsView,
     AppMain
+  },
+  created() {
+    // 登录后进入管理端布局时建立 WebSocket，接收来单/催发货等提醒
+    connectWebSocket()
+  },
+  beforeDestroy() {
+    closeWebSocket()
   },
   computed: {
     ...mapState('app', ['sidebarCollapsed'])

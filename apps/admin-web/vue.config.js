@@ -18,6 +18,12 @@ module.exports = defineConfig({
         pathRewrite: {
           '^/api': ''
         }
+      },
+      // WebSocket 连接（来单提醒、催发货提醒）
+      '/ws': {
+        target: 'ws://localhost:8080',
+        ws: true,
+        changeOrigin: true
       }
     }
   }
