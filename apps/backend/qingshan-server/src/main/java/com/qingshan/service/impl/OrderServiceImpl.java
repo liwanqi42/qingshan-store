@@ -20,6 +20,7 @@ import com.qingshan.result.PageResult;
 import com.qingshan.service.OrderService;
 import com.qingshan.service.support.OrderConverter;
 import com.qingshan.service.support.OrderManager;
+import com.qingshan.service.support.ProductCacheManager;
 import com.qingshan.service.support.OrderStatusHandler;
 import com.qingshan.service.support.OrderValidator;
 import com.qingshan.utils.PageUtil;
@@ -50,6 +51,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private ProductCacheManager productCacheManager;
 
     @Autowired
     private UserMapper userMapper;
@@ -186,11 +190,17 @@ public class OrderServiceImpl implements OrderService {
      * @param delta 变化量，1 表示累加、-1 表示扣减
      */
     private void changeProductSales(Long orderId, int delta) {
+        boolean changed = false;
         for (OrderDetail detail : orderDetailMapper.listByOrderId(orderId)) {
             if (detail.getProductId() == null || detail.getNumber() == null || detail.getNumber() <= 0) {
                 continue;
             }
             productMapper.addSales(detail.getProductId(), delta * detail.getNumber());
+            changed = true;
+        }
+        // 用户端商品列表有缓存，销量变化后需要立即失效
+        if (changed) {
+            productCacheManager.clearProductCache();
         }
     }
 

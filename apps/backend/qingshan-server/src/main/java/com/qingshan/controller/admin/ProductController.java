@@ -7,16 +7,15 @@ import com.qingshan.entity.Product;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.ProductService;
+import com.qingshan.service.support.ProductCacheManager;
 import com.qingshan.vo.ProductVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 商品管理
@@ -31,7 +30,7 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private ProductCacheManager productCacheManager;
 
     /**
      * 新增商品及样式
@@ -45,7 +44,7 @@ public class ProductController {
         productService.saveWithAttr(productDTO);
 
         //清理缓存数据（含分页缓存）
-        cleanClaim("product_*");
+        productCacheManager.clearProductCache();
         return Result.success();
     }
 
@@ -74,7 +73,7 @@ public class ProductController {
         productService.deleteBatch(ids);
 
         //清理缓存数据
-        cleanClaim("product_*");
+        productCacheManager.clearProductCache();
 
         return Result.success();
     }
@@ -104,7 +103,7 @@ public class ProductController {
         productService.updateWithAtrr(productDTO);
 
         //清理缓存数据
-        cleanClaim("product_*");
+        productCacheManager.clearProductCache();
 
         return Result.success();
     }
@@ -121,7 +120,7 @@ public class ProductController {
         productService.startOrStop(status,id);
 
         //清理缓存数据
-        cleanClaim("product_*");
+        productCacheManager.clearProductCache();
 
 
         return Result.success();
@@ -137,10 +136,5 @@ public class ProductController {
     public Result<List<Product>> list(Long categoryId){
         List<Product> list = productService.list(categoryId);
         return Result.success(list);
-    }
-
-    private void cleanClaim(String pattern){
-        Set keys = redisTemplate.keys(pattern);
-        redisTemplate.delete(keys);
     }
 }
