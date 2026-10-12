@@ -12,6 +12,9 @@ CREATE DATABASE IF NOT EXISTS `qingshan-store` DEFAULT CHARACTER SET utf8mb4;
 USE `qingshan-store`;
 SET NAMES utf8mb4;
 
+DROP TABLE IF EXISTS `stock_ledger`;
+DROP TABLE IF EXISTS `stock_order_item`;
+DROP TABLE IF EXISTS `stock_order`;
 DROP TABLE IF EXISTS `payment_notify_log`;
 DROP TABLE IF EXISTS `order_logistics_trace`;
 DROP TABLE IF EXISTS `order_detail`;
@@ -338,7 +341,7 @@ CREATE TABLE `sys_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='角色与菜单权限';
 
 INSERT INTO `sys_role` (`id`,`name`,`code`,`status`,`menu_paths`,`create_time`,`update_time`) VALUES
-    (1,'超级管理员','admin',1,'DashboardView,StatisticsView,OrderView,CategoryView,ProductView,BundleView,SystemUserView,SystemMenuView,SystemRoleView,SystemDictView,ShopView','2022-02-15 15:51:20','2022-02-15 15:51:20'),
+    (1,'超级管理员','admin',1,'DashboardView,StatisticsView,OrderView,CategoryView,ProductView,BundleView,StockInView,StockOutView,StockLedgerView,SystemUserView,SystemMenuView,SystemRoleView,SystemDictView,ShopView','2022-02-15 15:51:20','2022-02-15 15:51:20'),
     (2,'普通员工','employee',1,'DashboardView,SystemUserView','2022-02-15 15:51:20','2022-02-15 15:51:20');
 
 -- ------------------------------------------------------------
@@ -576,3 +579,74 @@ CREATE TABLE `payment_notify_log` (
   UNIQUE KEY `idx_notify_id` (`notify_id`),
   KEY `idx_order_number` (`order_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='支付/退款回调日志';
+
+-- ------------------------------------------------------------
+-- 入库/出库单据头
+-- ------------------------------------------------------------
+CREATE TABLE `stock_order` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_no` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '单据编号，RK 入库 / CK 出库',
+  `type` tinyint NOT NULL COMMENT '类型 1入库 2出库',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态 0待审核 1已审核',
+  `total_quantity` int NOT NULL DEFAULT '0' COMMENT '总数量',
+  `total_kinds` int NOT NULL DEFAULT '0' COMMENT '商品种数（按商品+SKU去重）',
+  `remark` varchar(200) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '备注',
+  `audit_time` datetime DEFAULT NULL COMMENT '审核时间',
+  `audit_user` bigint DEFAULT NULL COMMENT '审核人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_stock_order_no` (`order_no`),
+  KEY `idx_type_status_create` (`type`,`status`,`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='入库/出库单据';
+
+-- ------------------------------------------------------------
+-- 单据明细（保存商品/SKU 快照，商品后续改名或删除不影响历史单据）
+-- ------------------------------------------------------------
+CREATE TABLE `stock_order_item` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_id` bigint NOT NULL COMMENT '单据id',
+  `product_id` bigint NOT NULL COMMENT '商品id',
+  `sku_id` bigint DEFAULT NULL COMMENT 'SKU id，无规格商品为空',
+  `product_code` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '商品编号快照',
+  `sku_code` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'SKU编号快照',
+  `product_name` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '商品名称快照',
+  `sku_attrs` varchar(500) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '规格属性JSON快照',
+  `quantity` int NOT NULL COMMENT '数量',
+  `stock_before` int DEFAULT NULL COMMENT '审核前库存',
+  `stock_after` int DEFAULT NULL COMMENT '审核后库存',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_product_id` (`product_id`),
+  KEY `idx_sku_id` (`sku_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='入库/出库单据明细';
+
+-- ------------------------------------------------------------
+-- 库存流水台账（审核通过时追加，只增不改）
+-- 仅记录手工入库/出库，不包含销售、退款、商品编辑产生的库存变化
+-- ------------------------------------------------------------
+CREATE TABLE `stock_ledger` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `order_id` bigint NOT NULL COMMENT '单据id',
+  `order_no` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '单据编号',
+  `type` tinyint NOT NULL COMMENT '类型 1入库 2出库',
+  `product_id` bigint NOT NULL COMMENT '商品id',
+  `sku_id` bigint DEFAULT NULL COMMENT 'SKU id',
+  `product_code` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '商品编号快照',
+  `sku_code` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'SKU编号快照',
+  `product_name` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '商品名称快照',
+  `sku_attrs` varchar(500) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '规格属性JSON快照',
+  `quantity` int NOT NULL COMMENT '变动数量，按 type 区分方向',
+  `stock_before` int NOT NULL COMMENT '变动前库存',
+  `stock_after` int NOT NULL COMMENT '变动后库存',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_user` bigint DEFAULT NULL COMMENT '操作人',
+  PRIMARY KEY (`id`),
+  KEY `idx_type_create` (`type`,`create_time`),
+  KEY `idx_order_no` (`order_no`),
+  KEY `idx_product_code` (`product_code`),
+  KEY `idx_sku_code` (`sku_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='库存流水台账';

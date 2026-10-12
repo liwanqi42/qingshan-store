@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.StockOrderMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into stock_order
+            (order_no, type, status, total_quantity, total_kinds, remark,
+             create_time, update_time, create_user, update_user)
+        values
+            (#{orderNo}, #{type}, #{status}, #{totalQuantity}, #{totalKinds}, #{remark},
+             #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+    </insert>
+
+    <update id="updateDraft">
+        update stock_order
+        set remark = #{remark},
+            total_quantity = #{totalQuantity},
+            total_kinds = #{totalKinds},
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <update id="audit">
+        update stock_order
+        set status = 1,
+            audit_time = now(),
+            audit_user = #{userId},
+            update_time = now(),
+            update_user = #{userId}
+        where id = #{id}
+          and status = 0
+    </update>
+
+    <delete id="deleteDraft">
+        delete from stock_order where id = #{id} and status = 0
+    </delete>
+
+    <select id="pageQuery" resultType="com.qingshan.vo.StockOrderVO">
+        select o.id,
+               o.order_no,
+               o.type,
+               o.status,
+               o.total_quantity,
+               o.total_kinds,
+               o.remark,
+               o.audit_time,
+               o.audit_user,
+               au.name as audit_user_name,
+               o.create_time,
+               o.create_user,
+               cu.name as create_user_name,
+               o.update_time
+        from stock_order o
+        left join employee cu on cu.id = o.create_user
+        left join employee au on au.id = o.audit_user
+        <where>
+            <if test="type != null">
+                and o.type = #{type}
+            </if>
+            <if test="status != null">
+                and o.status = #{status}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and o.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                and exists (
+                    select 1 from stock_order_item i
+                    where i.order_id = o.id
+                      and (i.product_code like concat('%', #{code}, '%')
+                        or i.sku_code like concat('%', #{code}, '%'))
+                )
+            </if>
+            <if test="beginDate != null">
+                and o.create_time &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null">
+                and o.create_time &lt; date_add(#{endDate}, interval 1 day)
+            </if>
+        </where>
+        order by o.create_time desc, o.id desc
+    </select>
+
+    <select id="listForExport" resultType="com.qingshan.vo.StockOrderExportVO">
+        select o.order_no,
+               o.type,
+               o.status,
+               o.remark,
+               o.create_time,
+               cu.name as create_user_name,
+               o.audit_time,
+               au.name as audit_user_name,
+               i.product_code,
+               i.sku_code,
+               i.product_name,
+               i.sku_attrs,
+               i.quantity
+        from stock_order o
+        left join employee cu on cu.id = o.create_user
+        left join employee au on au.id = o.audit_user
+        left join stock_order_item i on i.order_id = o.id
+        <where>
+            <if test="type != null">
+                and o.type = #{type}
+            </if>
+            <if test="status != null">
+                and o.status = #{status}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and o.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                and (i.product_code like concat('%', #{code}, '%')
+                  or i.sku_code like concat('%', #{code}, '%'))
+            </if>
+            <if test="beginDate != null">
+                and o.create_time &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null">
+                and o.create_time &lt; date_add(#{endDate}, interval 1 day)
+            </if>
+        </where>
+        order by o.create_time desc, o.id desc, i.id
+    </select>
+
+    <select id="getSkuItem" resultType="com.qingshan.vo.StockItemVO">
+        select p.id as product_id,
+               p.product_code,
+               p.name as product_name,
+               p.image,
+               p.price,
+               p.stock,
+               s.id as sku_id,
+               s.sku_code,
+               s.attrs,
+               s.price as sku_price,
+               s.stock as sku_stock,
+               s.status as sku_status
+        from product_sku s
+        join product p on p.id = s.product_id
+        where s.sku_code = #{skuCode}
+        limit 1
+    </select>
+
+    <select id="getProductItem" resultType="com.qingshan.vo.StockItemVO">
+        select id as product_id,
+               product_code,
+               name as product_name,
+               image,
+               price,
+               stock
+        from product
+        where product_code = #{productCode}
+        limit 1
+    </select>
+
+    <select id="listSkuOptions" resultType="com.qingshan.vo.StockSkuVO">
+        select id as sku_id,
+               sku_code,
+               attrs,
+               price,
+               stock,
+               status
+        from product_sku
+        where product_id = #{productId}
+        order by id
+    </select>
+
+</mapper>

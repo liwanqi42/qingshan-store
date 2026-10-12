@@ -39,6 +39,7 @@ public class RoleServiceImpl implements RoleService {
      */
     private static final String DEFAULT_ADMIN_MENUS =
             "DashboardView,StatisticsView,OrderView,CategoryView,ProductView,BundleView,"
+                    + "StockInView,StockOutView,StockLedgerView,"
                     + "SystemUserView,SystemMenuView,SystemRoleView,SystemDictView,ShopView";
 
     /**

@@ -59,6 +59,25 @@ public class MessageConstant {
     public static final String ORDER_ALREADY_PAID = "该订单已支付";
     public static final String PRODUCT_BUNDLE_INCOMPLETE = "商品或套装信息不完整";
     public static final String PRODUCT_BUY_LIMIT = "单个商品最多购买" + NumConstant.PRODUCT_MAX_BUY + "件";
+    public static final String STOCK_ITEM_CODE_REQUIRED = "请输入商品编号或SKU编号";
+    public static final String STOCK_ITEM_NOT_FOUND = "商品编号或SKU编号不存在";
+    public static final String STOCK_ITEM_SKU_REQUIRED = "该商品有规格，请扫描 SKU 编号或先选择规格";
+    public static final String STOCK_SKU_NOT_FOUND = "商品规格不存在";
+    public static final String STOCK_SKU_MISMATCH = "商品与规格不匹配";
+    public static final String STOCK_SKU_DISABLED = "该商品规格已禁用";
+    public static final String STOCK_ITEM_DELETED = "商品已被删除，请删除该单据后重新录入";
+    public static final String STOCK_ITEM_HAS_SKU = "商品已维护规格，请删除该明细后按 SKU 重新录入";
+    public static final String STOCK_QUANTITY_INVALID = "数量必须为 1~999999 的整数";
+    public static final String STOCK_ORDER_EMPTY = "请先添加商品明细";
+    public static final String STOCK_ORDER_TOO_MANY_ITEMS = "单据明细不能超过 200 行";
+    public static final String STOCK_ORDER_TYPE_INVALID = "单据类型不正确";
+    public static final String STOCK_ORDER_NOT_FOUND = "单据不存在";
+    public static final String STOCK_ORDER_STATUS_ERROR = "单据状态已变更，请刷新后重试";
+    public static final String STOCK_ORDER_TYPE_IMMUTABLE = "不能修改单据类型";
+    public static final String STOCK_ORDER_UPDATED = "只有待审核单据可以修改";
+    public static final String STOCK_ORDER_DELETED = "只有待审核单据可以删除";
+    public static final String STOCK_EXPORT_EMPTY = "没有可导出的数据";
+    public static final String STOCK_LEDGER_EXPORT_EMPTY = "没有可导出的库存流水";
 
 
 }

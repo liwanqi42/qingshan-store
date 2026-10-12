@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.StockLedgerMapper">
+
+    <insert id="insertBatch">
+        insert into stock_ledger
+            (order_id, order_no, type, product_id, sku_id, product_code, sku_code,
+             product_name, sku_attrs, quantity, stock_before, stock_after,
+             create_time, create_user)
+        values
+        <foreach collection="items" item="item" separator=",">
+            (#{item.orderId}, #{item.orderNo}, #{item.type}, #{item.productId}, #{item.skuId},
+             #{item.productCode}, #{item.skuCode}, #{item.productName}, #{item.skuAttrs},
+             #{item.quantity}, #{item.stockBefore}, #{item.stockAfter},
+             #{item.createTime}, #{item.createUser})
+        </foreach>
+    </insert>
+
+    <select id="pageQuery" resultType="com.qingshan.vo.StockLedgerVO">
+        select l.*,
+               cu.name as create_user_name
+        from stock_ledger l
+        left join employee cu on cu.id = l.create_user
+        <where>
+            <if test="type != null">
+                and l.type = #{type}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and l.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                and (l.product_code like concat('%', #{code}, '%')
+                  or l.sku_code like concat('%', #{code}, '%'))
+            </if>
+            <if test="beginDate != null">
+                and l.create_time &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null">
+                and l.create_time &lt; date_add(#{endDate}, interval 1 day)
+            </if>
+        </where>
+        order by l.create_time desc, l.id desc
+    </select>
+
+    <select id="listForExport" resultType="com.qingshan.vo.StockLedgerVO">
+        select l.*,
+               cu.name as create_user_name
+        from stock_ledger l
+        left join employee cu on cu.id = l.create_user
+        <where>
+            <if test="type != null">
+                and l.type = #{type}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and l.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="code != null and code != ''">
+                and (l.product_code like concat('%', #{code}, '%')
+                  or l.sku_code like concat('%', #{code}, '%'))
+            </if>
+            <if test="beginDate != null">
+                and l.create_time &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null">
+                and l.create_time &lt; date_add(#{endDate}, interval 1 day)
+            </if>
+        </where>
+        order by l.create_time desc, l.id desc
+    </select>
+
+</mapper>
