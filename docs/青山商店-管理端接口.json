@@ -1655,7 +1655,7 @@
         "req_query": [],
         "req_body_type": "raw",
         "res_body_type": "json",
-        "res_body": "{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"integer\",\"format\":\"int32\"},\"data\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"name\":{\"type\":\"string\",\"description\":\"商品名称\"},\"categoryId\":{\"type\":\"integer\",\"format\":\"int64\",\"description\":\"商品分类id\"},\"price\":{\"type\":\"number\",\"description\":\"商品价格\"},\"image\":{\"type\":\"string\",\"description\":\"封面图路径\"},\"images\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"样式图列表（详情页轮播展示）\"},\"detailImages\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"详情长图列表（商品详情图文区）\"},\"description\":{\"type\":\"string\",\"description\":\"商品描述\"},\"status\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"商品状态：1上架，0下架\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量\"},\"updateTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"categoryName\":{\"type\":\"string\",\"description\":\"分类名称\"},\"attrs\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"productId\":{\"type\":\"integer\",\"format\":\"int64\",\"description\":\"商品id\"},\"name\":{\"type\":\"string\",\"description\":\"属性名称\"},\"attrValues\":{\"type\":\"string\",\"description\":\"属性值列表JSON，例如：[\\\"黑色\\\",\\\"白色\\\"]\"}},\"title\":\"ProductAttr\",\"$$ref\":\"#/definitions/ProductAttr\",\"required\":[\"name\",\"attrValues\"]},\"description\":\"商品属性/规格\"}},\"title\":\"ProductVO\",\"$$ref\":\"#/definitions/ProductVO\",\"required\":[\"categoryId\",\"categoryName\",\"attrs\",\"description\",\"id\",\"image\",\"name\",\"price\",\"status\",\"updateTime\",\"stock\",\"sales\"]},\"msg\":{\"type\":\"string\"}},\"title\":\"R«ProductVO»\",\"$$ref\":\"#/definitions/R«ProductVO»\",\"required\":[\"code\",\"data\"]}",
+        "res_body": "{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"integer\",\"format\":\"int32\"},\"data\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"name\":{\"type\":\"string\",\"description\":\"商品名称\"},\"categoryId\":{\"type\":\"integer\",\"format\":\"int64\",\"description\":\"商品分类id\"},\"price\":{\"type\":\"number\",\"description\":\"商品价格\"},\"image\":{\"type\":\"string\",\"description\":\"封面图路径\"},\"images\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"样式图列表（详情页轮播展示）\"},\"detailImages\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"详情长图列表（商品详情图文区）\"},\"description\":{\"type\":\"string\",\"description\":\"商品描述\"},\"status\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"商品状态：1上架，0下架\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量（支付成功及出库审核通过后累加）\"},\"updateTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"categoryName\":{\"type\":\"string\",\"description\":\"分类名称\"},\"attrs\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"productId\":{\"type\":\"integer\",\"format\":\"int64\",\"description\":\"商品id\"},\"name\":{\"type\":\"string\",\"description\":\"属性名称\"},\"attrValues\":{\"type\":\"string\",\"description\":\"属性值列表JSON，例如：[\\\"黑色\\\",\\\"白色\\\"]\"}},\"title\":\"ProductAttr\",\"$$ref\":\"#/definitions/ProductAttr\",\"required\":[\"name\",\"attrValues\"]},\"description\":\"商品属性/规格\"}},\"title\":\"ProductVO\",\"$$ref\":\"#/definitions/ProductVO\",\"required\":[\"categoryId\",\"categoryName\",\"attrs\",\"description\",\"id\",\"image\",\"name\",\"price\",\"status\",\"updateTime\",\"stock\",\"sales\"]},\"msg\":{\"type\":\"string\"}},\"title\":\"R«ProductVO»\",\"$$ref\":\"#/definitions/R«ProductVO»\",\"required\":[\"code\",\"data\"]}",
         "project_id": 10518,
         "catid": 105926,
         "uid": 12769,
@@ -1699,7 +1699,7 @@
         ],
         "req_body_type": "raw",
         "res_body_type": "json",
-        "res_body": "{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"integer\",\"format\":\"int32\"},\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"categoryId\":{\"type\":\"integer\",\"format\":\"int64\"},\"createTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"createUser\":{\"type\":\"integer\",\"format\":\"int64\"},\"description\":{\"type\":\"string\"},\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"image\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"price\":{\"type\":\"number\"},\"status\":{\"type\":\"integer\",\"format\":\"int32\"},\"updateTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"updateUser\":{\"type\":\"integer\",\"format\":\"int64\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量\"}},\"title\":\"Product\",\"$$ref\":\"#/definitions/Product\"}},\"msg\":{\"type\":\"string\"}},\"title\":\"R«List«Product»»\",\"$$ref\":\"#/definitions/R«List«Product»»\",\"required\":[\"code\"]}",
+        "res_body": "{\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"integer\",\"format\":\"int32\"},\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"categoryId\":{\"type\":\"integer\",\"format\":\"int64\"},\"createTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"createUser\":{\"type\":\"integer\",\"format\":\"int64\"},\"description\":{\"type\":\"string\"},\"id\":{\"type\":\"integer\",\"format\":\"int64\"},\"image\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"price\":{\"type\":\"number\"},\"status\":{\"type\":\"integer\",\"format\":\"int32\"},\"updateTime\":{\"type\":\"string\",\"format\":\"date-time\"},\"updateUser\":{\"type\":\"integer\",\"format\":\"int64\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量（支付成功及出库审核通过后累加）\"}},\"title\":\"Product\",\"$$ref\":\"#/definitions/Product\"}},\"msg\":{\"type\":\"string\"}},\"title\":\"R«List«Product»»\",\"$$ref\":\"#/definitions/R«List«Product»»\",\"required\":[\"code\"]}",
         "project_id": 10518,
         "catid": 105926,
         "uid": 12769,
@@ -1771,7 +1771,7 @@
         ],
         "req_body_type": "raw",
         "res_body_type": "json",
-        "res_body": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"number\"},\"msg\":{\"type\":\"null\"},\"data\":{\"type\":\"object\",\"properties\":{\"total\":{\"type\":\"number\",\"description\":\"总记录数\"},\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"number\"},\"name\":{\"type\":\"string\"},\"categoryId\":{\"type\":\"number\"},\"price\":{\"type\":\"number\"},\"image\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"status\":{\"type\":\"number\"},\"updateTime\":{\"type\":\"string\"},\"categoryName\":{\"type\":\"string\",\"description\":\"分类名称\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量\"}},\"required\":[\"id\",\"name\",\"categoryId\",\"price\",\"image\",\"description\",\"status\",\"updateTime\",\"categoryName\",\"stock\",\"sales\"]},\"description\":\"当前页数据\"}},\"required\":[\"total\",\"records\"]}},\"required\":[\"code\"]}",
+        "res_body": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"code\":{\"type\":\"number\"},\"msg\":{\"type\":\"null\"},\"data\":{\"type\":\"object\",\"properties\":{\"total\":{\"type\":\"number\",\"description\":\"总记录数\"},\"records\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"number\"},\"name\":{\"type\":\"string\"},\"categoryId\":{\"type\":\"number\"},\"price\":{\"type\":\"number\"},\"image\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"status\":{\"type\":\"number\"},\"updateTime\":{\"type\":\"string\"},\"categoryName\":{\"type\":\"string\",\"description\":\"分类名称\"},\"stock\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"库存\"},\"sales\":{\"type\":\"integer\",\"format\":\"int32\",\"description\":\"销量（支付成功及出库审核通过后累加）\"}},\"required\":[\"id\",\"name\",\"categoryId\",\"price\",\"image\",\"description\",\"status\",\"updateTime\",\"categoryName\",\"stock\",\"sales\"]},\"description\":\"当前页数据\"}},\"required\":[\"total\",\"records\"]}},\"required\":[\"code\"]}",
         "project_id": 10518,
         "catid": 105926,
         "uid": 12769,
@@ -2740,6 +2740,632 @@
         "__v": 0,
         "desc": "上传图片；通过 type 区分封面图、样式图和详情长图，分别存储到 OSS 不同目录。",
         "markdown": "上传图片；通过 type 区分封面图、样式图和详情长图，分别存储到 OSS 不同目录。"
+      }
+    ]
+  },
+  {
+    "index": 9,
+    "name": "库存管理相关接口",
+    "desc": "Stock Controller",
+    "add_time": 1792828048,
+    "up_time": 1792828048,
+    "list": [
+      {
+        "query_path": {
+          "path": "/admin/stock/item",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 0,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999116,
+        "method": "GET",
+        "title": "按商品编号或SKU编号查询",
+        "path": "/admin/stock/item",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "1",
+            "_id": "00000000000000000098930d",
+            "name": "code",
+            "example": "5090",
+            "desc": "商品编号或SKU编号"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"object\", \"properties\": {\"productId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"商品id\"}, \"productCode\": {\"type\": \"string\", \"description\": \"商品编号\"}, \"productName\": {\"type\": \"string\", \"description\": \"商品名称\"}, \"image\": {\"type\": \"string\", \"description\": \"商品图片\"}, \"price\": {\"type\": \"number\", \"description\": \"商品价格\"}, \"stock\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"商品总库存\"}, \"skuId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"按SKU编号查询时返回\"}, \"skuCode\": {\"type\": \"string\", \"description\": \"SKU编号\"}, \"attrs\": {\"type\": \"string\", \"description\": \"规格属性JSON\"}, \"skuPrice\": {\"type\": \"number\", \"description\": \"SKU价格\"}, \"skuStock\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"SKU库存\"}, \"skuStatus\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"SKU状态：0禁用 1启用\"}, \"skuList\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"skuId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"SKU id\"}, \"skuCode\": {\"type\": \"string\", \"description\": \"SKU编号\"}, \"attrs\": {\"type\": \"string\", \"description\": \"规格属性JSON\"}, \"price\": {\"type\": \"number\", \"description\": \"SKU价格\"}, \"stock\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"SKU库存\"}, \"status\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"状态：0禁用 1启用\"}}}, \"description\": \"商品下全部SKU，供选择规格\"}}, \"title\": \"StockItemVO\", \"required\": [\"productId\", \"productCode\", \"productName\", \"stock\"]}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«StockItemVO»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "入库/出库快速录入时，按商品编号或SKU编号查询商品与规格库存信息。",
+        "markdown": "入库/出库快速录入时，按商品编号或SKU编号查询商品与规格库存信息。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 1,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999118,
+        "method": "POST",
+        "title": "新建入库/出库单",
+        "path": "/admin/stock/orders",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "00000000000000000098930f",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"string\"}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«string»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "新建待审核单据，同一商品+SKU的多行明细会自动合并。",
+        "markdown": "新建待审核单据，同一商品+SKU的多行明细会自动合并。",
+        "req_body_other": "{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"单据id，修改待审核单据时传入\"}, \"type\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"类型：1入库 2出库\", \"enum\": [1, 2]}, \"remark\": {\"type\": \"string\", \"description\": \"备注，最多200字\"}, \"items\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"productId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"商品id\"}, \"skuId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"SKU id，无规格商品为空\"}, \"quantity\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"数量，1-999999\"}}, \"required\": [\"productId\", \"quantity\"]}, \"description\": \"商品明细\"}}, \"title\": \"StockOrderDTO\", \"required\": [\"type\", \"items\"]}"
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 2,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999120,
+        "method": "PUT",
+        "title": "修改入库/出库单",
+        "path": "/admin/stock/orders",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [
+          {
+            "required": "1",
+            "_id": "000000000000000000989311",
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "req_query": [],
+        "req_body_type": "json",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"string\"}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«string»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "仅待审核单据可修改，单据类型不可变更。",
+        "markdown": "仅待审核单据可修改，单据类型不可变更。",
+        "req_body_other": "{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"单据id，修改待审核单据时传入\"}, \"type\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"类型：1入库 2出库\", \"enum\": [1, 2]}, \"remark\": {\"type\": \"string\", \"description\": \"备注，最多200字\"}, \"items\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"productId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"商品id\"}, \"skuId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"SKU id，无规格商品为空\"}, \"quantity\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"数量，1-999999\"}}, \"required\": [\"productId\", \"quantity\"]}, \"description\": \"商品明细\"}}, \"title\": \"StockOrderDTO\", \"required\": [\"type\", \"items\"]}"
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders/{id}",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "var",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 3,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999123,
+        "method": "DELETE",
+        "title": "删除入库/出库单",
+        "path": "/admin/stock/orders/{id}",
+        "req_params": [
+          {
+            "_id": "000000000000000000989312",
+            "name": "id",
+            "example": "3",
+            "desc": "单据id"
+          }
+        ],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"string\"}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«string»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "仅待审核单据可删除。",
+        "markdown": "仅待审核单据可删除。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders/{id}/audit",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "var",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 4,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999125,
+        "method": "POST",
+        "title": "审核入库/出库单",
+        "path": "/admin/stock/orders/{id}/audit",
+        "req_params": [
+          {
+            "_id": "000000000000000000989314",
+            "name": "id",
+            "example": "3",
+            "desc": "单据id"
+          }
+        ],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"string\"}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«string»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "审核通过后才会实际变更库存；出库单审核通过后同步累加商品销量并清理用户端商品缓存。仅超级管理员可操作。",
+        "markdown": "审核通过后才会实际变更库存；出库单审核通过后同步累加商品销量并清理用户端商品缓存。仅超级管理员可操作。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders/page",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 5,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999126,
+        "method": "GET",
+        "title": "入库/出库单分页查询",
+        "path": "/admin/stock/orders/page",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "1",
+            "_id": "000000000000000000989317",
+            "name": "page",
+            "example": "1",
+            "desc": "页码"
+          },
+          {
+            "required": "1",
+            "_id": "000000000000000000989318",
+            "name": "pageSize",
+            "example": "10",
+            "desc": "每页记录数"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989319",
+            "name": "type",
+            "example": "2",
+            "desc": "类型：1入库 2出库"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098931a",
+            "name": "status",
+            "example": "0",
+            "desc": "状态：0待审核 1已审核"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098931b",
+            "name": "orderNo",
+            "example": "CK372273484497162240",
+            "desc": "单据编号"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098931c",
+            "name": "code",
+            "example": "5090",
+            "desc": "商品编号或SKU编号"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098931d",
+            "name": "beginDate",
+            "example": "2026-10-01",
+            "desc": "创建开始日期"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098931e",
+            "name": "endDate",
+            "example": "2026-10-31",
+            "desc": "创建结束日期"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"type\": \"object\", \"properties\": {\"code\": {\"type\": \"number\"}, \"msg\": {\"type\": \"null\"}, \"data\": {\"type\": \"object\", \"properties\": {\"total\": {\"type\": \"number\", \"description\": \"总记录数\"}, \"records\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"number\"}, \"orderNo\": {\"type\": \"string\", \"description\": \"单据编号\"}, \"type\": {\"type\": \"number\", \"description\": \"类型：1入库 2出库\"}, \"status\": {\"type\": \"number\", \"description\": \"状态：0待审核 1已审核\"}, \"totalQuantity\": {\"type\": \"number\", \"description\": \"总数量\"}, \"totalKinds\": {\"type\": \"number\", \"description\": \"商品种数\"}, \"remark\": {\"type\": \"string\"}, \"auditTime\": {\"type\": \"string\"}, \"auditUser\": {\"type\": \"number\"}, \"auditUserName\": {\"type\": \"string\"}, \"createTime\": {\"type\": \"string\"}, \"createUser\": {\"type\": \"number\"}, \"createUserName\": {\"type\": \"string\"}, \"updateTime\": {\"type\": \"string\"}}, \"required\": [\"id\", \"orderNo\", \"type\", \"status\", \"totalQuantity\", \"totalKinds\", \"createTime\", \"createUserName\"]}, \"description\": \"当前页数据\"}}, \"required\": [\"total\", \"records\"]}}, \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "按类型、状态、单据编号、商品编号和创建日期分页查询单据。",
+        "markdown": "按类型、状态、单据编号、商品编号和创建日期分页查询单据。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders/{id}",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "var",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 6,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999136,
+        "method": "GET",
+        "title": "入库/出库单详情",
+        "path": "/admin/stock/orders/{id}",
+        "req_params": [
+          {
+            "_id": "00000000000000000098931f",
+            "name": "id",
+            "example": "3",
+            "desc": "单据id"
+          }
+        ],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"type\": \"object\", \"properties\": {\"code\": {\"type\": \"integer\", \"format\": \"int32\"}, \"data\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\", \"format\": \"int64\"}, \"orderNo\": {\"type\": \"string\", \"description\": \"单据编号\"}, \"type\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"类型：1入库 2出库\"}, \"status\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"状态：0待审核 1已审核\"}, \"totalQuantity\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"总数量\"}, \"totalKinds\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"商品种数\"}, \"remark\": {\"type\": \"string\"}, \"auditTime\": {\"type\": \"string\", \"format\": \"date-time\"}, \"auditUser\": {\"type\": \"integer\", \"format\": \"int64\"}, \"auditUserName\": {\"type\": \"string\"}, \"createTime\": {\"type\": \"string\", \"format\": \"date-time\"}, \"createUser\": {\"type\": \"integer\", \"format\": \"int64\"}, \"createUserName\": {\"type\": \"string\"}, \"updateTime\": {\"type\": \"string\", \"format\": \"date-time\"}, \"items\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\", \"format\": \"int64\"}, \"orderId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"单据id\"}, \"productId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"商品id\"}, \"skuId\": {\"type\": \"integer\", \"format\": \"int64\", \"description\": \"SKU id，无规格商品为空\"}, \"productCode\": {\"type\": \"string\", \"description\": \"商品编号快照\"}, \"skuCode\": {\"type\": \"string\", \"description\": \"SKU编号快照\"}, \"productName\": {\"type\": \"string\", \"description\": \"商品名称快照\"}, \"skuAttrs\": {\"type\": \"string\", \"description\": \"规格属性JSON快照\"}, \"quantity\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"数量\"}, \"stockBefore\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"审核前库存\"}, \"stockAfter\": {\"type\": \"integer\", \"format\": \"int32\", \"description\": \"审核后库存\"}, \"createTime\": {\"type\": \"string\", \"format\": \"date-time\"}}, \"required\": [\"productId\", \"productCode\", \"productName\", \"quantity\"]}, \"description\": \"单据明细\"}}, \"title\": \"StockOrderVO\", \"required\": [\"id\", \"orderNo\", \"type\", \"status\", \"items\"]}, \"msg\": {\"type\": \"string\"}}, \"title\": \"R«StockOrderVO»\", \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "返回单据头与全部明细，明细包含审核前后库存快照。",
+        "markdown": "返回单据头与全部明细，明细包含审核前后库存快照。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/orders/export",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": false,
+        "res_body_is_json_schema": false,
+        "api_opened": false,
+        "index": 7,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999137,
+        "method": "GET",
+        "title": "导出入库/出库单 Excel",
+        "path": "/admin/stock/orders/export",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "1",
+            "_id": "000000000000000000989322",
+            "name": "page",
+            "example": "1",
+            "desc": "页码"
+          },
+          {
+            "required": "1",
+            "_id": "000000000000000000989323",
+            "name": "pageSize",
+            "example": "10",
+            "desc": "每页记录数"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989324",
+            "name": "type",
+            "example": "2",
+            "desc": "类型：1入库 2出库"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989325",
+            "name": "status",
+            "example": "0",
+            "desc": "状态：0待审核 1已审核"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989326",
+            "name": "orderNo",
+            "example": "CK372273484497162240",
+            "desc": "单据编号"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989327",
+            "name": "code",
+            "example": "5090",
+            "desc": "商品编号或SKU编号"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989328",
+            "name": "beginDate",
+            "example": "2026-10-01",
+            "desc": "创建开始日期"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989329",
+            "name": "endDate",
+            "example": "2026-10-31",
+            "desc": "创建结束日期"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "raw",
+        "res_body": "OK",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "按查询条件导出单据明细 Excel。",
+        "markdown": "按查询条件导出单据明细 Excel。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/ledger/page",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": true,
+        "res_body_is_json_schema": true,
+        "api_opened": false,
+        "index": 8,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999146,
+        "method": "GET",
+        "title": "库存台账分页查询",
+        "path": "/admin/stock/ledger/page",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "1",
+            "_id": "00000000000000000098932b",
+            "name": "page",
+            "example": "1",
+            "desc": "页码"
+          },
+          {
+            "required": "1",
+            "_id": "00000000000000000098932c",
+            "name": "pageSize",
+            "example": "10",
+            "desc": "每页记录数"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098932d",
+            "name": "type",
+            "example": "2",
+            "desc": "类型：1入库 2出库"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098932e",
+            "name": "orderNo",
+            "example": "CK372273484497162240",
+            "desc": "单据编号"
+          },
+          {
+            "required": "0",
+            "_id": "00000000000000000098932f",
+            "name": "code",
+            "example": "5090",
+            "desc": "商品编号或SKU编号"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989330",
+            "name": "beginDate",
+            "example": "2026-10-01",
+            "desc": "开始日期"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989331",
+            "name": "endDate",
+            "example": "2026-10-31",
+            "desc": "结束日期"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "json",
+        "res_body": "{\"$schema\": \"http://json-schema.org/draft-04/schema#\", \"type\": \"object\", \"properties\": {\"code\": {\"type\": \"number\"}, \"msg\": {\"type\": \"null\"}, \"data\": {\"type\": \"object\", \"properties\": {\"total\": {\"type\": \"number\", \"description\": \"总记录数\"}, \"records\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"number\"}, \"orderId\": {\"type\": \"number\"}, \"orderNo\": {\"type\": \"string\", \"description\": \"单据编号\"}, \"type\": {\"type\": \"number\", \"description\": \"类型：1入库 2出库\"}, \"productId\": {\"type\": \"number\"}, \"skuId\": {\"type\": \"number\"}, \"productCode\": {\"type\": \"string\", \"description\": \"商品编号\"}, \"skuCode\": {\"type\": \"string\", \"description\": \"SKU编号\"}, \"productName\": {\"type\": \"string\", \"description\": \"商品名称\"}, \"skuAttrs\": {\"type\": \"string\", \"description\": \"规格属性JSON\"}, \"quantity\": {\"type\": \"number\", \"description\": \"变动数量\"}, \"stockBefore\": {\"type\": \"number\", \"description\": \"变动前库存\"}, \"stockAfter\": {\"type\": \"number\", \"description\": \"变动后库存\"}, \"createTime\": {\"type\": \"string\"}, \"createUser\": {\"type\": \"number\"}, \"createUserName\": {\"type\": \"string\"}}, \"required\": [\"orderNo\", \"type\", \"productCode\", \"productName\", \"quantity\", \"stockBefore\", \"stockAfter\", \"createTime\"]}, \"description\": \"当前页数据\"}}, \"required\": [\"total\", \"records\"]}}, \"required\": [\"code\"]}",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "审核通过后生成的只增不改库存流水，支持按类型、单据、商品和日期筛选。",
+        "markdown": "审核通过后生成的只增不改库存流水，支持按类型、单据、商品和日期筛选。",
+        "req_body_other": null
+      },
+      {
+        "query_path": {
+          "path": "/admin/stock/ledger/export",
+          "params": []
+        },
+        "edit_uid": 0,
+        "status": "undone",
+        "type": "static",
+        "req_body_is_json_schema": false,
+        "res_body_is_json_schema": false,
+        "api_opened": false,
+        "index": 9,
+        "tag": [
+          "库存管理相关接口"
+        ],
+        "_id": 9999154,
+        "method": "GET",
+        "title": "导出库存台账 Excel",
+        "path": "/admin/stock/ledger/export",
+        "req_params": [],
+        "req_body_form": [],
+        "req_headers": [],
+        "req_query": [
+          {
+            "required": "1",
+            "_id": "000000000000000000989333",
+            "name": "page",
+            "example": "1",
+            "desc": "页码"
+          },
+          {
+            "required": "1",
+            "_id": "000000000000000000989334",
+            "name": "pageSize",
+            "example": "10",
+            "desc": "每页记录数"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989335",
+            "name": "type",
+            "example": "2",
+            "desc": "类型：1入库 2出库"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989336",
+            "name": "orderNo",
+            "example": "CK372273484497162240",
+            "desc": "单据编号"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989337",
+            "name": "code",
+            "example": "5090",
+            "desc": "商品编号或SKU编号"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989338",
+            "name": "beginDate",
+            "example": "2026-10-01",
+            "desc": "开始日期"
+          },
+          {
+            "required": "0",
+            "_id": "000000000000000000989339",
+            "name": "endDate",
+            "example": "2026-10-31",
+            "desc": "结束日期"
+          }
+        ],
+        "req_body_type": "raw",
+        "res_body_type": "raw",
+        "res_body": "OK",
+        "project_id": 10518,
+        "catid": 105933,
+        "uid": 12769,
+        "add_time": 1792828048,
+        "up_time": 1792828048,
+        "__v": 0,
+        "desc": "按查询条件导出库存流水 Excel，出库数量以负数展示。",
+        "markdown": "按查询条件导出库存流水 Excel，出库数量以负数展示。",
+        "req_body_other": null
       }
     ]
   }

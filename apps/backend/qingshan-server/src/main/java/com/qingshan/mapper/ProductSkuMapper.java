@@ -31,6 +31,22 @@ public interface ProductSkuMapper {
     List<ProductSku> listByProductId(Long productId);
 
     /**
+     * 统计商品下的SKU数量
+     * @param productId 商品id
+     * @return SKU数量
+     */
+    @Select("select count(id) from product_sku where product_id = #{productId}")
+    int countByProductId(Long productId);
+
+    /**
+     * 查询SKU当前库存
+     * @param id SKU id
+     * @return 库存
+     */
+    @Select("select stock from product_sku where id = #{id}")
+    Integer getStock(Long id);
+
+    /**
      * 删除商品下所有SKU
      * @param productId 商品id
      */
