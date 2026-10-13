@@ -104,6 +104,9 @@ const ICON_OPTIONS = [
   'el-icon-s-goods',
   'el-icon-s-shop',
   'el-icon-s-data',
+  'el-icon-download',
+  'el-icon-upload2',
+  'el-icon-notebook-2',
   'el-icon-setting'
 ]
 

@@ -12,6 +12,10 @@ const ProductView = () =>
   import(/* webpackChunkName: "product" */ '@/views/product/index.vue')
 const BundleView = () =>
   import(/* webpackChunkName: "bundle" */ '@/views/bundle/index.vue')
+const StockOrderView = () =>
+  import(/* webpackChunkName: "stock-order" */ '@/views/stock/index.vue')
+const StockLedgerView = () =>
+  import(/* webpackChunkName: "stock-ledger" */ '@/views/stock/ledger.vue')
 const OrderView = () =>
   import(/* webpackChunkName: "order" */ '@/views/order/index.vue')
 const ShopView = () =>
@@ -89,6 +93,38 @@ export const constantRoutes = [
         name: 'OrderView',
         component: OrderView,
         meta: { title: '订单管理', icon: 'el-icon-s-order', roles: ['admin'] }
+      },
+      {
+        path: 'stock/in',
+        name: 'StockInView',
+        component: StockOrderView,
+        meta: {
+          title: '入库管理',
+          icon: 'el-icon-download',
+          roles: ['admin'],
+          stockType: 1
+        }
+      },
+      {
+        path: 'stock/out',
+        name: 'StockOutView',
+        component: StockOrderView,
+        meta: {
+          title: '出库管理',
+          icon: 'el-icon-upload2',
+          roles: ['admin'],
+          stockType: 2
+        }
+      },
+      {
+        path: 'stock/ledger',
+        name: 'StockLedgerView',
+        component: StockLedgerView,
+        meta: {
+          title: '库存台账',
+          icon: 'el-icon-notebook-2',
+          roles: ['admin']
+        }
       },
       {
         path: 'category',
