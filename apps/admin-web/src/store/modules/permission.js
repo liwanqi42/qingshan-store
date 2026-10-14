@@ -22,12 +22,15 @@ function applyMenuSettings(routes, settings) {
       const key = route.name || route.path
       const config = settings[key] || {}
       const meta = route.meta || {}
+      const hasMoreConfig = config.more !== undefined && config.more !== null
+      const more = hasMoreConfig ? config.more === true : meta.more === true
       const next = {
         ...route,
         meta: {
           ...meta,
           title: config.title || meta.title,
-          icon: config.icon || meta.icon
+          icon: config.icon || meta.icon,
+          more
         }
       }
 
@@ -35,10 +38,14 @@ function applyMenuSettings(routes, settings) {
         next.children = applyMenuSettings(route.children, settings)
       }
 
+      //菜单排序优先使用本地配置，未配置时使用路由 meta 上的默认排序
+      const hasCustomSort =
+        config.sort !== undefined && config.sort !== null && config.sort !== ''
+
       return {
         route: next,
         hidden: config.hidden === true,
-        sort: Number(config.sort) || 0
+        sort: hasCustomSort ? Number(config.sort) || 0 : Number(meta.sort) || 0
       }
     })
     .filter(item => {
@@ -51,19 +58,51 @@ function applyMenuSettings(routes, settings) {
     .map(item => item.route)
 }
 
+//“更多管理”抽屉内的固定展示顺序
+const MORE_MANAGE_NAMES = [
+  'SystemRoleView',
+  'SystemDictView',
+  'SystemMenuView',
+  'ShopView'
+]
+
+function getAccessibleChildren(rootState) {
+  const roles = rootState.user ? rootState.user.roles : []
+  const permissions = rootState.user ? rootState.user.permissions : []
+  const menuPaths = rootState.user ? rootState.user.menuPaths : []
+  const routes = filterRoutes(constantRoutes, roles, permissions, menuPaths)
+  const rootRoute = routes.find(route => route.path === '/')
+  return rootRoute && rootRoute.children ? rootRoute.children : []
+}
+
 const state = {}
 
 const getters = {
   sidebarRoutes: (state, getters, rootState) => {
-    const roles = rootState.user ? rootState.user.roles : []
-    const permissions = rootState.user ? rootState.user.permissions : []
-    const menuPaths = rootState.user ? rootState.user.menuPaths : []
     const settings = rootState.menu ? rootState.menu.settings : {}
-    const routes = filterRoutes(constantRoutes, roles, permissions, menuPaths)
-    const rootRoute = routes.find(route => route.path === '/')
-    const children = rootRoute && rootRoute.children ? rootRoute.children : []
+    const children = getAccessibleChildren(rootState)
 
-    return applyMenuSettings(children, settings)
+    //归入“更多管理”的路由不在侧边栏展示
+    return applyMenuSettings(children, settings).filter(
+      route => !(route.meta && route.meta.more)
+    )
+  },
+  moreManageRoutes: (state, getters, rootState) => {
+    const settings = rootState.menu ? rootState.menu.settings : {}
+    const children = getAccessibleChildren(rootState)
+    const moreRoutes = applyMenuSettings(children, settings).filter(
+      route => route.meta && route.meta.more
+    )
+
+    //默认四项保持固定顺序，其余手动移入的菜单按侧边栏排序追加
+    const fixedRoutes = MORE_MANAGE_NAMES.map(name =>
+      moreRoutes.find(route => route.name === name)
+    ).filter(Boolean)
+    const extraRoutes = moreRoutes.filter(
+      route => !MORE_MANAGE_NAMES.includes(route.name)
+    )
+
+    return [...fixedRoutes, ...extraRoutes]
   }
 }
 

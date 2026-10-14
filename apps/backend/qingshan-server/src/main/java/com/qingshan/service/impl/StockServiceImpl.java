@@ -257,6 +257,10 @@ public class StockServiceImpl implements StockService {
             item.setStockAfter(change.getAfter());
             stockOrderItemMapper.updateStockSnapshot(item);
 
+            if (stockOut) {
+                productMapper.addSales(item.getProductId(), item.getQuantity());
+            }
+
             ledgers.add(StockLedger.builder()
                     .orderId(order.getId())
                     .orderNo(order.getOrderNo())

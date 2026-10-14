@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-alert
-      title="当前为本地菜单配置，保存后立即生效；后端菜单接口接入后可替换为持久化接口。"
+      title="当前为本地菜单配置，保存后立即生效；排序值越小越靠前，未单独设置时使用系统默认排序。开启“更多管理”的菜单在侧边栏底部的“更多管理”入口中展示。"
       type="info"
       :closable="false"
       show-icon
@@ -35,6 +35,16 @@
           <template slot-scope="{ row }">
             <el-tag :type="row.hidden ? 'info' : 'success'" size="mini">
               {{ row.hidden ? '隐藏' : '显示' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="展示位置" width="100">
+          <template slot-scope="{ row }">
+            <el-tag
+              :type="row.hidden ? 'info' : row.more ? 'warning' : 'success'"
+              size="mini"
+            >
+              {{ row.hidden ? '已隐藏' : row.more ? '更多管理' : '侧边栏' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -81,6 +91,10 @@
         <el-form-item label="显示">
           <el-switch v-model="editForm.visible" />
         </el-form-item>
+        <el-form-item label="更多管理">
+          <el-switch v-model="editForm.more" :disabled="!editForm.visible" />
+          <span class="form-tip">开启后不在侧边栏展示，移至“更多管理”</span>
+        </el-form-item>
       </el-form>
       <span slot="footer">
         <el-button @click="editVisible = false">取消</el-button>
@@ -120,7 +134,8 @@ export default {
         title: '',
         icon: '',
         sort: 0,
-        visible: true
+        visible: true,
+        more: false
       },
       iconOptions: ICON_OPTIONS
     }
@@ -137,26 +152,37 @@ export default {
   },
   methods: {
     buildRows(routes, basePath = '') {
-      return routes.map(route => {
-        const key = route.name || route.path
-        const config = this.settings[key] || {}
-        const meta = route.meta || {}
-        const fullPath = route.path.startsWith('/')
-          ? route.path
-          : `${basePath}/${route.path}`.replace(/\/+/g, '/')
+      return routes
+        .map(route => {
+          const key = route.name || route.path
+          const config = this.settings[key] || {}
+          const meta = route.meta || {}
+          const fullPath = route.path.startsWith('/')
+            ? route.path
+            : `${basePath}/${route.path}`.replace(/\/+/g, '/')
+          const hasCustomSort =
+            config.sort !== undefined &&
+            config.sort !== null &&
+            config.sort !== ''
+          const hasMoreConfig =
+            config.more !== undefined && config.more !== null
 
-        return {
-          key,
-          path: fullPath,
-          title: config.title || meta.title || '',
-          icon: config.icon || meta.icon || '',
-          sort: config.sort === undefined ? 0 : config.sort,
-          hidden: config.hidden === true,
-          children: route.children
-            ? this.buildRows(route.children, fullPath)
-            : undefined
-        }
-      })
+          return {
+            key,
+            path: fullPath,
+            title: config.title || meta.title || '',
+            icon: config.icon || meta.icon || '',
+            sort: hasCustomSort
+              ? Number(config.sort) || 0
+              : Number(meta.sort) || 0,
+            hidden: config.hidden === true,
+            more: hasMoreConfig ? config.more === true : meta.more === true,
+            children: route.children
+              ? this.buildRows(route.children, fullPath)
+              : undefined
+          }
+        })
+        .sort((a, b) => a.sort - b.sort)
     },
     handleEdit(row) {
       this.editForm = {
@@ -164,7 +190,8 @@ export default {
         title: row.title,
         icon: row.icon,
         sort: row.sort,
-        visible: !row.hidden
+        visible: !row.hidden,
+        more: Boolean(row.more)
       }
       this.editVisible = true
     },
@@ -180,7 +207,8 @@ export default {
           title: this.editForm.title,
           icon: this.editForm.icon,
           sort: Number(this.editForm.sort) || 0,
-          hidden: !this.editForm.visible
+          hidden: !this.editForm.visible,
+          more: this.editForm.more === true
         }
       }
 
@@ -227,5 +255,11 @@ export default {
 .icon-name {
   color: $text-secondary;
   font-size: 13px;
+}
+
+.form-tip {
+  margin-left: 10px;
+  font-size: 12px;
+  color: $text-secondary;
 }
 </style>

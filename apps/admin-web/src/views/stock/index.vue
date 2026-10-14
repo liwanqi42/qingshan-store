@@ -92,7 +92,7 @@
               打印
             </el-button>
             <el-button
-              v-if="row.status === 0"
+              v-if="row.status === 0 && canAudit"
               type="text"
               size="small"
               @click="handleAudit(row)"
@@ -251,6 +251,10 @@ export default {
     pageTitle() {
       return this.stockType === 1 ? '入库单' : '出库单'
     },
+    canAudit() {
+      const roles = this.$store.getters['user/roles'] || []
+      return roles.includes('admin')
+    },
     detailTotalKinds() {
       return this.detailOrder && this.detailOrder.items
         ? this.detailOrder.items.length
@@ -361,6 +365,10 @@ export default {
       }
     },
     handleAudit(row) {
+      if (!this.canAudit) {
+        this.$message.warning('仅管理员可审核库存单据')
+        return
+      }
       const action = this.stockType === 1 ? '增加' : '扣减'
       this.$confirm(
         `审核通过后将${action}库存且单据不可修改，确定审核「${row.orderNo}」吗？`,

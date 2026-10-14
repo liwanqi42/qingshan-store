@@ -5,6 +5,7 @@ import com.qingshan.dto.StockOrderDTO;
 import com.qingshan.dto.StockOrderPageQueryDTO;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
+import com.qingshan.service.RoleService;
 import com.qingshan.service.StockService;
 import com.qingshan.service.support.ProductCacheManager;
 import com.qingshan.vo.StockItemVO;
@@ -39,6 +40,9 @@ public class StockController {
 
     @Autowired
     private ProductCacheManager productCacheManager;
+
+    @Autowired
+    private RoleService roleService;
 
     /**
      * 按商品编号或SKU编号查询快速录入信息
@@ -101,6 +105,8 @@ public class StockController {
     @ApiOperation("审核入库/出库单")
     public Result audit(@PathVariable Long id) {
         log.info("审核库存单据: {}", id);
+        //审核会实际变更库存，仅允许超级管理员操作
+        roleService.checkCurrentAdmin();
         stockService.audit(id);
 
         //库存变化后清理用户端商品缓存

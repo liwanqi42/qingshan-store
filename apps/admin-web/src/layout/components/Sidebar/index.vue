@@ -28,18 +28,21 @@
         />
       </el-menu>
     </el-scrollbar>
+    <more-manage :collapse="collapse" />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import SidebarItem from './SidebarItem.vue'
+import MoreManage from '../MoreManage/index.vue'
 import { isExternal } from '@/utils'
 
 export default {
   name: 'AppSidebar',
   components: {
-    SidebarItem
+    SidebarItem,
+    MoreManage
   },
   props: {
     collapse: {

@@ -76,7 +76,7 @@ export const constantRoutes = [
         path: 'dashboard',
         name: 'DashboardView',
         component: Dashboard,
-        meta: { title: '工作台', icon: 'el-icon-s-home', affix: true }
+        meta: { title: '工作台', icon: 'el-icon-s-home', affix: true, sort: 10 }
       },
       {
         path: 'statistics',
@@ -85,14 +85,20 @@ export const constantRoutes = [
         meta: {
           title: '数据统计',
           icon: 'el-icon-s-data',
-          roles: ['admin']
+          roles: ['admin'],
+          sort: 20
         }
       },
       {
         path: 'order',
         name: 'OrderView',
         component: OrderView,
-        meta: { title: '订单管理', icon: 'el-icon-s-order', roles: ['admin'] }
+        meta: {
+          title: '订单管理',
+          icon: 'el-icon-s-order',
+          roles: ['admin'],
+          sort: 30
+        }
       },
       {
         path: 'stock/in',
@@ -102,7 +108,8 @@ export const constantRoutes = [
           title: '入库管理',
           icon: 'el-icon-download',
           roles: ['admin'],
-          stockType: 1
+          stockType: 1,
+          sort: 40
         }
       },
       {
@@ -113,7 +120,8 @@ export const constantRoutes = [
           title: '出库管理',
           icon: 'el-icon-upload2',
           roles: ['admin'],
-          stockType: 2
+          stockType: 2,
+          sort: 50
         }
       },
       {
@@ -123,32 +131,48 @@ export const constantRoutes = [
         meta: {
           title: '库存台账',
           icon: 'el-icon-notebook-2',
-          roles: ['admin']
+          roles: ['admin'],
+          sort: 60
         }
       },
       {
         path: 'category',
         name: 'CategoryView',
         component: CategoryView,
-        meta: { title: '分类管理', icon: 'el-icon-menu', roles: ['admin'] }
+        meta: {
+          title: '分类管理',
+          icon: 'el-icon-menu',
+          roles: ['admin'],
+          sort: 70
+        }
       },
       {
         path: 'product',
         name: 'ProductView',
         component: ProductView,
-        meta: { title: '商品管理', icon: 'el-icon-s-goods', roles: ['admin'] }
+        meta: {
+          title: '商品管理',
+          icon: 'el-icon-s-goods',
+          roles: ['admin'],
+          sort: 80
+        }
       },
       {
         path: 'bundle',
         name: 'BundleView',
         component: BundleView,
-        meta: { title: '套餐管理', icon: 'el-icon-box', roles: ['admin'] }
+        meta: {
+          title: '套餐管理',
+          icon: 'el-icon-box',
+          roles: ['admin'],
+          sort: 90
+        }
       },
       {
         path: 'system/user',
         name: 'SystemUserView',
         component: SystemUser,
-        meta: { title: '员工管理', icon: 'el-icon-s-custom' }
+        meta: { title: '员工管理', icon: 'el-icon-s-custom', sort: 100 }
       },
       {
         path: 'system/menu',
@@ -157,7 +181,9 @@ export const constantRoutes = [
         meta: {
           title: '菜单管理',
           icon: 'el-icon-s-grid',
-          roles: ['admin']
+          roles: ['admin'],
+          sort: 110,
+          more: true
         }
       },
       {
@@ -167,7 +193,9 @@ export const constantRoutes = [
         meta: {
           title: '权限管理',
           icon: 'el-icon-s-check',
-          roles: ['admin']
+          roles: ['admin'],
+          sort: 120,
+          more: true
         }
       },
       {
@@ -177,14 +205,22 @@ export const constantRoutes = [
         meta: {
           title: '字典管理',
           icon: 'el-icon-collection',
-          roles: ['admin']
+          roles: ['admin'],
+          sort: 130,
+          more: true
         }
       },
       {
         path: 'shop',
         name: 'ShopView',
         component: ShopView,
-        meta: { title: '店铺设置', icon: 'el-icon-s-shop', roles: ['admin'] }
+        meta: {
+          title: '店铺管理',
+          icon: 'el-icon-s-shop',
+          roles: ['admin'],
+          sort: 140,
+          more: true
+        }
       }
     ]
   },

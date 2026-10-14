@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-alert
-      title="当前为本地字典配置，保存后立即生效；后端字典接口接入后可替换为持久化接口。"
+      title="当前为本地字典配置，保存后立即生效；系统内置字典更新后会自动同步，后端字典接口接入后可替换为持久化接口。"
       type="info"
       :closable="false"
       show-icon
