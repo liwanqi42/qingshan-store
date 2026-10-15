@@ -18,9 +18,17 @@ public interface EmployeeService {
 
     /**
      * 新增员工
-     * @param employeeDTO
+     * @param employeeDTO 员工信息
+     * @return 随机初始密码，仅返回一次
      */
-    void save(EmployeeDTO employeeDTO);
+    String save(EmployeeDTO employeeDTO);
+
+    /**
+     * 管理员重置员工密码
+     * @param id 员工id
+     * @return 新的随机初始密码，仅返回一次
+     */
+    String resetPassword(Long id);
 
     /**
      * 分页查询

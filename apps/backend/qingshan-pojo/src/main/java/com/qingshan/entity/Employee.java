@@ -35,6 +35,12 @@ public class Employee implements Serializable {
 
     private Integer status;
 
+    /** 是否必须修改密码 0:否 1:是 */
+    private Integer mustChangePassword;
+
+    /** 令牌版本，递增后旧 token 全部失效 */
+    private Integer tokenVersion;
+
 //    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 

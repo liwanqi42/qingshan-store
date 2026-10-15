@@ -139,6 +139,8 @@ CREATE TABLE IF NOT EXISTS `employee` (
   `id_number` varchar(18) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '身份证号',
   `role_code` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL DEFAULT 'employee' COMMENT '角色编码',
   `status` int NOT NULL DEFAULT '1' COMMENT '状态 0:禁用，1:启用',
+  `must_change_password` tinyint NOT NULL DEFAULT '0' COMMENT '是否必须修改密码 0:否，1:是',
+  `token_version` int NOT NULL DEFAULT '0' COMMENT '令牌版本，递增后旧 token 失效',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
   `create_user` bigint DEFAULT NULL COMMENT '创建人',

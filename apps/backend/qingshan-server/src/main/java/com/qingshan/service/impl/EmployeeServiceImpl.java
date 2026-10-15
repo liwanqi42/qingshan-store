@@ -3,7 +3,6 @@ package com.qingshan.service.impl;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.qingshan.constant.MessageConstant;
-import com.qingshan.constant.PasswordConstant;
 import com.qingshan.constant.StatusConstant;
 import com.qingshan.dto.EmployeeDTO;
 import com.qingshan.dto.EmployeeLoginDTO;
@@ -11,20 +10,19 @@ import com.qingshan.dto.EmployeePageQueryDTO;
 import com.qingshan.dto.PasswordEditDTO;
 import com.qingshan.entity.Employee;
 import com.qingshan.entity.Role;
-import com.qingshan.exception.AccountLockedException;
-import com.qingshan.exception.AccountNotFoundException;
-import com.qingshan.exception.BaseException;
-import com.qingshan.exception.PasswordEditFailedException;
-import com.qingshan.exception.PasswordErrorException;
+import com.qingshan.exception.*;
 import com.qingshan.mapper.EmployeeMapper;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.EmployeeService;
 import com.qingshan.service.RoleService;
 import com.qingshan.utils.PageUtil;
+import com.qingshan.utils.PasswordUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
@@ -32,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
+@Slf4j
 public class EmployeeServiceImpl implements EmployeeService {
 
     @Autowired
@@ -85,16 +84,21 @@ public class EmployeeServiceImpl implements EmployeeService {
         //3、校验角色是否存在且已启用
         roleService.requireEnabledByCode(employee.getRoleCode());
 
+        if (Integer.valueOf(1).equals(employee.getMustChangePassword())) {
+            log.warn("员工{}使用初始密码登录，需先修改密码", employee.getUsername());
+        }
+
         //4、返回实体对象
         return employee;
     }
 
     /**
-     * 新增员工
+     * 新增员工：生成随机初始密码，员工首次登录必须修改
      * @param employeeDTO 员工信息
+     * @return 随机初始密码，仅返回一次
      */
     @Override
-    public void save(EmployeeDTO employeeDTO) {
+    public String save(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
 
         //对象属性拷贝
@@ -110,13 +114,32 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         //设置账户状态，默认正常状态
         employee.setStatus(StatusConstant.ENABLE);
+        employee.setMustChangePassword(1);
+        employee.setTokenVersion(0);
 
-        //设置密码
-        // TODO(prod): 不要使用统一的默认密码，改为随机初始密码并通过安全渠道发给员工
-        employee.setPassword(passwordEncoder.encode(PasswordConstant.DEFAULT_PASSWORD));
-
+        //随机初始密码，通过安全渠道交给员工
+        String initialPassword = PasswordUtil.randomPassword(12);
+        employee.setPassword(passwordEncoder.encode(initialPassword));
 
         employeeMapper.insert(employee);
+        return initialPassword;
+    }
+
+    /**
+     * 管理员重置员工密码：生成随机密码，并要求员工下次登录后修改
+     * @param id 员工id
+     * @return 新的随机初始密码，仅返回一次
+     */
+    @Override
+    @Transactional
+    public String resetPassword(Long id) {
+        Employee employee = employeeMapper.getById(id);
+        if (employee == null) {
+            throw new AccountNotFoundException(MessageConstant.ACCOUNT_NOT_FOUND);
+        }
+        String initialPassword = PasswordUtil.randomPassword(12);
+        employeeMapper.resetPassword(id, passwordEncoder.encode(initialPassword));
+        return initialPassword;
     }
 
     /**
@@ -149,6 +172,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      * @param id 员工id
      */
     @Override
+    @Transactional
     public void enableOrDisable(Integer status, long id) {
 
         Employee employee = Employee.builder()
@@ -157,6 +181,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                                 .build();
 
         employeeMapper.update(employee);
+
+        // 禁用后立即让该员工已签发的 token 失效
+        if (StatusConstant.DISABLE.equals(status)) {
+            employeeMapper.increaseTokenVersion(id);
+        }
     }
 
     /**
@@ -181,6 +210,7 @@ public class EmployeeServiceImpl implements EmployeeService {
      * @param employeeDTO 员工信息
      */
     @Override
+    @Transactional
     public void update(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeDTO, employee);
@@ -191,6 +221,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         //校验角色；管理员账号不允许改成其他角色，避免自锁
+        boolean roleChanged = false;
         if (StringUtils.hasText(employee.getRoleCode())) {
             Employee existing = employeeMapper.getById(employee.getId());
             if (existing != null
@@ -198,10 +229,17 @@ public class EmployeeServiceImpl implements EmployeeService {
                     && !employee.getRoleCode().equals(existing.getRoleCode())) {
                 throw new BaseException(MessageConstant.ADMIN_EMPLOYEE_ROLE_IMMUTABLE);
             }
+            roleChanged = existing != null
+                    && !employee.getRoleCode().equals(existing.getRoleCode());
             roleService.requireEnabledByCode(employee.getRoleCode());
         }
 
         employeeMapper.update(employee);
+
+        // 角色变化后让旧 token 失效，避免继续使用旧角色权限
+        if (roleChanged) {
+            employeeMapper.increaseTokenVersion(employee.getId());
+        }
     }
 
     /**
@@ -266,15 +304,10 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new PasswordEditFailedException(MessageConstant.PASSWORD_EDIT_FAILED);
         }
 
-        //3、更新为新密码（BCrypt）
-        Employee emp = Employee.builder()
-                .id(passwordEditDTO.getEmpId())
-                .password(passwordEncoder.encode(passwordEditDTO.getNewPassword()))
-//                .updateTime(LocalDateTime.now())
-//                .updateUser(BaseContext.getCurrentId())
-                .build();
-
-        employeeMapper.update(emp);
+        //3、更新为新密码（BCrypt），清除首登改密标记，并让旧 token 失效
+        employeeMapper.updatePasswordAndInvalidate(
+                passwordEditDTO.getEmpId(),
+                passwordEncoder.encode(passwordEditDTO.getNewPassword()));
     }
 
 }

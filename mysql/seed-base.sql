@@ -49,5 +49,5 @@ ON DUPLICATE KEY UPDATE `menu_paths` = VALUES(`menu_paths`);
 -- 默认管理员
 -- 密码：123456（BCrypt），生产环境首次登录后必须立即修改
 -- ------------------------------------------------------------
-INSERT IGNORE INTO `employee` (`id`,`name`,`username`,`password`,`phone`,`sex`,`id_number`,`role_code`,`status`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
-    (1,'管理员','admin','$2a$10$1AvxBUOmDSE6tpzpP5p3fusX/B9125r3cm1uz.Y.owUAt3L8Bo6va','13812312312','1','110101199001010047','admin',1,'2022-02-15 15:51:20','2022-02-17 09:16:20',10,1);
+INSERT IGNORE INTO `employee` (`id`,`name`,`username`,`password`,`phone`,`sex`,`id_number`,`role_code`,`status`,`must_change_password`,`token_version`,`create_time`,`update_time`,`create_user`,`update_user`) VALUES
+    (1,'管理员','admin','$2a$10$1AvxBUOmDSE6tpzpP5p3fusX/B9125r3cm1uz.Y.owUAt3L8Bo6va','13812312312','1','110101199001010047','admin',1,1,0,'2022-02-15 15:51:20','2022-02-17 09:16:20',10,1);

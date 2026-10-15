@@ -5,9 +5,7 @@ import com.qingshan.annotation.AutoFill;
 import com.qingshan.dto.EmployeePageQueryDTO;
 import com.qingshan.entity.Employee;
 import com.qingshan.enumeration.OperationType;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 @Mapper
 public interface EmployeeMapper {
@@ -26,9 +24,9 @@ public interface EmployeeMapper {
      * 插入员工数据
      * @param employee 员工信息
      */
-    @Insert("insert into employee(name, username, password, phone, sex, id_number, role_code, create_time, update_time, create_user, update_user, status)" +
+    @Insert("insert into employee(name, username, password, phone, sex, id_number, role_code, status, must_change_password, token_version, create_time, update_time, create_user, update_user)" +
             "values " +
-            "(#{name}, #{username}, #{password}, #{phone}, #{sex}, #{idNumber}, #{roleCode}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser}, #{status})")
+            "(#{name}, #{username}, #{password}, #{phone}, #{sex}, #{idNumber}, #{roleCode}, #{status}, #{mustChangePassword}, #{tokenVersion}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})")
     @AutoFill(value = OperationType.INSERT)
     void insert(Employee employee);
 
@@ -61,4 +59,30 @@ public interface EmployeeMapper {
      */
     @Select("select count(*) from employee where role_code = #{roleCode}")
     int countByRoleCode(String roleCode);
+
+    /**
+     * 递增员工令牌版本，使该员工已签发的 token 全部失效
+     */
+    @Update("update employee set token_version = token_version + 1 where id = #{id}")
+    int increaseTokenVersion(@Param("id") Long id);
+
+    /**
+     * 递增某角色下所有员工的令牌版本，角色被禁用时调用
+     */
+    @Update("update employee set token_version = token_version + 1 where role_code = #{roleCode}")
+    int increaseTokenVersionByRoleCode(@Param("roleCode") String roleCode);
+
+    /**
+     * 修改密码：清除首登改密标记，并让旧 token 失效
+     */
+    @Update("update employee set password = #{password}, must_change_password = 0, " +
+            "token_version = token_version + 1, update_time = now() where id = #{id}")
+    int updatePasswordAndInvalidate(@Param("id") Long id, @Param("password") String password);
+
+    /**
+     * 管理员重置密码：设置首登改密标记，并让旧 token 失效
+     */
+    @Update("update employee set password = #{password}, must_change_password = 1, " +
+            "token_version = token_version + 1, update_time = now() where id = #{id}")
+    int resetPassword(@Param("id") Long id, @Param("password") String password);
 }

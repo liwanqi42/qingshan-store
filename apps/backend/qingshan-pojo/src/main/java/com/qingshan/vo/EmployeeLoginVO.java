@@ -41,4 +41,7 @@ public class EmployeeLoginVO implements Serializable {
     @ApiModelProperty("可访问的路由名称列表，* 表示全部")
     private List<String> menuPaths;
 
+    @ApiModelProperty("是否必须先修改初始密码")
+    private Boolean mustChangePassword;
+
 }
