@@ -120,6 +120,7 @@ qingshan/
 │   ├── schema.sql                 # 建库建表（所有环境，可重复执行）
 │   ├── seed-base.sql              # 基础数据：分类 / 角色 / 管理员
 │   ├── seed-demo.sql              # 演示商品（仅开发 / 演示环境）
+│   ├── upgrade.sql                # 存量库升级（集中维护 ALTER，幂等）
 │   └── drop-dev.sql               # 开发环境重置（删除全部业务表）
 └── scripts/                       # 预留脚本目录
 ```
@@ -178,6 +179,7 @@ qingshan/
 | `mysql/schema.sql` | 建库建表，不含 `DROP TABLE` 和种子数据 | 所有环境 |
 | `mysql/seed-base.sql` | 基础数据：分类、角色、管理员账号 | 所有环境 |
 | `mysql/seed-demo.sql` | 演示商品、SKU、商品图片 | 仅开发 / 演示 |
+| `mysql/upgrade.sql` | 存量库结构升级（集中维护所有 `ALTER`，幂等） | 已有数据的库 |
 | `mysql/drop-dev.sql` | 删除全部业务表，用于重置开发库 | 仅开发 |
 
 开发 / 演示环境（在仓库根目录执行）：
@@ -199,7 +201,13 @@ mysql -u root -p --default-character-set=utf8mb4 < mysql/seed-base.sql
 > ⚠ 默认管理员仍是 `admin / 123456`，上线前必须在管理端修改密码。
 > ⚠ `seed-demo.sql` 和 `drop-dev.sql` 禁止在生产执行。
 
-`schema.sql` 使用 `CREATE TABLE IF NOT EXISTS`，可以重复执行，但不会升级已有表结构；旧库缺列 / 索引时需手工 `ALTER`。原 `mysql/migrations/` 下的增量脚本已合并进 `schema.sql`，该目录不再使用。
+`schema.sql` 使用 `CREATE TABLE IF NOT EXISTS`，可以重复执行，但**不会升级已有表结构**。新库直接执行 `schema.sql` 即可；已有数据的库需要执行 `upgrade.sql`：
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 qingshan-store < mysql/upgrade.sql
+```
+
+`upgrade.sql` 集中维护所有存量库的 `ALTER`，每段变更带日期、目的和回滚说明，可重复执行。以后新增字段或索引时，直接追加到该文件，不再按变更拆多个脚本。
 
 脚本中的数据库名硬编码为 `qingshan-store`；如需修改，请同步替换各脚本中的 `CREATE DATABASE` / `USE`，并调整 `application-dev.yml` 中的 `qingshan.datasource.database`。
 

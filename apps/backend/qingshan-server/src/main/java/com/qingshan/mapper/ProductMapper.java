@@ -6,11 +6,7 @@ import com.qingshan.dto.ProductPageQueryDTO;
 import com.qingshan.entity.Product;
 import com.qingshan.enumeration.OperationType;
 import com.qingshan.vo.ProductVO;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -57,14 +53,12 @@ public interface ProductMapper {
 
     /**
      * 统计商品编号被占用的数量，修改时排除自身
+     * SQL 见 resources/mapper/ProductMapper.xml
+     *
      * @param productCode 商品编号
      * @param excludeId 需要排除的商品id，新增时传null
      * @return 占用的数量
      */
-    @Select("<script>"
-            + "select count(id) from product where product_code = #{productCode}"
-            + "<if test='excludeId != null'> and id != #{excludeId}</if>"
-            + "</script>")
     int countByProductCode(@Param("productCode") String productCode, @Param("excludeId") Long excludeId);
 
     /**

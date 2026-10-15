@@ -52,6 +52,14 @@
     </select>
 
 
+    <select id="countByProductCode" resultType="java.lang.Integer">
+        select count(id) from product
+        where product_code = #{productCode}
+        <if test="excludeId != null">
+            and id != #{excludeId}
+        </if>
+    </select>
+
     <select id="countByCondition" resultType="java.lang.Integer">
         select count(id) from product
         <where>

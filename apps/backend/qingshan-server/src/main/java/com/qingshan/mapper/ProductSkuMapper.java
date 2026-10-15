@@ -1,13 +1,7 @@
 package com.qingshan.mapper;
 
 import com.qingshan.entity.ProductSku;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -81,15 +75,11 @@ public interface ProductSkuMapper {
 
     /**
      * 删除商品下不在保留列表中的SKU
+     * SQL 见 resources/mapper/ProductSkuMapper.xml
+     *
      * @param productId 商品id
      * @param ids 需要保留的SKU id列表，为空时删除全部
      */
-    @Delete("<script>"
-            + "delete from product_sku where product_id = #{productId}"
-            + "<if test='ids != null and ids.size() > 0'> and id not in "
-            + "<foreach collection='ids' open='(' close=')' separator=',' item='id'>#{id}</foreach>"
-            + "</if>"
-            + "</script>")
     void deleteByProductIdExcludingIds(@Param("productId") Long productId, @Param("ids") List<Long> ids);
 
     /**

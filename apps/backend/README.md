@@ -40,6 +40,12 @@ mysql -u root -p --default-character-set=utf8mb4 < mysql/seed-demo.sql
 
 生产环境只执行 `schema.sql` 和 `seed-base.sql`，不要导入演示数据。
 
+已有数据的库不要重复执行 `schema.sql`（它不会修改已存在的表），而是执行存量库升级脚本：
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 qingshan-store < mysql/upgrade.sql
+```
+
 3. 在 `qingshan-server/src/main/resources/application-dev.yml` 中配置数据库、Redis、OSS 和微信参数（该文件已被 `.gitignore` 排除，需要手动创建）。
 4. 启动后端：
 
@@ -71,6 +77,7 @@ mvn spring-boot:run
 - 数据库结构：`mysql/schema.sql`（建库建表，可重复执行）
 - 基础数据：`mysql/seed-base.sql`（分类 / 角色 / 管理员，所有环境）
 - 演示数据：`mysql/seed-demo.sql`（含演示商品，仅用于开发）
+- 存量库升级：`mysql/upgrade.sql`（集中维护所有 ALTER，幂等）
 - 开发重置：`mysql/drop-dev.sql`（删除全部业务表，禁止在生产执行）
 - 接口导出文件：`docs/`
 - 上线前检查清单：`SECURITY_TODO.md`（本地开发文件，可能未纳入版本库）
