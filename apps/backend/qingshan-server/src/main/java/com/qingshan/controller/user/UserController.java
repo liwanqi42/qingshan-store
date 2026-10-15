@@ -8,6 +8,7 @@ import com.qingshan.properties.JwtProperties;
 import com.qingshan.result.Result;
 import com.qingshan.service.UserService;
 import com.qingshan.service.support.LoginRateLimiter;
+import com.qingshan.service.support.TokenBlacklistService;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.UserLoginVO;
 import io.swagger.annotations.Api;
@@ -35,6 +36,8 @@ public class UserController {
     private JwtProperties jwtProperties;
     @Autowired
     private LoginRateLimiter loginRateLimiter;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     /**
      * 登录：手机号密码登录或微信登录
@@ -85,6 +88,20 @@ public class UserController {
             loginRateLimiter.recordAttempt("register", account, ip);
         }
         return Result.success(buildLoginVO(user));
+    }
+
+    /**
+     * 退出登录：把当前 token 写入黑名单，立即失效
+     * @param request
+     * @return
+     */
+    @PostMapping("/logout")
+    @ApiOperation("用户退出")
+    public Result<String> logout(HttpServletRequest request) {
+        tokenBlacklistService.revoke(
+                request.getHeader(jwtProperties.getUserTokenName()),
+                jwtProperties.getUserSecretKey());
+        return Result.success();
     }
 
     /**

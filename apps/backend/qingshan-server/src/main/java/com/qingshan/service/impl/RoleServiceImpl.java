@@ -13,13 +13,10 @@ import com.qingshan.service.RoleService;
 import com.qingshan.vo.RoleVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -142,6 +139,7 @@ public class RoleServiceImpl implements RoleService {
      * @param roleDTO 角色入参DTO
      */
     @Override
+    @Transactional
     public void update(RoleDTO roleDTO) {
         Role existing = requireById(roleDTO.getId());
 
@@ -166,6 +164,12 @@ public class RoleServiceImpl implements RoleService {
                 .menuPaths(joinMenuPaths(roleDTO.getMenuPaths()))
                 .build();
         roleMapper.update(role);
+
+        // 角色被停用后，该角色下员工已签发的 token 立即失效
+        if (StatusConstant.DISABLE.equals(roleDTO.getStatus())
+                && !StatusConstant.DISABLE.equals(existing.getStatus())) {
+            employeeMapper.increaseTokenVersionByRoleCode(existing.getCode());
+        }
     }
 
     /**
@@ -192,6 +196,7 @@ public class RoleServiceImpl implements RoleService {
      * @param id 角色id
      */
     @Override
+    @Transactional
     public void enableOrDisable(Integer status, Long id) {
         Role existing = requireById(id);
         if (Role.CODE_ADMIN.equals(existing.getCode())
@@ -199,6 +204,11 @@ public class RoleServiceImpl implements RoleService {
             throw new BaseException(MessageConstant.ADMIN_ROLE_PROTECTED);
         }
         roleMapper.update(Role.builder().id(id).status(status).build());
+
+        // 角色被停用后，该角色下员工已签发的 token 立即失效
+        if (StatusConstant.DISABLE.equals(status)) {
+            employeeMapper.increaseTokenVersionByRoleCode(existing.getCode());
+        }
     }
 
     /**

@@ -3,6 +3,7 @@ package com.qingshan.interceptor;
 import com.qingshan.constant.JwtClaimsConstant;
 import com.qingshan.context.BaseContext;
 import com.qingshan.properties.JwtProperties;
+import com.qingshan.service.support.TokenBlacklistService;
 import com.qingshan.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,9 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtProperties jwtProperties;
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     /**
      * 校验jwt
@@ -46,6 +50,10 @@ public class JwtTokenUserInterceptor implements HandlerInterceptor {
         //2、校验令牌
         try {
             Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
+            if (tokenBlacklistService.isRevoked(claims.getId())) {
+                response.setStatus(401);
+                return false;
+            }
             Long userId = Long.valueOf(claims.get(JwtClaimsConstant.USER_ID).toString());
             log.info("当前用户id：{}", userId);
             BaseContext.setCurrentId(userId);

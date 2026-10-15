@@ -1,5 +1,5 @@
-import { post, wxLogin } from '../utils/request'
-import { saveToken } from '../utils/token'
+import {post, wxLogin} from '../utils/request'
+import {saveToken} from '../utils/token'
 
 const USER_KEY = 'user'
 
@@ -15,8 +15,6 @@ class User {
     const updated = {
       ...userInfo,
       id: data.id,
-      // TODO(security): 后端移除 openid 后同步删除，本地只保留展示必需的信息
-      openid: data.openid || userInfo.openid,
       phone: data.phone || userInfo.phone,
       phoneAuthorized: true,
       loginType: 'password'
@@ -61,13 +59,21 @@ class User {
     const updated = {
       ...userInfo,
       id: data.id,
-      openid: data.openid,
       phone: data.phone || userInfo.phone,
       phoneAuthorized: true,
       loginType: 'wechat'
     }
     wx.setStorageSync(USER_KEY, updated)
     return updated
+  }
+
+  // 退出登录：通知后端把当前 token 加入黑名单
+  async logout () {
+    try {
+      await post('/user/user/logout')
+    } catch (e) {
+      // 本地退出不依赖后端，网络异常时直接清理本地登录态
+    }
   }
 
   // 后端没有单独的用户信息接口，用户资料来自登录结果并保存在本地

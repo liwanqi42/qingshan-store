@@ -1,7 +1,8 @@
 import order from '../../models/order'
+import user from '../../models/user'
 import config from '../../config'
-import { requireLogin } from '../../utils/auth'
-import { removeToken } from '../../utils/token'
+import {requireLogin} from '../../utils/auth'
+import {removeToken} from '../../utils/token'
 
 Page({
 	data: {
@@ -88,10 +89,12 @@ Page({
     wx.showModal({
       title: '提示',
       content: '确定要退出登录吗？',
-      success: (res) => {
+      success: async (res) => {
         if (!res.confirm) {
           return
         }
+        // 先通知后端拉黑 token，失败也继续清理本地登录态
+        await user.logout()
         removeToken()
         wx.removeStorageSync('user')
         this.setData({
