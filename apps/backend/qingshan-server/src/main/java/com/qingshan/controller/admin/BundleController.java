@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.dto.BundleDTO;
 import com.qingshan.dto.BundlePageQueryDTO;
 import com.qingshan.result.PageResult;
@@ -30,6 +31,7 @@ public class BundleController {
      * @return
      */
     @PostMapping
+    @RequireRole
     @ApiOperation("新增捆绑包")
     @CacheEvict(cacheNames = "bundleCache", key = "#bundleDTO.categoryId")
     public Result<String> save(@RequestBody BundleDTO bundleDTO){
@@ -56,6 +58,7 @@ public class BundleController {
      * @return
      */
     @DeleteMapping
+    @RequireRole
     @ApiOperation("批量删除捆绑包")
     @CacheEvict(cacheNames = "bundleCache", allEntries = true)
     public Result delete(@RequestParam List<Long> ids){
@@ -82,6 +85,7 @@ public class BundleController {
      * @return
      */
     @PutMapping
+    @RequireRole
     @ApiOperation("修改套餐")
     @CacheEvict(cacheNames = "bundleCache", allEntries = true)
     public Result update(@RequestBody BundleDTO bundleDTO) {
@@ -96,6 +100,7 @@ public class BundleController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @RequireRole
     @ApiOperation("套餐起售停售")
     @CacheEvict(cacheNames = "bundleCache", allEntries = true)
     public Result startOrStop(@PathVariable Integer status, Long id) {

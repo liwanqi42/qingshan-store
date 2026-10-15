@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.dto.CategoryDTO;
 import com.qingshan.dto.CategoryPageQueryDTO;
 import com.qingshan.entity.Category;
@@ -31,6 +32,7 @@ public class CategoryController {
      * @return
      */
     @PostMapping
+    @RequireRole
     @ApiOperation("新增分类")
     public Result<String> save(@RequestBody CategoryDTO categoryDTO){
         log.info("新增分类：{}", categoryDTO);
@@ -57,6 +59,7 @@ public class CategoryController {
      * @return
      */
     @DeleteMapping
+    @RequireRole
     @ApiOperation("删除分类")
     public Result<String> deleteById(Long id){
         log.info("删除分类：{}", id);
@@ -70,6 +73,7 @@ public class CategoryController {
      * @return
      */
     @PutMapping
+    @RequireRole
     @ApiOperation("修改分类")
     public Result<String> update(@RequestBody CategoryDTO categoryDTO){
         categoryService.update(categoryDTO);
@@ -83,6 +87,7 @@ public class CategoryController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @RequireRole
     @ApiOperation("启用禁用分类")
     public Result<String> startOrStop(@PathVariable("status") Integer status, Long id){
         categoryService.startOrStop(status,id);

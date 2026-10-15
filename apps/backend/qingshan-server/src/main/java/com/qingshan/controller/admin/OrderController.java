@@ -1,11 +1,7 @@
 package com.qingshan.controller.admin;
 
-import com.qingshan.dto.OrdersCancelDTO;
-import com.qingshan.dto.OrdersConfirmDTO;
-import com.qingshan.dto.OrdersPageQueryDTO;
-import com.qingshan.dto.OrdersRefundDTO;
-import com.qingshan.dto.OrdersRefundRejectDTO;
-import com.qingshan.dto.OrdersRejectionDTO;
+import com.qingshan.annotation.RequireRole;
+import com.qingshan.dto.*;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.OrderService;
@@ -68,6 +64,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/confirm")
+    @RequireRole
     @ApiOperation("接单")
     public Result confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO) {
         orderService.confirm(ordersConfirmDTO);
@@ -80,6 +77,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/rejection")
+    @RequireRole
     @ApiOperation("拒单")
     public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) throws Exception {
         orderService.rejection(ordersRejectionDTO);
@@ -92,6 +90,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/cancel")
+    @RequireRole
     @ApiOperation("取消订单")
     public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception {
         orderService.cancel(ordersCancelDTO);
@@ -104,6 +103,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/refund/approve")
+    @RequireRole
     @ApiOperation("同意售后")
     public Result approveRefund(@RequestBody OrdersRefundDTO ordersRefundDTO) {
         orderService.approveRefund(ordersRefundDTO);
@@ -116,6 +116,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/refund/receive")
+    @RequireRole
     @ApiOperation("确认收到退货并退款")
     public Result receiveRefund(@RequestBody OrdersRefundDTO ordersRefundDTO) {
         orderService.receiveRefund(ordersRefundDTO);
@@ -128,6 +129,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/refund/reject")
+    @RequireRole
     @ApiOperation("拒绝售后")
     public Result rejectRefund(@RequestBody OrdersRefundRejectDTO ordersRefundRejectDTO) {
         orderService.rejectRefund(ordersRefundRejectDTO);
@@ -140,6 +142,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/delivery/{id}")
+    @RequireRole
     @ApiOperation("派送订单")
     public Result delivery(@PathVariable("id") Long id) {
         orderService.delivery(id);
@@ -152,6 +155,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/complete/{id}")
+    @RequireRole
     @ApiOperation("完成订单")
     public Result complete(@PathVariable("id") Long id) {
         orderService.complete(id);

@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.result.Result;
 import com.qingshan.utils.AliOssUtil;
@@ -12,11 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * 通用接口
@@ -44,6 +41,7 @@ public class CommonController {
      * @return 文件访问路径
      */
     @PostMapping("/upload")
+    @RequireRole
     @ApiOperation("文件上传")
     public Result<String> upload(MultipartFile file, @RequestParam(required = false) Integer type) {
         if (file == null || file.isEmpty()) {

@@ -1,6 +1,7 @@
 package com.qingshan.controller.admin;
 
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.dto.ProductDTO;
 import com.qingshan.dto.ProductPageQueryDTO;
 import com.qingshan.entity.Product;
@@ -38,6 +39,7 @@ public class ProductController {
      * @return
      */
     @PostMapping
+    @RequireRole
     @ApiOperation("新增商品")
     public Result save(@RequestBody ProductDTO productDTO){
         log.info("新增商品: {}", productDTO);
@@ -67,6 +69,7 @@ public class ProductController {
      * @return
      */
     @DeleteMapping
+    @RequireRole
     @ApiOperation("商品的批量删除")
     public Result delete(@RequestParam List<Long> ids){
         log.info("商品的批量删除:{}", ids);
@@ -97,6 +100,7 @@ public class ProductController {
      * @return
      */
     @PutMapping
+    @RequireRole
     @ApiOperation("修改商品信息")
     public Result update(@RequestBody ProductDTO productDTO){
         log.info("修改商品信息:{}", productDTO);
@@ -115,6 +119,7 @@ public class ProductController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @RequireRole
     @ApiOperation("商品起售停售")
     public Result<String> startOrStop(@PathVariable Integer status, Long id){
         productService.startOrStop(status,id);

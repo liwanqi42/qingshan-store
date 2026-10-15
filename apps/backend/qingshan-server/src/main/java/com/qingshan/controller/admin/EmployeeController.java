@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.constant.JwtClaimsConstant;
 import com.qingshan.context.BaseContext;
 import com.qingshan.dto.EmployeeDTO;
@@ -14,6 +15,7 @@ import com.qingshan.result.Result;
 import com.qingshan.service.EmployeeService;
 import com.qingshan.service.RoleService;
 import com.qingshan.service.support.LoginRateLimiter;
+import com.qingshan.service.support.TokenBlacklistService;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.EmployeeLoginVO;
 import io.swagger.annotations.Api;
@@ -44,6 +46,8 @@ public class EmployeeController {
     private JwtProperties jwtProperties;
     @Autowired
     private LoginRateLimiter loginRateLimiter;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     /**
      * 登录
@@ -75,6 +79,9 @@ public class EmployeeController {
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();
         claims.put(JwtClaimsConstant.EMP_ID, employee.getId());
+        claims.put(JwtClaimsConstant.ROLE_CODE, role.getCode());
+        claims.put(JwtClaimsConstant.TOKEN_VERSION,
+                employee.getTokenVersion() == null ? 0 : employee.getTokenVersion());
         String token = JwtUtil.createJWT(
                 jwtProperties.getAdminSecretKey(),
                 jwtProperties.getAdminTtl(),
@@ -91,6 +98,7 @@ public class EmployeeController {
                         ? Collections.singletonList("*")
                         : Collections.emptyList())
                 .menuPaths(roleService.resolveMenuPaths(role))
+                .mustChangePassword(Integer.valueOf(1).equals(employee.getMustChangePassword()))
                 .build();
 
         return Result.success(employeeLoginVO);
@@ -103,7 +111,10 @@ public class EmployeeController {
      */
     @PostMapping("/logout")
     @ApiOperation("员工退出")
-    public Result<String> logout() {
+    public Result<String> logout(HttpServletRequest request) {
+        tokenBlacklistService.revoke(
+                request.getHeader(jwtProperties.getAdminTokenName()),
+                jwtProperties.getAdminSecretKey());
         return Result.success();
     }
 
@@ -113,11 +124,11 @@ public class EmployeeController {
      * @return
      */
     @PostMapping
+    @RequireRole
     @ApiOperation("新增员工")
-    public Result save(@RequestBody EmployeeDTO employeeDTO){
+    public Result<String> save(@RequestBody EmployeeDTO employeeDTO){
         roleService.checkCurrentAdmin();
-        employeeService.save(employeeDTO);
-        return Result.success();
+        return Result.success(employeeService.save(employeeDTO));
     }
 
     /**
@@ -139,6 +150,7 @@ public class EmployeeController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @RequireRole
     @ApiOperation("启用和禁用员工账户")
     public Result enableOrDisable(@PathVariable Integer status, long id){
         roleService.checkCurrentAdmin();
@@ -165,11 +177,24 @@ public class EmployeeController {
      * @return
      */
     @PutMapping
+    @RequireRole
     @ApiOperation("修改员工信息")
     public Result update(@RequestBody EmployeeDTO employeeDTO){
         roleService.checkCurrentAdmin();
         employeeService.update(employeeDTO);
         return Result.success();
+    }
+
+    /**
+     * 管理员重置员工密码：返回随机初始密码，员工下次登录必须修改
+     * @param id 员工id
+     * @return 新的随机初始密码
+     */
+    @PutMapping("/{id}/reset-password")
+    @RequireRole
+    @ApiOperation("重置员工密码")
+    public Result<String> resetPassword(@PathVariable Long id){
+        return Result.success(employeeService.resetPassword(id));
     }
 
     /**

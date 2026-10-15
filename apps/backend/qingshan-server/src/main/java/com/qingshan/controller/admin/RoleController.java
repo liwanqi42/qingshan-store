@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.dto.RoleDTO;
 import com.qingshan.result.Result;
 import com.qingshan.service.RoleService;
@@ -8,14 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -48,6 +42,7 @@ public class RoleController {
      * @return
      */
     @PostMapping
+    @RequireRole
     @ApiOperation("新增角色")
     public Result save(@RequestBody RoleDTO roleDTO) {
         roleService.checkCurrentAdmin();
@@ -62,6 +57,7 @@ public class RoleController {
      * @return
      */
     @PutMapping
+    @RequireRole
     @ApiOperation("修改角色")
     public Result update(@RequestBody RoleDTO roleDTO) {
         roleService.checkCurrentAdmin();
@@ -75,6 +71,7 @@ public class RoleController {
      * @return
      */
     @DeleteMapping("/{id}")
+    @RequireRole
     @ApiOperation("删除角色")
     public Result delete(@PathVariable Long id) {
         roleService.checkCurrentAdmin();
@@ -89,6 +86,7 @@ public class RoleController {
      * @return
      */
     @PostMapping("/status/{status}")
+    @RequireRole
     @ApiOperation("启用禁用角色")
     public Result enableOrDisable(@PathVariable("status") Integer status, Long id) {
         roleService.checkCurrentAdmin();
@@ -101,6 +99,7 @@ public class RoleController {
      * @return
      */
     @PostMapping("/reset")
+    @RequireRole
     @ApiOperation("恢复默认角色配置")
     public Result reset() {
         roleService.checkCurrentAdmin();

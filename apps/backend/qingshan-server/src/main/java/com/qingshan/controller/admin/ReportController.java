@@ -1,5 +1,6 @@
 package com.qingshan.controller.admin;
 
+import com.qingshan.annotation.RequireRole;
 import com.qingshan.result.Result;
 import com.qingshan.service.ReportService;
 import com.qingshan.vo.OrderReportVO;
@@ -90,6 +91,7 @@ public class ReportController {
      * @param response
      */
     @GetMapping("/export")
+    @RequireRole
     @ApiOperation("导出运营数据报表")
     public void export(HttpServletResponse response){
         reportService.exportBusinessData(response);
