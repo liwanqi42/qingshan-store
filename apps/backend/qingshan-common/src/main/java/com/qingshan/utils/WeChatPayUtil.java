@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
 import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
 import com.qingshan.properties.WeChatProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -33,6 +34,7 @@ import java.util.List;
  * 微信支付工具类
  */
 @Component
+@Slf4j
 @SuppressWarnings("unused")
 public class WeChatPayUtil {
 
@@ -139,9 +141,9 @@ public class WeChatPayUtil {
         String bodyAsString = jsapi(orderNum, total, description, openid);
         //解析返回结果
         JSONObject jsonObject = JSON.parseObject(bodyAsString);
-        // TODO(prod): 删除 System.out，改用日志（不要打印完整响应，避免泄露交易信息）；
-        //   同时检查 post() 的 HTTP 状态码，非 2xx 时抛出带 err_code 的业务异常
-        System.out.println(jsonObject);
+        // TODO(prod): 检查 post() 的 HTTP 状态码，非 2xx 时抛出带 err_code 的业务异常
+        // 不打印完整响应，避免交易信息落盘
+        log.info("微信支付预下单完成：订单号={}", orderNum);
 
         String prepayId = jsonObject.getString("prepay_id");
         if (prepayId != null) {

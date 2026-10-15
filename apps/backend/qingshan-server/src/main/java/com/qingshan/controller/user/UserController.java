@@ -99,7 +99,6 @@ public class UserController {
 
         return UserLoginVO.builder()
                 .id(user.getId())
-                .openid(user.getOpenid())
                 .phone(user.getPhone())
                 .token(token)
                 .build();

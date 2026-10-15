@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -86,8 +87,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO) {
-        //1.下单前校验：风控、收货地址
+        //1.下单前校验：营业状态、风控、收货地址
         Long userId = BaseContext.getCurrentId();
+        orderValidator.checkShopOpen();
         orderValidator.checkSubmitFrequency(userId);
         AddressBook addressBook = orderValidator.checkAddress(ordersSubmitDTO.getAddressBookId(), userId);
 
@@ -110,27 +112,41 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 订单支付
+     * 订单支付：只允许支付自己的、待付款且未支付的订单，金额由服务端读取
      *
      * @param ordersPaymentDTO
      * @return
      */
+    @Override
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
-        // TODO(security): 支付前校验订单存在且属于当前用户，防止用他人订单号发起支付
-        // TODO(wechat-pay): 金额不能写死，改为校验订单存在且属于当前用户后取订单实际金额 orders.getAmount()
-        //当前登录用户id
         Long userId = BaseContext.getCurrentId();
-        User user = userMapper.getById(userId);
-        // TODO(wechat-pay): 手机号注册的用户没有 openid，直接支付会失败；
-        //   需在结算前引导微信授权登录并绑定 openid，openid 为空时返回明确的业务提示
-        // TODO(wechat-pay): 校验 order 的 pay_status 为未支付，已取消/已支付订单不能再次发起支付
+        Orders orders = orderValidator.requireOwnedByNumber(ordersPaymentDTO.getOrderNumber(), userId);
 
-        //调用微信支付接口，生成预支付交易单
+        if (Orders.PAY_STATUS_PAID.equals(orders.getPayStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_ALREADY_PAID);
+        }
+        if (!Orders.STATUS_PENDING_PAYMENT.equals(orders.getStatus())
+                || !Orders.PAY_STATUS_UN_PAID.equals(orders.getPayStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        User user = userMapper.getById(userId);
+        if (user == null || !StringUtils.hasText(user.getOpenid())) {
+            // 微信支付必须绑定 openid，手机号注册用户需先完成微信授权登录
+            throw new OrderBusinessException(MessageConstant.ORDER_NEED_WECHAT_LOGIN);
+        }
+
+        BigDecimal amount = orders.getAmount();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new OrderBusinessException("订单金额异常，无法支付");
+        }
+
+        //调用微信支付接口，生成预支付交易单，金额取订单实际应付金额
         JSONObject jsonObject = weChatPayUtil.pay(
-                ordersPaymentDTO.getOrderNumber(), //商户订单号
-                new BigDecimal(0.01), //支付金额，单位 元
-                MessageConstant.ORDER_NAME_DESC, //商品描述
-                user.getOpenid() //微信用户的openid
+                orders.getNumber(),
+                amount,
+                MessageConstant.ORDER_NAME_DESC,
+                user.getOpenid()
         );
 
         if (jsonObject.getString("code") != null && jsonObject.getString("code").equals("ORDERPAID")) {
@@ -217,6 +233,11 @@ public class OrderServiceImpl implements OrderService {
         // 幂等：已支付的订单直接返回，重复点击不报错
         if (Orders.PAY_STATUS_PAID.equals(ordersDB.getPayStatus())) {
             return;
+        }
+        // 已取消、已退款等非待付款订单不能再支付
+        if (!Orders.STATUS_PENDING_PAYMENT.equals(ordersDB.getStatus())
+                || !Orders.PAY_STATUS_UN_PAID.equals(ordersDB.getPayStatus())) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
         int updated = orderMapper.paySuccess(ordersDB.getId(), LocalDateTime.now());
         if (updated == 0) {

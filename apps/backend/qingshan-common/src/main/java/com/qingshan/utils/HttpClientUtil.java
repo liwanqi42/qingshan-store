@@ -1,6 +1,7 @@
 package com.qingshan.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -23,6 +24,7 @@ import java.util.Map;
 /**
  * Http工具类
  */
+@Slf4j
 public class HttpClientUtil {
 
     static final  int TIMEOUT_MSEC = 5 * 1000;
@@ -60,13 +62,15 @@ public class HttpClientUtil {
                 result = EntityUtils.toString(response.getEntity(),"UTF-8");
             }
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("发送 GET 请求失败：{}", url, e);
         }finally {
             try {
-                response.close();
+                if (response != null) {
+                    response.close();
+                }
                 httpClient.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.warn("关闭 HTTP 连接失败", e);
             }
         }
 
@@ -111,9 +115,12 @@ public class HttpClientUtil {
             throw e;
         } finally {
             try {
-                response.close();
+                if (response != null) {
+                    response.close();
+                }
+                httpClient.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.warn("关闭 HTTP 连接失败", e);
             }
         }
 
@@ -161,9 +168,12 @@ public class HttpClientUtil {
             throw e;
         } finally {
             try {
-                response.close();
+                if (response != null) {
+                    response.close();
+                }
+                httpClient.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                log.warn("关闭 HTTP 连接失败", e);
             }
         }
 

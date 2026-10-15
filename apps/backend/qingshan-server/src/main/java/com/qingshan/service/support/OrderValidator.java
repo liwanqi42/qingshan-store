@@ -48,6 +48,18 @@ public class OrderValidator {
     @Autowired
     private OrderStatusHandler orderStatusHandler;
 
+    @Autowired
+    private ShopStatusService shopStatusService;
+
+    /**
+     * 打烊期间禁止新下单；已下单的支付、取消、退款不受影响
+     */
+    public void checkShopOpen() {
+        if (!shopStatusService.isOpen()) {
+            throw new OrderBusinessException(MessageConstant.SHOP_CLOSED);
+        }
+    }
+
     /**
      * 校验收货地址存在且属于当前用户
      */

@@ -57,6 +57,8 @@ public class MessageConstant {
     public static final String PRODUCT_PRICE = "商品价格异常";
     public static final String ORDER_NAME_DESC = "青山商店订单";
     public static final String ORDER_ALREADY_PAID = "该订单已支付";
+    public static final String ORDER_NEED_WECHAT_LOGIN = "当前账号未绑定微信，请使用微信登录后再支付";
+    public static final String SHOP_CLOSED = "店铺休息中，暂不接单";
     public static final String PRODUCT_BUNDLE_INCOMPLETE = "商品或套装信息不完整";
     public static final String PRODUCT_BUY_LIMIT = "单个商品最多购买" + NumConstant.PRODUCT_MAX_BUY + "件";
     public static final String STOCK_ITEM_CODE_REQUIRED = "请输入商品编号或SKU编号";

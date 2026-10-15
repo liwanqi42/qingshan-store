@@ -42,14 +42,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderManager {
 
-    /**
-     * 模拟支付的退款金额
-     *
-     * TODO(wechat-pay): 退款金额不能写死 0.01，必须用订单实际金额 ordersDB.getAmount(),
-     *   且 refund(退款金额/total) 两个参数都要与微信侧原始支付金额一致
-     */
-    private static final BigDecimal MOCK_REFUND_AMOUNT = new BigDecimal(0.01);
-
     @Autowired
     private OrderProperties orderProperties;
 
@@ -295,13 +287,18 @@ public class OrderManager {
                 log.info("模拟退款：订单{}", ordersDB.getNumber());
                 return true;
             }
+            BigDecimal refundAmount = ordersDB.getAmount();
+            if (refundAmount == null || refundAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new OrderBusinessException("订单金额异常，无法退款");
+            }
             try {
-                String refund = weChatPayUtil.refund(
+                // 退款金额与原始支付金额一致，避免部分退款或金额校验失败
+                weChatPayUtil.refund(
                         ordersDB.getNumber(),
                         ordersDB.getNumber(),
-                        MOCK_REFUND_AMOUNT,
-                        MOCK_REFUND_AMOUNT);
-                log.info("申请退款：{}", refund);
+                        refundAmount,
+                        refundAmount);
+                log.info("申请退款：订单{}", ordersDB.getNumber());
             } catch (Exception e) {
                 log.error("订单{}退款失败", ordersDB.getNumber(), e);
                 throw new OrderBusinessException("订单退款失败");

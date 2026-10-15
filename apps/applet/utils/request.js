@@ -84,7 +84,7 @@ function doLogin (extraData) {
   })
 }
 
-// 微信登录，返回 { id, openid, phone, token }
+// 微信登录，返回 { id, phone, token }
 export function wxLogin (extraData) {
   // 带手机号等附加参数时不能复用静默登录的 Promise
   if (extraData && Object.keys(extraData).length > 0) {

@@ -6,6 +6,7 @@ import com.qingshan.entity.Product;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
 import com.qingshan.service.ProductService;
+import com.qingshan.service.support.ProductCacheManager;
 import com.qingshan.utils.PageUtil;
 import com.qingshan.vo.ProductVO;
 import io.swagger.annotations.Api;
@@ -36,6 +37,9 @@ public class ProductController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private ProductCacheManager productCacheManager;
+
     /**
      * 根据分类id查询商品
      *
@@ -46,7 +50,7 @@ public class ProductController {
     @ApiOperation("根据分类id查询商品")
     public Result<List<ProductVO>> list(Long categoryId) {
 
-        String key = "product_" +categoryId;
+        String key = "product_v" + productCacheManager.currentVersion() + "_" + categoryId;
 
         List<ProductVO> list = getCache(key);
         if (list != null && ! list.isEmpty()){
@@ -59,7 +63,7 @@ public class ProductController {
                 .build();
 
         list = productService.listWithAttr(product);
-        redisTemplate.opsForValue().set(key, list, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        putCache(key, list);
 
         return Result.success(list);
     }
@@ -79,7 +83,7 @@ public class ProductController {
         productPageQueryDTO.setPage(PageUtil.pageNum(productPageQueryDTO.getPage()));
         productPageQueryDTO.setPageSize(PageUtil.pageSize(productPageQueryDTO.getPageSize()));
 
-        String key = "product_page_"
+        String key = "product_page_v" + productCacheManager.currentVersion() + "_"
                 + (productPageQueryDTO.getCategoryId() == null ? "all" : productPageQueryDTO.getCategoryId()) + "_"
                 + (productPageQueryDTO.getName() == null ? "" : productPageQueryDTO.getName()) + "_"
                 + productPageQueryDTO.getPage() + "_"
@@ -88,7 +92,7 @@ public class ProductController {
         PageResult pageResult = getCache(key);
         if (pageResult == null) {
             pageResult = productService.pageQuery(productPageQueryDTO);
-            redisTemplate.opsForValue().set(key, pageResult, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+            putCache(key, pageResult);
         }
         return Result.success(pageResult);
     }
@@ -117,8 +121,27 @@ public class ProductController {
             return (T) redisTemplate.opsForValue().get(key);
         } catch (SerializationException e) {
             log.warn("商品缓存反序列化失败，删除脏缓存：{}", key, e);
-            redisTemplate.delete(key);
+            try {
+                redisTemplate.delete(key);
+            } catch (Exception deleteException) {
+                log.warn("删除脏缓存失败：{}", key, deleteException);
+            }
             return null;
+        } catch (Exception e) {
+            // Redis 不可用时回源数据库，不影响商品浏览
+            log.warn("读取商品缓存失败，本次回源数据库：{}", key, e);
+            return null;
+        }
+    }
+
+    /**
+     * 写入商品缓存，失败时忽略，由下次请求回源或 TTL 兜底
+     */
+    private void putCache(String key, Object value) {
+        try {
+            redisTemplate.opsForValue().set(key, value, CACHE_TTL_MINUTES, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.warn("写入商品缓存失败：{}", key, e);
         }
     }
 
