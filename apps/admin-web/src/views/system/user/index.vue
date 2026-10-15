@@ -82,7 +82,7 @@
             {{ formatDateTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="140" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template slot-scope="{ row }">
             <el-button
               v-if="isAdmin"
@@ -91,6 +91,14 @@
               @click="handleEdit(row)"
             >
               编辑
+            </el-button>
+            <el-button
+              v-if="isAdmin"
+              type="text"
+              size="small"
+              @click="handleResetPassword(row)"
+            >
+              重置密码
             </el-button>
             <el-button type="text" size="small" @click="handleDetail(row)">
               详情
@@ -126,13 +134,9 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import {
-  getEmployeePage,
-  enableOrDisableEmployee,
-  getEmployeeById
-} from '@/api/employee'
-import { getRoleList } from '@/api/role'
+import {mapGetters} from 'vuex'
+import {enableOrDisableEmployee, getEmployeeById, getEmployeePage, resetEmployeePassword} from '@/api/employee'
+import {getRoleList} from '@/api/role'
 import UserForm from './components/UserForm.vue'
 import UserDetail from './components/UserDetail.vue'
 import DictTag from '@/components/DictTag/index.vue'
@@ -261,6 +265,28 @@ export default {
         .catch(() => {
           row.status = previousStatus
         })
+    },
+    handleResetPassword(row) {
+      this.$confirm(
+        `确定要重置「${row.name || row.username}」的密码吗？重置后旧密码立即失效。`,
+        '重置密码',
+        {
+          confirmButtonText: '确定重置',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+        .then(() =>
+          resetEmployeePassword(row.id).then(res => {
+            const password = res && res.data
+            this.$alert(
+              `新的初始密码：${password}，请通过安全渠道发给员工，员工下次登录必须修改。`,
+              '密码已重置',
+              { confirmButtonText: '我知道了' }
+            )
+          })
+        )
+        .catch(() => {})
     },
     handleFormSuccess() {
       this.fetchList()

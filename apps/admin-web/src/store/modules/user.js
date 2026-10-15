@@ -1,36 +1,28 @@
 import {
-  getToken,
-  setToken,
-  getUserInfo,
-  setUserInfo,
-  getRoles,
-  setRoles,
-  getPermissions,
-  setPermissions,
-  getMenuPaths,
-  setMenuPaths,
-  clearAuth
+    clearAuth,
+    getMenuPaths,
+    getPermissions,
+    getRoles,
+    getToken,
+    getUserInfo,
+    setMenuPaths,
+    setPermissions,
+    setRoles,
+    setToken,
+    setUserInfo
 } from '@/utils/auth'
-import {
-  login as loginApi,
-  logout as logoutApi
-} from '@/api/employee'
+import {login as loginApi, logout as logoutApi} from '@/api/employee'
 
 const token = getToken()
 const cachedUserInfo = token ? getUserInfo() : null
 
-// 旧登录态没有缓存角色时，先按升级前的管理员权限处理，
-// 员工重新登录后以服务端返回的角色为准
+// 登录态必须带有服务端返回的角色信息；旧 token 会被后端拒绝，重新登录即可
 function resolveCachedAuth() {
   if (!token) {
     return { roles: [], permissions: [], menuPaths: [] }
   }
-  const roles = getRoles()
-  if (!roles.length) {
-    return { roles: ['admin'], permissions: ['*'], menuPaths: ['*'] }
-  }
   return {
-    roles,
+    roles: getRoles(),
     permissions: getPermissions(),
     menuPaths: getMenuPaths()
   }
@@ -56,7 +48,9 @@ const getters = {
   roleCode: state => state.roleCode,
   roles: state => state.roles,
   permissions: state => state.permissions,
-  menuPaths: state => state.menuPaths
+  menuPaths: state => state.menuPaths,
+  mustChangePassword: state =>
+    Boolean(state.userInfo && state.userInfo.mustChangePassword)
 }
 
 const mutations = {
@@ -103,7 +97,8 @@ const actions = {
           id: data.id,
           userName: data.userName,
           name: data.name,
-          roleCode: data.roleCode
+          roleCode: data.roleCode,
+          mustChangePassword: Boolean(data.mustChangePassword)
         },
         roles: data.roles,
         permissions: data.permissions,

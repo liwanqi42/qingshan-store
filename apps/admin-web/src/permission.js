@@ -1,6 +1,6 @@
 import router from './router'
 import store from './store'
-import { checkRouteAccess } from '@/utils/permission'
+import {checkRouteAccess} from '@/utils/permission'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -24,6 +24,17 @@ router.beforeEach((to, from, next) => {
       next(canRedirect ? redirect : '/dashboard')
       return
     }
+    // 首次登录或管理员重置密码后，必须先修改密码
+    const mustChangePassword = store.getters['user/mustChangePassword']
+    if (mustChangePassword && to.path !== '/force-password') {
+      next('/force-password')
+      return
+    }
+    if (!mustChangePassword && to.path === '/force-password') {
+      next('/dashboard')
+      return
+    }
+
     const roles = store.getters['user/roles']
     const permissions = store.getters['user/permissions']
     const menuPaths = store.getters['user/menuPaths']

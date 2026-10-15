@@ -76,13 +76,9 @@
 </template>
 
 <script>
-import { addEmployee, updateEmployee } from '@/api/employee'
-import { getRoleList } from '@/api/role'
-import {
-  isValidUsername,
-  isValidPhone,
-  isValidIdNumber
-} from '@/utils/validate'
+import {addEmployee, updateEmployee} from '@/api/employee'
+import {getRoleList} from '@/api/role'
+import {isValidIdNumber, isValidPhone, isValidUsername} from '@/utils/validate'
 
 export default {
   name: 'UserForm',
@@ -230,9 +226,22 @@ export default {
           : addEmployee({ ...this.form })
 
         action
-          .then(() => {
-            this.$message.success(this.isEdit ? '修改员工成功' : '新增员工成功')
+          .then(res => {
             this.dialogVisible = false
+            if (this.isEdit) {
+              this.$message.success('修改员工成功')
+            } else {
+              const password = res && res.data
+              if (password) {
+                this.$alert(
+                  `初始密码：${password}，请通过安全渠道发给员工，员工首次登录后必须修改。`,
+                  '员工创建成功',
+                  { confirmButtonText: '我知道了' }
+                )
+              } else {
+                this.$message.success('新增员工成功')
+              }
+            }
             this.$emit('success')
           })
           .catch(() => {})

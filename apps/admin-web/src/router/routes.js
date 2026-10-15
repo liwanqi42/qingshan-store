@@ -2,6 +2,8 @@ const Layout = () =>
   import(/* webpackChunkName: "layout" */ '@/layout/index.vue')
 const Login = () =>
   import(/* webpackChunkName: "login" */ '@/views/login/index.vue')
+const ForcePassword = () =>
+  import(/* webpackChunkName: "force-password" */ '@/views/force-password/index.vue')
 const Dashboard = () =>
   import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/index.vue')
 const Statistics = () =>
@@ -41,6 +43,12 @@ export const constantRoutes = [
     name: 'Login',
     component: Login,
     meta: { title: '登录', hidden: true, notNeedAuth: true }
+  },
+  {
+    path: '/force-password',
+    name: 'ForcePasswordView',
+    component: ForcePassword,
+    meta: { title: '修改初始密码', hidden: true }
   },
   {
     path: '/404',

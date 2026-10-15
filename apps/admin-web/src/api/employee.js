@@ -62,3 +62,10 @@ export function enableOrDisableEmployee(status, id) {
     params: { id }
   })
 }
+
+export function resetEmployeePassword(id) {
+  return request({
+    url: `/admin/employee/${id}/reset-password`,
+    method: 'put'
+  })
+}

@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { Message } from 'element-ui'
-import { getToken, clearAuth } from './auth'
-import { getBaseApi } from './index'
+import {Message} from 'element-ui'
+import {clearAuth, getToken} from './auth'
+import {getBaseApi} from './index'
 
 const service = axios.create({
   baseURL: getBaseApi(),
@@ -81,6 +81,13 @@ service.interceptors.response.use(
 
       if (status === 401) {
         handleUnauthorized()
+        return Promise.reject(error)
+      } else if (status === 403 && data && data.msg === '请先修改初始密码') {
+        // 本地登录态丢失但 token 仍有效时，后端会拦截并返回该提示
+        const target = `${window.location.origin}${window.location.pathname}#/force-password`
+        if (!window.location.hash.startsWith('#/force-password')) {
+          window.location.replace(target)
+        }
         return Promise.reject(error)
       } else if (data && data.msg) {
         message = data.msg
