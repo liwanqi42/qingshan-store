@@ -57,14 +57,15 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
                 .excludePathPatterns("/admin/employee/login");
         registry.addInterceptor(jwtTokenUserInterceptor)
                 .addPathPatterns("/user/**")
-                // 登录、注册和商品浏览不要求登录
+                // 登录、注册、商品浏览和字典查询不要求登录
                 .excludePathPatterns("/user/user/login")
                 .excludePathPatterns("/user/user/register")
                 .excludePathPatterns("/user/user/status")
                 .excludePathPatterns("/user/shop/status")
                 .excludePathPatterns("/user/product/**")
                 .excludePathPatterns("/user/category/**")
-                .excludePathPatterns("/user/bundle/**");
+                .excludePathPatterns("/user/bundle/**")
+                .excludePathPatterns("/user/dict/**");
 
         // 生产环境直接屏蔽接口文档相关路径，避免 Swagger/Knife4j 暴露
         if (environment.acceptsProfiles(Profiles.of("prod"))) {
