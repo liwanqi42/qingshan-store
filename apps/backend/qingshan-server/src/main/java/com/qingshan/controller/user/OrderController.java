@@ -6,7 +6,9 @@ import com.qingshan.dto.OrdersSubmitDTO;
 import com.qingshan.dto.RefundApplyDTO;
 import com.qingshan.result.PageResult;
 import com.qingshan.result.Result;
+import com.qingshan.service.LogisticsService;
 import com.qingshan.service.OrderService;
+import com.qingshan.vo.OrderLogisticsVO;
 import com.qingshan.vo.OrderPaymentVO;
 import com.qingshan.vo.OrderRemindVO;
 import com.qingshan.vo.OrderSubmitVO;
@@ -27,6 +29,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private LogisticsService logisticsService;
 
     /**
      * 用户下单
@@ -81,6 +86,17 @@ public class OrderController {
     @ApiOperation("订单详情")
     public Result<UserOrderVO> detail(@RequestParam String orderNo) {
         return Result.success(orderService.getDetail4User(orderNo));
+    }
+
+    /**
+     * 查看物流轨迹
+     * @param orderNumber 订单号
+     * @return 物流信息，无轨迹时 traces 为空
+     */
+    @GetMapping("/logistics/{orderNumber}")
+    @ApiOperation("查看物流")
+    public Result<OrderLogisticsVO> logistics(@PathVariable String orderNumber) {
+        return Result.success(logisticsService.getForUser(orderNumber));
     }
 
     /**

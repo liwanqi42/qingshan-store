@@ -292,4 +292,20 @@ public interface OrderMapper {
      */
     @Select("select count(id) from orders where status = #{status}")
     Integer countStatus(Integer status);
+
+    /**
+     * 手工录入物流轨迹时补齐订单上的快递公司和单号，已有值不覆盖
+     * @param orderId 订单id
+     * @param expressCompany 快递公司
+     * @param trackingNumber 物流单号
+     */
+    @Update("update orders set " +
+            "express_company = case when express_company is null or express_company = '' " +
+            "then #{expressCompany} else express_company end, " +
+            "tracking_number = case when tracking_number is null or tracking_number = '' " +
+            "then #{trackingNumber} else tracking_number end " +
+            "where id = #{orderId}")
+    int fillLogisticsInfo(@Param("orderId") Long orderId,
+                          @Param("expressCompany") String expressCompany,
+                          @Param("trackingNumber") String trackingNumber);
 }
