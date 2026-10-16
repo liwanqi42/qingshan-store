@@ -3,13 +3,16 @@ package com.qingshan.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.dto.UserLoginDTO;
+import com.qingshan.dto.UserProfileDTO;
 import com.qingshan.dto.UserRegisterDTO;
 import com.qingshan.entity.User;
+import com.qingshan.exception.BaseException;
 import com.qingshan.exception.LoginFailedException;
 import com.qingshan.mapper.UserMapper;
 import com.qingshan.properties.WeChatProperties;
 import com.qingshan.service.UserService;
 import com.qingshan.utils.HttpClientUtil;
+import com.qingshan.vo.UserProfileVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -279,5 +282,88 @@ public class UserServiceImpl implements UserService {
         accessToken = token;
         accessTokenExpireAt = now + (expiresIn == null ? 7200 : expiresIn) * 1000L - 60_000L;
         return accessToken;
+    }
+
+    /**
+     * 查询当前用户资料
+     * @param userId 用户id
+     * @return 用户资料
+     */
+    @Override
+    public UserProfileVO getProfile(Long userId) {
+        User user = userId == null ? null : userMapper.getById(userId);
+        if (user == null) {
+            throw new BaseException(MessageConstant.USER_NOT_FOUND);
+        }
+        return toProfile(user);
+    }
+
+    /**
+     * 更新当前用户资料，只允许修改昵称、头像和性别
+     * @param userId 用户id
+     * @param userProfileDTO 资料
+     * @return 更新后的资料
+     */
+    @Override
+    public UserProfileVO updateProfile(Long userId, UserProfileDTO userProfileDTO) {
+        User user = userId == null ? null : userMapper.getById(userId);
+        if (user == null) {
+            throw new BaseException(MessageConstant.USER_NOT_FOUND);
+        }
+        if (userProfileDTO == null) {
+            return toProfile(user);
+        }
+
+        String name = userProfileDTO.getName();
+        String avatar = userProfileDTO.getAvatar();
+        String sex = userProfileDTO.getSex();
+
+        if (name != null) {
+            name = name.trim();
+            if (name.isEmpty()) {
+                throw new BaseException(MessageConstant.PROFILE_NAME_REQUIRED);
+            }
+            if (name.length() > 32) {
+                throw new BaseException(MessageConstant.PROFILE_NAME_TOO_LONG);
+            }
+        }
+        if (avatar != null) {
+            avatar = avatar.trim();
+            if (avatar.length() > 500) {
+                throw new BaseException(MessageConstant.PROFILE_AVATAR_TOO_LONG);
+            }
+        }
+        if (sex != null && !sex.isEmpty() && !"0".equals(sex) && !"1".equals(sex)) {
+            throw new BaseException(MessageConstant.PROFILE_SEX_INVALID);
+        }
+
+        // 没有需要更新的字段时直接返回，避免生成空的 update 语句
+        if (name == null && avatar == null && sex == null) {
+            return toProfile(user);
+        }
+
+        User update = User.builder()
+                .id(userId)
+                .name(name)
+                .avatar(avatar)
+                .sex(sex)
+                .build();
+        userMapper.update(update);
+        return getProfile(userId);
+    }
+
+    /**
+     * User 实体转个人资料视图
+     * @param user 用户
+     * @return 个人资料
+     */
+    private UserProfileVO toProfile(User user) {
+        return UserProfileVO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .avatar(user.getAvatar())
+                .sex(user.getSex())
+                .phone(user.getPhone())
+                .build();
     }
 }

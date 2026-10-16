@@ -1,7 +1,9 @@
 package com.qingshan.controller.user;
 
 import com.qingshan.constant.JwtClaimsConstant;
+import com.qingshan.context.BaseContext;
 import com.qingshan.dto.UserLoginDTO;
+import com.qingshan.dto.UserProfileDTO;
 import com.qingshan.dto.UserRegisterDTO;
 import com.qingshan.entity.User;
 import com.qingshan.properties.JwtProperties;
@@ -11,12 +13,15 @@ import com.qingshan.service.support.LoginRateLimiter;
 import com.qingshan.service.support.TokenBlacklistService;
 import com.qingshan.utils.JwtUtil;
 import com.qingshan.vo.UserLoginVO;
+import com.qingshan.vo.UserProfileVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -105,6 +110,27 @@ public class UserController {
     }
 
     /**
+     * 查询当前用户资料
+     * @return 用户资料
+     */
+    @GetMapping("/profile")
+    @ApiOperation("用户资料查询")
+    public Result<UserProfileVO> profile() {
+        return Result.success(userService.getProfile(BaseContext.getCurrentId()));
+    }
+
+    /**
+     * 更新当前用户资料
+     * @param userProfileDTO 昵称、头像、性别
+     * @return 更新后的资料
+     */
+    @PutMapping("/profile")
+    @ApiOperation("用户资料更新")
+    public Result<UserProfileVO> updateProfile(@RequestBody UserProfileDTO userProfileDTO) {
+        return Result.success(userService.updateProfile(BaseContext.getCurrentId(), userProfileDTO));
+    }
+
+    /**
      * 生成登录返回结果
      * @param user
      * @return
@@ -118,6 +144,9 @@ public class UserController {
                 .id(user.getId())
                 .phone(user.getPhone())
                 .token(token)
+                .name(user.getName())
+                .avatar(user.getAvatar())
+                .sex(user.getSex())
                 .build();
     }
 }
