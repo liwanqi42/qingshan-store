@@ -220,7 +220,6 @@ Page({
     if (detail.status === 0) {
       actions.push({ name: '取消订单', action: 'cancel' })
     }
-    // TODO(logistics): 查看物流暂未实现后端，先占位
     if (detail.status === 2 || detail.status === 3) {
       actions.push({ name: '查看物流', action: 'logistics' })
     }
@@ -243,10 +242,8 @@ Page({
         if (action.action === 'cancel') {
           this.cancelOrderById(detail.id)
         } else if (action.action === 'logistics') {
-          // TODO(logistics): 接入物流查询接口后改为跳转物流详情页
-          wx.showToast({
-            icon: 'none',
-            title: '物流功能暂未开放'
+          wx.navigateTo({
+            url: '/pages/logistics/index?orderNo=' + detail.orderNo
           })
         } else if (action.action === 'refund') {
           this.openRefundPopup()

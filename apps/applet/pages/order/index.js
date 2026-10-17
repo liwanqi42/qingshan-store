@@ -325,7 +325,6 @@ Page({
       actions.push({ name: '取消订单', action: 'cancel' })
     }
     // 催发货已改为列表卡片上的常驻按钮，不再放进“更多”菜单
-    // TODO(logistics): 查看物流暂未实现后端，先占位
     if (orderItem.status === 2 || orderItem.status === 3) {
       actions.push({ name: '查看物流', action: 'logistics' })
     }
@@ -373,11 +372,12 @@ Page({
     if (action === 'cancel') {
       this.cancelOrderById(id)
     } else if (action === 'logistics') {
-      // TODO(logistics): 接入物流查询接口后改为跳转物流详情页
-      wx.showToast({
-        icon: 'none',
-        title: '物流功能暂未开放'
-      })
+      const orderItem = this.findOrder(id)
+      if (orderItem) {
+        wx.navigateTo({
+          url: '/pages/logistics/index?orderNo=' + orderItem.orderNo
+        })
+      }
     } else if (action === 'refund') {
       const orderItem = this.findOrder(id)
       if (orderItem) {

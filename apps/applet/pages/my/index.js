@@ -1,7 +1,7 @@
 import order from '../../models/order'
 import user from '../../models/user'
 import config from '../../config'
-import {requireLogin} from '../../utils/auth'
+import {isAuthorized, requireLogin} from '../../utils/auth'
 import {removeToken} from '../../utils/token'
 
 Page({
@@ -22,6 +22,21 @@ Page({
       userInfo: wx.getStorageSync('user') || {}
     })
     this.loadOrderRemind()
+    this.refreshProfile()
+  },
+  // 从服务端刷新头像、昵称和性别
+  async refreshProfile() {
+    if (!isAuthorized()) {
+      return
+    }
+    const res = await user.getProfile()
+    if (res && res.error_code !== undefined) {
+      console.log(res.msg)
+      return
+    }
+    this.setData({
+      userInfo: res
+    })
   },
   // 加载提醒的订单数量
   async loadOrderRemind() {
@@ -44,7 +59,17 @@ Page({
       this.setData({
         userInfo: wx.getStorageSync('user') || {}
       })
+      this.refreshProfile()
     }
+  },
+  // 编辑个人资料
+  async goProfileEdit() {
+    if (!(await this.checkUserLogin())) {
+      return
+    }
+    wx.navigateTo({
+      url: '/pages/my/profile/index'
+    })
   },
   async goMyCoupon() {
     if (!(await this.checkUserLogin())) {

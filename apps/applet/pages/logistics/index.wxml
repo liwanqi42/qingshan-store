@@ -1,0 +1,39 @@
+<view class="logistics-page">
+  <view class="header-card">
+    <view class="order-no">订单编号 {{orderNo}}</view>
+    <view class="express" wx:if="{{expressCompany || trackingNumber}}">
+      <view class="company">{{expressCompany || '快递信息'}}</view>
+      <view class="tracking" wx:if="{{trackingNumber}}" bindtap="copyTrackingNumber">
+        {{trackingNumber}}
+        <text class="copy">复制</text>
+      </view>
+    </view>
+    <view class="express empty" wx:else>暂无快递公司或单号</view>
+    <view class="ship-time" wx:if="{{shipTime}}">发货时间：{{shipTime}}</view>
+  </view>
+
+  <view class="trace-card" wx:if="{{traces.length > 0}}">
+    <view class="trace-item {{item.isLatest ? 'latest' : ''}}" wx:for="{{traces}}" wx:key="id">
+      <view class="dot-line">
+        <view class="dot"></view>
+        <view class="line" wx:if="{{index < traces.length - 1}}"></view>
+      </view>
+      <view class="trace-content">
+        <view class="trace-head">
+          <view class="trace-desc">{{item.description}}</view>
+          <view class="trace-status">{{item.statusText}}</view>
+        </view>
+        <view class="trace-time">{{item.timeText}}</view>
+        <view class="trace-express" wx:if="{{item.expressCompany || item.trackingNumber}}">
+          {{item.expressCompany || ''}} {{item.trackingNumber || ''}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!loading && traces.length === 0}}">
+    <image src="/images/order/order-empty.svg" />
+    <view class="empty-text">暂无物流轨迹</view>
+    <view class="empty-tip">商家录入物流信息后可在这里查看</view>
+  </view>
+</view>

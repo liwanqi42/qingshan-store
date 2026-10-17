@@ -1,0 +1,164 @@
+page {
+  background-color: #f5f5f5;
+}
+
+.logistics-page {
+  padding: 20rpx;
+}
+
+.header-card {
+  padding: 28rpx 24rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+}
+
+.order-no {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.express {
+  margin-top: 16rpx;
+}
+
+.express .company {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.express .tracking {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.express.empty {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.copy {
+  margin-left: 12rpx;
+  color: #EB4D50;
+}
+
+.ship-time {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.trace-card {
+  margin-top: 20rpx;
+  padding: 28rpx 24rpx 8rpx;
+  background-color: #ffffff;
+  border-radius: 16rpx;
+}
+
+.trace-item {
+  display: flex;
+}
+
+.dot-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40rpx;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 16rpx;
+  height: 16rpx;
+  margin-top: 8rpx;
+  background-color: #d8d8d8;
+  border-radius: 8rpx;
+}
+
+.trace-item.latest .dot {
+  width: 20rpx;
+  height: 20rpx;
+  margin-top: 6rpx;
+  background-color: #EB4D50;
+}
+
+.line {
+  flex: 1;
+  width: 2rpx;
+  margin-top: 6rpx;
+  background-color: #eeeeee;
+}
+
+.trace-content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 32rpx;
+  margin-left: 12rpx;
+}
+
+.trace-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.trace-desc {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  color: #999999;
+}
+
+.trace-item.latest .trace-desc {
+  font-weight: 600;
+  color: #333333;
+}
+
+.trace-status {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 22rpx;
+  color: #999999;
+}
+
+.trace-item.latest .trace-status {
+  color: #EB4D50;
+}
+
+.trace-time {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.trace-express {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #bbbbbb;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 180rpx;
+}
+
+.empty-state image {
+  width: 220rpx;
+  height: 220rpx;
+}
+
+.empty-text {
+  margin-top: 24rpx;
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.empty-tip {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #999999;
+}

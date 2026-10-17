@@ -35,6 +35,11 @@ class Order {
     return get(`/user/order/detail?orderNo=${orderNo}`)
   }
 
+  // 查看物流轨迹，对应后端 OrderController：GET /user/order/logistics/{orderNumber}
+  async getLogistics(orderNumber) {
+    return get(`/user/order/logistics/${encodeURIComponent(orderNumber)}`)
+  }
+
   async deleteOrder(id) {
     return _delete(`/user/order?id=${id}`)
   }

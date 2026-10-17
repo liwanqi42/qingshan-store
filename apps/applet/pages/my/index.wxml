@@ -1,11 +1,12 @@
 <view>
-  <view class="user">
+  <view class="user" bindtap="goProfileEdit">
     <image src="{{userInfo.avatar || '/images/icon/avatar.svg'}}" />
     <view class="info">
-      <button class="auth" wx:if="{{!userInfo.phoneAuthorized}}" bindtap="doAuthInfo">登录</button>
+      <button class="auth" wx:if="{{!userInfo.phoneAuthorized}}" catchtap="doAuthInfo">登录</button>
       <view class="nickname">{{userInfo.nickName || '微信用户'}}</view>
       <view class="phone">{{userInfo.phone || userInfo.mobile}}</view>
     </view>
+    <view class="edit-tip" wx:if="{{userInfo.phoneAuthorized}}">编辑资料 ›</view>
   </view>
   <view class="order-panel">
     <view class="top">
