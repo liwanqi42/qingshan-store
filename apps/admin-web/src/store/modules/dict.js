@@ -1,6 +1,17 @@
-const STORAGE_KEY = 'admin-web-dicts'
-const STORAGE_FINGERPRINT_KEY = 'admin-web-dicts-fingerprint'
+import {
+  addDictItem,
+  addDictType,
+  deleteDictItem,
+  deleteDictType,
+  getDictList,
+  resetDicts as resetDictsApi,
+  updateDictItem,
+  updateDictType
+} from '@/api/dict'
 
+const STORAGE_KEY = 'admin-web-dicts'
+
+// 内置默认数据只作为接口异常时的离线兜底，正常使用以服务端字典为准
 function getDefaultDicts() {
   return {
     employee_sex: {
@@ -116,94 +127,106 @@ function getDefaultDicts() {
   }
 }
 
-function mergeDefaults(dicts) {
-  const defaults = getDefaultDicts()
-  const merged = { ...dicts }
+function normalizeItem(item, index) {
+  const value = item.value === undefined || item.value === null
+    ? ''
+    : String(item.value)
+  return {
+    id: item.id === undefined ? null : item.id,
+    label: item.label || '',
+    value,
+    tagType: item.tagType || '',
+    sort: Number(item.sort) || index + 1,
+    status: item.status === undefined || item.status === null
+      ? 1
+      : Number(item.status)
+  }
+}
 
-  Object.keys(defaults).forEach(type => {
-    const defaultDict = defaults[type]
-    const current = merged[type]
+function normalizeDictType(dictType, fallbackType) {
+  return {
+    id: dictType.id === undefined ? null : dictType.id,
+    type: dictType.type || fallbackType,
+    name: dictType.name || fallbackType,
+    status: dictType.status === undefined || dictType.status === null
+      ? 1
+      : Number(dictType.status),
+    sort: Number(dictType.sort) || 0,
+    isSystem: Number(dictType.isSystem) || 0,
+    items: (dictType.items || []).map(normalizeItem)
+  }
+}
 
-    if (!current || typeof current !== 'object') {
-      merged[type] = defaultDict
-      return
-    }
-
-    const items = Array.isArray(current.items) ? [...current.items] : []
-    const existingValues = new Set(items.map(item => String(item.value)))
-    defaultDict.items.forEach(item => {
-      if (!existingValues.has(String(item.value))) {
-        items.push({ ...item })
-      }
-    })
-    items.sort((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0))
-
-    merged[type] = {
-      ...current,
-      name: current.name || defaultDict.name,
-      items
+function toDictMap(list) {
+  const dicts = {}
+  const dictList = list || []
+  dictList.forEach(dictType => {
+    if (dictType && dictType.type) {
+      dicts[dictType.type] = normalizeDictType(dictType, dictType.type)
     }
   })
-
-  return merged
+  return dicts
 }
 
-//默认字典数据的指纹，代码中的默认数据变化后用于触发本地配置自动同步
-function getDefaultsFingerprint() {
-  const raw = JSON.stringify(getDefaultDicts())
-  let hash = 5381
-  for (let i = 0; i < raw.length; i++) {
-    hash = ((hash << 5) + hash + raw.charCodeAt(i)) >>> 0
-  }
-  return String(hash)
-}
-
-function saveFingerprint(fingerprint) {
-  localStorage.setItem(STORAGE_FINGERPRINT_KEY, fingerprint)
-}
-
-function loadDicts() {
+function getFallbackDicts() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : null
-    const fingerprint = getDefaultsFingerprint()
-
-    if (!parsed || typeof parsed !== 'object') {
-      const defaults = getDefaultDicts()
-      persistDicts(defaults)
-      saveFingerprint(fingerprint)
-      return defaults
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const dicts = {}
+      Object.keys(parsed).forEach(type => {
+        dicts[type] = normalizeDictType(parsed[type] || {}, type)
+      })
+      if (Object.keys(dicts).length) {
+        return dicts
+      }
     }
-
-    //默认数据有变化时自动合并新增的字典类型/字典项，无需手动恢复默认
-    if (localStorage.getItem(STORAGE_FINGERPRINT_KEY) !== fingerprint) {
-      const merged = mergeDefaults(parsed)
-      persistDicts(merged)
-      saveFingerprint(fingerprint)
-      return merged
-    }
-
-    return parsed
   } catch (e) {
-    return getDefaultDicts()
+    // 本地缓存损坏时使用内置默认值
   }
+
+  const defaults = getDefaultDicts()
+  const dicts = {}
+  Object.keys(defaults).forEach((type, index) => {
+    dicts[type] = normalizeDictType({
+      ...defaults[type],
+      type,
+      sort: (index + 1) * 10,
+      isSystem: 1
+    }, type)
+  })
+  return dicts
 }
 
 function persistDicts(dicts) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(dicts))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dicts))
+  } catch (e) {
+    // 存储空间不足等情况不影响页面使用
+  }
 }
 
 const state = {
-  dicts: loadDicts()
+  dicts: getFallbackDicts(),
+  loaded: false
 }
 
 const getters = {
   dictTypes: state =>
-    Object.keys(state.dicts).map(type => ({
-      type,
-      name: state.dicts[type].name,
-      count: (state.dicts[type].items || []).length
-    })),
+    Object.keys(state.dicts)
+      .map(type => {
+        const dict = state.dicts[type]
+        return {
+          id: dict.id,
+          type,
+          name: dict.name,
+          status: dict.status,
+          sort: dict.sort,
+          isSystem: dict.isSystem,
+          count: (dict.items || []).length
+        }
+      })
+      .sort((a, b) => (a.sort - b.sort) || a.type.localeCompare(b.type)),
   getDictItem: state => (type, value) => {
     const dict = state.dicts[type]
     if (!dict || !Array.isArray(dict.items)) {
@@ -217,67 +240,46 @@ const getters = {
 
 const mutations = {
   SET_DICTS(state, dicts) {
-    state.dicts = dicts
-    persistDicts(dicts)
+    state.dicts = dicts || {}
+    persistDicts(state.dicts)
+  },
+  SET_LOADED(state, loaded) {
+    state.loaded = Boolean(loaded)
   }
 }
 
 const actions = {
-  saveDictType({ state, commit }, { type, name }) {
-    const dicts = { ...state.dicts }
-    dicts[type] = {
-      ...(dicts[type] || { items: [] }),
-      name
+  loadDicts({ state, commit }, options = {}) {
+    if (state.loaded && !options.force) {
+      return Promise.resolve()
     }
-    commit('SET_DICTS', dicts)
+    return getDictList()
+      .then(res => {
+        commit('SET_DICTS', toDictMap(res.data || []))
+      })
+      .catch(() => {
+        // 接口异常时保留本地缓存或内置默认值，页面不白屏
+      })
+      .then(() => {
+        commit('SET_LOADED', true)
+      })
   },
-  deleteDictType({ state, commit }, type) {
-    const dicts = { ...state.dicts }
-    delete dicts[type]
-    commit('SET_DICTS', dicts)
+  saveDictType({ dispatch }, payload) {
+    const save = payload.id ? updateDictType : addDictType
+    return save(payload).then(() => dispatch('loadDicts', { force: true }))
   },
-  saveDictItem({ state, commit }, { type, item, originalValue }) {
-    const dict = state.dicts[type]
-    if (!dict) {
-      return
-    }
-
-    const items = Array.isArray(dict.items) ? [...dict.items] : []
-    const index =
-      originalValue === undefined
-        ? -1
-        : items.findIndex(
-            oldItem => String(oldItem.value) === String(originalValue)
-          )
-
-    if (index > -1) {
-      items.splice(index, 1, { ...item })
-    } else {
-      items.push({ ...item })
-    }
-
-    items.sort((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0))
-    commit('SET_DICTS', {
-      ...state.dicts,
-      [type]: { ...dict, items }
-    })
+  deleteDictType({ dispatch }, id) {
+    return deleteDictType(id).then(() => dispatch('loadDicts', { force: true }))
   },
-  deleteDictItem({ state, commit }, { type, value }) {
-    const dict = state.dicts[type]
-    if (!dict) {
-      return
-    }
-    const items = (dict.items || []).filter(
-      item => String(item.value) !== String(value)
-    )
-    commit('SET_DICTS', {
-      ...state.dicts,
-      [type]: { ...dict, items }
-    })
+  saveDictItem({ dispatch }, payload) {
+    const save = payload.id ? updateDictItem : addDictItem
+    return save(payload).then(() => dispatch('loadDicts', { force: true }))
   },
-  resetDicts({ commit }) {
-    commit('SET_DICTS', getDefaultDicts())
-    saveFingerprint(getDefaultsFingerprint())
+  deleteDictItem({ dispatch }, id) {
+    return deleteDictItem(id).then(() => dispatch('loadDicts', { force: true }))
+  },
+  resetDicts({ dispatch }) {
+    return resetDictsApi().then(() => dispatch('loadDicts', { force: true }))
   }
 }
 

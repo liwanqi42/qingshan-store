@@ -1,62 +1,74 @@
-const STORAGE_KEY = 'admin-web-menu-settings'
+import {
+  addMenu,
+  deleteMenu,
+  getMenuList,
+  resetMenus as resetMenusApi,
+  updateMenu
+} from '@/api/menu'
 
-// 菜单默认标题调整后，清理旧的本地覆盖，避免侧边栏继续显示旧名称
-const LEGACY_TITLES = {
-  SystemRoleView: ['角色管理']
-}
-
-function loadSettings() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const parsed = raw ? JSON.parse(raw) : {}
-    const settings = parsed && typeof parsed === 'object' ? parsed : {}
-    let changed = false
-
-    Object.keys(LEGACY_TITLES).forEach(key => {
-      const config = settings[key]
-      if (config && LEGACY_TITLES[key].includes(config.title)) {
-        delete config.title
-        changed = true
-        if (Object.keys(config).length === 0) {
-          delete settings[key]
-        }
-      }
-    })
-
-    if (changed) {
-      persistSettings(settings)
+function toSettings(list) {
+  const settings = {}
+  const menus = list || []
+  menus.forEach(menu => {
+    if (!menu || !menu.name) {
+      return
     }
-    return settings
-  } catch (e) {
-    return {}
-  }
-}
-
-function persistSettings(settings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    settings[menu.name] = {
+      id: menu.id,
+      name: menu.name,
+      path: menu.path,
+      title: menu.title,
+      icon: menu.icon,
+      sort: Number(menu.sort) || 0,
+      hidden: Number(menu.hidden) === 1,
+      more: Number(menu.more) === 1
+    }
+  })
+  return settings
 }
 
 const state = {
-  settings: loadSettings()
+  settings: {},
+  loaded: false
 }
 
 const mutations = {
   SET_SETTINGS(state, settings) {
     state.settings = settings || {}
-    persistSettings(state.settings)
   },
-  RESET_SETTINGS(state) {
-    state.settings = {}
-    persistSettings(state.settings)
+  SET_LOADED(state, loaded) {
+    state.loaded = Boolean(loaded)
   }
 }
 
 const actions = {
-  saveSettings({ commit }, settings) {
-    commit('SET_SETTINGS', settings)
+  loadMenus({ state, commit }, options = {}) {
+    if (state.loaded && !options.force) {
+      return Promise.resolve()
+    }
+    return getMenuList()
+      .then(res => {
+        commit('SET_SETTINGS', toSettings(res.data || []))
+      })
+      .catch(() => {
+        // 接口异常时回退到路由 meta 中的默认菜单配置
+        commit('SET_SETTINGS', {})
+      })
+      .then(() => {
+        commit('SET_LOADED', true)
+      })
   },
-  resetSettings({ commit }) {
-    commit('RESET_SETTINGS')
+  saveMenu({ dispatch }, payload) {
+    return updateMenu(payload).then(() => dispatch('loadMenus', { force: true }))
+  },
+  createMenu({ dispatch }, payload) {
+    return addMenu(payload).then(() => dispatch('loadMenus', { force: true }))
+  },
+  deleteMenu({ dispatch }, id) {
+    return deleteMenu(id).then(() => dispatch('loadMenus', { force: true }))
+  },
+  resetMenus({ dispatch }) {
+    return resetMenusApi().then(() => dispatch('loadMenus', { force: true }))
   }
 }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-alert
-      title="当前为本地字典配置，保存后立即生效；系统内置字典更新后会自动同步，后端字典接口接入后可替换为持久化接口。"
+      title="字典配置已保存到服务端，所有管理员共享同一份数据；内置字典可停用但不可删除，可随时恢复默认。"
       type="info"
       :closable="false"
       show-icon
@@ -31,7 +31,16 @@
             @click="selectType(item.type)"
           >
             <div class="dict-type-main">
-              <div class="dict-type-name">{{ item.name }}</div>
+              <div class="dict-type-name">
+                {{ item.name }}
+                <el-tag
+                  :type="item.status === 1 ? 'success' : 'info'"
+                  size="mini"
+                  class="type-status"
+                >
+                  {{ item.status === 1 ? '启用' : '停用' }}
+                </el-tag>
+              </div>
               <div class="dict-type-code">{{ item.type }}</div>
             </div>
             <div class="dict-type-meta">{{ item.count }} 项</div>
@@ -80,6 +89,13 @@
             </template>
           </el-table-column>
           <el-table-column prop="sort" label="排序" width="80" />
+          <el-table-column label="状态" width="90">
+            <template slot-scope="{ row }">
+              <el-tag :type="row.status === 1 ? 'success' : 'info'" size="mini">
+                {{ row.status === 1 ? '启用' : '停用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="120">
             <template slot-scope="{ row }">
               <el-button type="text" size="small" @click="handleEditItem(row)">
@@ -121,10 +137,16 @@
         <el-form-item label="字典名称" prop="name">
           <el-input v-model="typeForm.name" placeholder="请输入字典名称" />
         </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="typeForm.sort" :min="0" :max="9999" />
+        </el-form-item>
+        <el-form-item label="启用">
+          <el-switch v-model="typeForm.status" />
+        </el-form-item>
       </el-form>
       <span slot="footer">
         <el-button @click="typeVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitType">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="submitType">保存</el-button>
       </span>
     </el-dialog>
 
@@ -161,12 +183,15 @@
           </el-select>
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="itemForm.sort" :min="0" :max="999" />
+          <el-input-number v-model="itemForm.sort" :min="0" :max="9999" />
+        </el-form-item>
+        <el-form-item label="启用">
+          <el-switch v-model="itemForm.status" />
         </el-form-item>
       </el-form>
       <span slot="footer">
         <el-button @click="itemVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitItem">保存</el-button>
+        <el-button type="primary" :loading="saving" @click="submitItem">保存</el-button>
       </span>
     </el-dialog>
   </div>
@@ -188,7 +213,7 @@ export default {
         return
       }
       if (
-        !this.typeFormOriginalType &&
+        !this.isEditType &&
         this.dictTypes.some(item => item.type === value)
       ) {
         callback(new Error('字典类型已存在'))
@@ -216,22 +241,27 @@ export default {
 
     return {
       selectedType: '',
+      saving: false,
       typeVisible: false,
       typeForm: {
+        id: null,
         type: '',
-        name: ''
+        name: '',
+        sort: 0,
+        status: true
       },
-      typeFormOriginalType: '',
       typeRules: {
         type: [{ validator: validateTypeCode, trigger: 'blur' }],
         name: [{ required: true, message: '请输入字典名称', trigger: 'blur' }]
       },
       itemVisible: false,
       itemForm: {
+        id: null,
         label: '',
         value: '',
         tagType: '',
-        sort: 0
+        sort: 0,
+        status: true
       },
       itemFormOriginalValue: undefined,
       itemRules: {
@@ -262,10 +292,10 @@ export default {
       )
     },
     isEditType() {
-      return Boolean(this.typeFormOriginalType)
+      return Boolean(this.typeForm.id)
     },
     isEditItem() {
-      return this.itemFormOriginalValue !== undefined
+      return Boolean(this.itemForm.id)
     }
   },
   watch: {
@@ -295,9 +325,28 @@ export default {
     selectType(type) {
       this.selectedType = type
     },
+    nextTypeSort() {
+      const max = this.dictTypes.reduce(
+        (result, item) => Math.max(result, Number(item.sort) || 0),
+        0
+      )
+      return max + 10
+    },
+    nextItemSort() {
+      const max = this.currentItems.reduce(
+        (result, item) => Math.max(result, Number(item.sort) || 0),
+        0
+      )
+      return max + 1
+    },
     handleAddType() {
-      this.typeForm = { type: '', name: '' }
-      this.typeFormOriginalType = ''
+      this.typeForm = {
+        id: null,
+        type: '',
+        name: '',
+        sort: this.nextTypeSort(),
+        status: true
+      }
       this.typeVisible = true
       this.$nextTick(() => {
         if (this.$refs.typeForm) {
@@ -306,8 +355,13 @@ export default {
       })
     },
     handleEditType(item) {
-      this.typeForm = { type: item.type, name: item.name }
-      this.typeFormOriginalType = item.type
+      this.typeForm = {
+        id: item.id,
+        type: item.type,
+        name: item.name,
+        sort: Number(item.sort) || 0,
+        status: item.status === 1
+      }
       this.typeVisible = true
       this.$nextTick(() => {
         if (this.$refs.typeForm) {
@@ -316,21 +370,30 @@ export default {
       })
     },
     submitType() {
-      this.$refs.typeForm.validate(valid => {
-        if (!valid) {
+      this.$refs.typeForm.validate(async valid => {
+        if (!valid || this.saving) {
           return
         }
-
-        const isEdit = Boolean(this.typeFormOriginalType)
-        this.$store.dispatch('dict/saveDictType', {
-          type: this.typeForm.type,
-          name: this.typeForm.name
-        })
-        if (!isEdit) {
-          this.selectedType = this.typeForm.type
+        const isEdit = this.isEditType
+        this.saving = true
+        try {
+          await this.$store.dispatch('dict/saveDictType', {
+            id: this.typeForm.id,
+            type: this.typeForm.type.trim(),
+            name: this.typeForm.name.trim(),
+            sort: Number(this.typeForm.sort) || 0,
+            status: this.typeForm.status ? 1 : 0
+          })
+          if (!isEdit) {
+            this.selectedType = this.typeForm.type.trim()
+          }
+          this.typeVisible = false
+          this.$message.success(isEdit ? '字典类型修改成功' : '字典类型新增成功')
+        } catch (e) {
+          // 请求层已提示错误
+        } finally {
+          this.saving = false
         }
-        this.typeVisible = false
-        this.$message.success(isEdit ? '字典类型修改成功' : '字典类型新增成功')
       })
     },
     handleDeleteType(item) {
@@ -339,22 +402,33 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       })
-        .then(() => {
-          this.$store.dispatch('dict/deleteDictType', item.type)
-          if (this.selectedType === item.type) {
-            this.selectedType = ''
-            this.$nextTick(this.selectFirstType)
+        .then(async () => {
+          try {
+            await this.$store.dispatch('dict/deleteDictType', item.id)
+            if (this.selectedType === item.type) {
+              this.selectedType = ''
+              this.$nextTick(this.selectFirstType)
+            }
+            this.$message.success('字典类型已删除')
+          } catch (e) {
+            // 请求层已提示错误
           }
-          this.$message.success('字典类型已删除')
         })
         .catch(() => {})
     },
     handleAddItem() {
-      if (!this.selectedType) {
+      if (!this.selectedType || !this.currentDict) {
         this.$message.warning('请先选择字典类型')
         return
       }
-      this.itemForm = { label: '', value: '', tagType: '', sort: 0 }
+      this.itemForm = {
+        id: null,
+        label: '',
+        value: '',
+        tagType: '',
+        sort: this.nextItemSort(),
+        status: true
+      }
       this.itemFormOriginalValue = undefined
       this.itemVisible = true
       this.$nextTick(() => {
@@ -365,10 +439,12 @@ export default {
     },
     handleEditItem(row) {
       this.itemForm = {
+        id: row.id,
         label: row.label,
         value: row.value,
         tagType: row.tagType || '',
-        sort: row.sort || 0
+        sort: Number(row.sort) || 0,
+        status: row.status === 1
       }
       this.itemFormOriginalValue = row.value
       this.itemVisible = true
@@ -379,22 +455,29 @@ export default {
       })
     },
     submitItem() {
-      this.$refs.itemForm.validate(valid => {
-        if (!valid) {
+      this.$refs.itemForm.validate(async valid => {
+        if (!valid || this.saving || !this.currentDict) {
           return
         }
-
-        const isEdit = this.itemFormOriginalValue !== undefined
-        this.$store.dispatch('dict/saveDictItem', {
-          type: this.selectedType,
-          item: {
-            ...this.itemForm,
-            sort: Number(this.itemForm.sort) || 0
-          },
-          originalValue: this.itemFormOriginalValue
-        })
-        this.itemVisible = false
-        this.$message.success(isEdit ? '字典项修改成功' : '字典项新增成功')
+        const isEdit = this.isEditItem
+        this.saving = true
+        try {
+          await this.$store.dispatch('dict/saveDictItem', {
+            id: this.itemForm.id,
+            typeId: this.currentDict.id,
+            label: this.itemForm.label.trim(),
+            value: this.itemForm.value.trim(),
+            tagType: this.itemForm.tagType,
+            sort: Number(this.itemForm.sort) || 0,
+            status: this.itemForm.status ? 1 : 0
+          })
+          this.itemVisible = false
+          this.$message.success(isEdit ? '字典项修改成功' : '字典项新增成功')
+        } catch (e) {
+          // 请求层已提示错误
+        } finally {
+          this.saving = false
+        }
       })
     },
     handleDeleteItem(row) {
@@ -403,26 +486,31 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       })
-        .then(() => {
-          this.$store.dispatch('dict/deleteDictItem', {
-            type: this.selectedType,
-            value: row.value
-          })
-          this.$message.success('字典项已删除')
+        .then(async () => {
+          try {
+            await this.$store.dispatch('dict/deleteDictItem', row.id)
+            this.$message.success('字典项已删除')
+          } catch (e) {
+            // 请求层已提示错误
+          }
         })
         .catch(() => {})
     },
     handleReset() {
-      this.$confirm('确定恢复默认字典配置吗？', '提示', {
+      this.$confirm('确定恢复默认字典配置吗？自定义字典和修改将被清除。', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       })
-        .then(() => {
-          this.$store.dispatch('dict/resetDicts')
-          this.selectedType = ''
-          this.$nextTick(this.selectFirstType)
-          this.$message.success('已恢复默认字典配置')
+        .then(async () => {
+          try {
+            await this.$store.dispatch('dict/resetDicts')
+            this.selectedType = ''
+            this.$nextTick(this.selectFirstType)
+            this.$message.success('已恢复默认字典配置')
+          } catch (e) {
+            // 请求层已提示错误
+          }
         })
         .catch(() => {})
     }
@@ -496,6 +584,10 @@ export default {
   font-size: 14px;
   font-weight: 500;
   color: $text-primary;
+}
+
+.type-status {
+  margin-left: 6px;
 }
 
 .dict-type-code {

@@ -8,7 +8,7 @@ NProgress.configure({ showSpinner: false })
 
 const APP_TITLE = process.env.VUE_APP_TITLE || '青山商店管理后台'
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   NProgress.start()
 
   const hasToken = store.getters['user/isLoggedIn']
@@ -34,6 +34,12 @@ router.beforeEach((to, from, next) => {
       next('/dashboard')
       return
     }
+
+    // 字典和菜单配置由服务端下发，首次进入时加载；失败时使用缓存或路由默认值
+    await Promise.all([
+      store.dispatch('dict/loadDicts'),
+      store.dispatch('menu/loadMenus')
+    ])
 
     const roles = store.getters['user/roles']
     const permissions = store.getters['user/permissions']

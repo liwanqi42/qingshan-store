@@ -83,3 +83,26 @@ export function completeOrder(id) {
     method: 'put'
   })
 }
+
+export function getLogisticsTrace(orderId) {
+  return request({
+    url: '/admin/order/logistics/trace',
+    method: 'get',
+    params: { orderId }
+  })
+}
+
+export function addLogisticsTrace(data) {
+  return request({
+    url: '/admin/order/logistics/trace',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteLogisticsTrace(id) {
+  return request({
+    url: `/admin/order/logistics/trace/${id}`,
+    method: 'delete'
+  })
+}
