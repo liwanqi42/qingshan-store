@@ -93,7 +93,7 @@
       <view class="empty" wx:if="{{couponList.length === 0}}">暂无可用的优惠券</view>
       <scroll-view scroll-y="true" style="max-height: 220rpx;" bindscrolltolower="scrolltolowerEvent">
         <view class="coupon" wx:for="{{couponList}}">
-          <view class="select-btn {{selectedCoupon.cLogId === item.cLogId ? 'selected' : ''}}" data-id="{{item.cLogId}}" bindtap="selectCoupon">
+          <view class="select-btn {{selectedCoupon.userCouponId === item.userCouponId ? 'selected' : ''}}" data-id="{{item.userCouponId}}" bindtap="selectCoupon">
             <image src="/images/icon/selected.svg" />
           </view>
           <view class="desc">{{item.title}}</view>

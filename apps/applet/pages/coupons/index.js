@@ -73,6 +73,8 @@ Page({
       mask: true,
       title: '领取成功'
     })
+    // 刷新可领列表：已达限领或领完的券不再展示
+    this.loadCouponList()
   },
   onPullDownRefresh: function () {
 

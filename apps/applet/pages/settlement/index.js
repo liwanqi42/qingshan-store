@@ -567,7 +567,7 @@ Page({
       const startDateArr = couponDO.startTime.split(' ')[0].split('-')
       const endDateArr = couponDO.endTime.split(' ')[0].split('-')
       coupons.push({
-        cLogId: couponDO.CLogId,
+        userCouponId: couponDO.userCouponId,
         couponId: couponDO.couponId,
         title: title,
         type: couponDO.type,
@@ -600,16 +600,16 @@ Page({
   },
   // 选择券
   selectCoupon(e) {
-    let couponLogId = e.currentTarget.dataset.id
+    let couponLogId = Number(e.currentTarget.dataset.id)
     let selectedCoupon = this.data.selectedCoupon
 
-    if (couponLogId === selectedCoupon.cLogId) {
+    if (couponLogId === selectedCoupon.userCouponId) {
       selectedCoupon = {}
     } else {
       const couponList = this.data.couponList
       for (let i = 0; i < couponList.length; i++) {
         const coupon = couponList[i]
-        if (coupon.cLogId === couponLogId) {
+        if (coupon.userCouponId === couponLogId) {
           selectedCoupon = coupon
           break
         }
@@ -653,7 +653,12 @@ Page({
       goodsCount += num
     }
     goodsAmount = parseFloat(goodsAmount.toFixed(2))
-    const discountAmount = parseFloat(this.calcDiscountAmount(goodsAmount).toFixed(2))
+    // 商品金额变化后不再满足门槛时自动取消选中，避免提交后后端拒绝
+    let selectedCoupon = this.data.selectedCoupon
+    if (selectedCoupon.userCouponId !== undefined && !this.isCouponUsable(selectedCoupon, goodsAmount)) {
+      selectedCoupon = {}
+    }
+    const discountAmount = parseFloat(this.calcDiscountAmount(goodsAmount, selectedCoupon).toFixed(2))
     const freightAmount = 0
     const amount = Math.max(0, parseFloat((goodsAmount - discountAmount + freightAmount).toFixed(2)))
     this.setData({
@@ -662,15 +667,22 @@ Page({
       discountAmount: discountAmount,
       freightAmount: freightAmount,
       freightText: freightAmount > 0 ? '￥' + freightAmount : '免运费',
+      selectedCoupon: selectedCoupon,
       amount: amount
     })
   },
+  // 优惠券是否满足金额门槛
+  isCouponUsable(coupon, goodsAmount) {
+    if (coupon.type === 1 || coupon.type === 4) {
+      return goodsAmount >= Number(coupon.fullMoney || 0)
+    }
+    return true
+  },
   // 计算优惠金额
-  calcDiscountAmount(goodsAmount) {
+  calcDiscountAmount(goodsAmount, selectedCoupon) {
     goodsAmount = parseFloat(goodsAmount.toFixed(2), 10)
-    const selectedCoupon = this.data.selectedCoupon
     let discountAmount = 0
-    if (selectedCoupon.cLogId !== undefined) {
+    if (selectedCoupon.userCouponId !== undefined) {
       switch(selectedCoupon.type) {
         case 1:
           if (goodsAmount >= selectedCoupon.fullMoney) {
@@ -692,7 +704,10 @@ Page({
           discountAmount = 0
       }
     }
-    return parseFloat(discountAmount, 10)
+    // 与服务端一致：最多抵扣到商品金额减 0.01，保证实付金额大于 0
+    const maxDiscount = Math.max(0, goodsAmount - 0.01)
+    discountAmount = Math.min(Number(discountAmount) || 0, maxDiscount)
+    return parseFloat(discountAmount.toFixed(2))
   },
   async submitOrder() {
     if (!(await requireLogin())) {
@@ -730,6 +745,10 @@ Page({
       freightAmount: this.data.freightAmount.toFixed(2),
       amount: amount.toFixed(2),
       items: this.buildOrderItems()
+    }
+    // 选中的券由后端二次校验并计算抵扣，前端传值只用于定位券记录
+    if (this.data.selectedCoupon.userCouponId) {
+      params.userCouponId = this.data.selectedCoupon.userCouponId
     }
     const res = await order.placeOrder(params)
     const { error_code, msg } = res

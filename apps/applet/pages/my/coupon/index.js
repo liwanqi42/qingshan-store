@@ -49,7 +49,7 @@ Page({
       const startDateArr = couponDO.startTime.split(' ')[0].split('-')
       const endDateArr = couponDO.endTime.split(' ')[0].split('-')
       coupons.push({
-        cLogId: couponDO.CLogId,
+        userCouponId: couponDO.userCouponId,
         couponId: couponDO.couponId,
         amount: amount,
         title: title,

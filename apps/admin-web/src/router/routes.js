@@ -14,6 +14,8 @@ const ProductView = () =>
   import(/* webpackChunkName: "product" */ '@/views/product/index.vue')
 const BundleView = () =>
   import(/* webpackChunkName: "bundle" */ '@/views/bundle/index.vue')
+const CouponView = () =>
+  import(/* webpackChunkName: "coupon" */ '@/views/coupon/index.vue')
 const StockOrderView = () =>
   import(/* webpackChunkName: "stock-order" */ '@/views/stock/index.vue')
 const StockLedgerView = () =>
@@ -174,6 +176,17 @@ export const constantRoutes = [
           icon: 'el-icon-box',
           roles: ['admin'],
           sort: 90
+        }
+      },
+      {
+        path: 'coupon',
+        name: 'CouponView',
+        component: CouponView,
+        meta: {
+          title: '优惠券管理',
+          icon: 'el-icon-ticket',
+          roles: ['admin'],
+          sort: 95
         }
       },
       {
