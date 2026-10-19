@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qingshan.mapper.CouponMapper">
+
+    <select id="pageQuery" resultType="com.qingshan.vo.CouponVO">
+        select c.id, c.name, c.type, c.full_money, c.minus, c.rate,
+               c.start_time, c.end_time, c.total_count, c.received_count,
+               c.limit_per_user, c.status, c.create_time, c.update_time,
+               case when c.total_count = 0 then null
+                    else c.total_count - c.received_count end as remain_count,
+               (select count(*) from user_coupon uc
+                 where uc.coupon_id = c.id and uc.status = 1) as used_count
+          from coupon c
+        <where>
+            <if test="name != null and name != ''">
+                and c.name like concat('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                and c.type = #{type}
+            </if>
+            <if test="status != null">
+                and c.status = #{status}
+            </if>
+        </where>
+        order by c.id desc
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into coupon (
+            name, type, full_money, minus, rate, start_time, end_time,
+            total_count, received_count, limit_per_user, status,
+            create_time, update_time, create_user, update_user
+        ) values (
+            #{name}, #{type}, #{fullMoney}, #{minus}, #{rate}, #{startTime}, #{endTime},
+            #{totalCount}, #{receivedCount}, #{limitPerUser}, #{status},
+            #{createTime}, #{updateTime}, #{createUser}, #{updateUser}
+        )
+    </insert>
+
+    <update id="update">
+        update coupon
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="fullMoney != null">full_money = #{fullMoney},</if>
+            <if test="minus != null">minus = #{minus},</if>
+            <if test="rate != null">rate = #{rate},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="endTime != null">end_time = #{endTime},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="limitPerUser != null">limit_per_user = #{limitPerUser},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="updateUser != null">update_user = #{updateUser},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from coupon where id = #{id} and received_count = 0
+    </delete>
+
+    <update id="updateStatus">
+        update coupon
+        set status = #{status}
+        <if test="updateTime != null">, update_time = #{updateTime}</if>
+        <if test="updateUser != null">, update_user = #{updateUser}</if>
+        where id = #{id}
+    </update>
+
+    <update id="increaseReceived">
+        update coupon
+        set received_count = received_count + 1,
+            update_time = #{now}
+        where id = #{id}
+          and status = 1
+          and start_time &lt;= #{now}
+          and end_time &gt;= #{now}
+          and (total_count = 0 or received_count &lt; total_count)
+    </update>
+
+    <select id="listAvailable" resultType="com.qingshan.entity.Coupon">
+        select c.*
+          from coupon c
+         where c.status = 1
+           and c.start_time &lt;= #{now}
+           and c.end_time &gt;= #{now}
+           and (c.total_count = 0 or c.received_count &lt; c.total_count)
+           and (select count(*) from user_coupon uc
+                 where uc.coupon_id = c.id and uc.user_id = #{userId}) &lt; c.limit_per_user
+         order by c.end_time asc, c.id desc
+    </select>
+
+</mapper>

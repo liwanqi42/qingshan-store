@@ -15,6 +15,7 @@ import com.qingshan.mapper.OrderMapper;
 import com.qingshan.mapper.ShoppingCartMapper;
 import com.qingshan.model.ResolvedOrderItem;
 import com.qingshan.properties.OrderProperties;
+import com.qingshan.service.CouponService;
 import com.qingshan.service.OrderStockService;
 import com.qingshan.service.ShoppingCartService;
 import com.qingshan.utils.WeChatPayUtil;
@@ -71,6 +72,9 @@ public class OrderManager {
 
     @Autowired
     private OrderValidator orderValidator;
+
+    @Autowired
+    private CouponService couponService;
 
     @Autowired
     private WeChatPayUtil weChatPayUtil;
@@ -148,6 +152,7 @@ public class OrderManager {
                 continue;
             }
             restoreStock(orderId);
+            couponService.returnForOrder(orderId);
             cancelled++;
         }
         return cancelled;

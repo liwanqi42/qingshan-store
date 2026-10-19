@@ -48,16 +48,19 @@ public class OrderConverter {
      * 组装订单主体
      */
     public Orders toOrder(OrdersSubmitDTO ordersSubmitDTO, AddressBook addressBook, Long userId,
-                          String number, LocalDateTime orderTime, BigDecimal amount) {
+                          String number, LocalDateTime orderTime, BigDecimal amount,
+                          BigDecimal couponAmount, Long userCouponId) {
         return Orders.builder()
                 .number(number)
                 .status(Orders.STATUS_PENDING_PAYMENT)
                 .userId(userId)
+                .userCouponId(userCouponId)
                 .addressBookId(ordersSubmitDTO.getAddressBookId())
                 .orderTime(orderTime)
                 .payMethod(ordersSubmitDTO.getPayMethod())
                 .payStatus(Orders.PAY_STATUS_UN_PAID)
                 .amount(amount)
+                .couponAmount(couponAmount)
                 .remark(ordersSubmitDTO.getRemark())
                 .phone(addressBook.getPhone())
                 .consignee(addressBook.getConsignee())
@@ -100,6 +103,7 @@ public class OrderConverter {
                 .orderTime(orders.getOrderTime())
                 .orderNumber(orders.getNumber())
                 .orderAmount(orders.getAmount())
+                .couponAmount(orders.getCouponAmount())
                 .build();
     }
 

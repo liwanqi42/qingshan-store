@@ -51,7 +51,8 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into orders (
-            number, status, user_id, address_book_id, order_time, pay_method, pay_status, amount
+            number, status, user_id, user_coupon_id, address_book_id, order_time, pay_method, pay_status,
+            amount, coupon_amount
             <if test="checkoutTime != null">, checkout_time</if>
             <if test="remark != null">, remark</if>
             <if test="phone != null">, phone</if>
@@ -65,7 +66,8 @@
             <if test="invoiceTitle != null">, invoice_title</if>
         )
         values (
-            #{number}, #{status}, #{userId}, #{addressBookId}, #{orderTime}, #{payMethod}, #{payStatus}, #{amount}
+            #{number}, #{status}, #{userId}, #{userCouponId}, #{addressBookId}, #{orderTime}, #{payMethod}, #{payStatus},
+            #{amount}, #{couponAmount}
             <if test="checkoutTime != null">, #{checkoutTime}</if>
             <if test="remark != null">, #{remark}</if>
             <if test="phone != null">, #{phone}</if>

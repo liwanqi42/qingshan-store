@@ -114,6 +114,26 @@ public class MessageConstant {
     public static final String STOCK_ORDER_DELETED = "只有待审核单据可以删除";
     public static final String STOCK_EXPORT_EMPTY = "没有可导出的数据";
     public static final String STOCK_LEDGER_EXPORT_EMPTY = "没有可导出的库存流水";
+    public static final String COUPON_NAME_REQUIRED = "请输入优惠券名称";
+    public static final String COUPON_NAME_TOO_LONG = "优惠券名称不能超过64个字符";
+    public static final String COUPON_TYPE_INVALID = "优惠券类型不正确";
+    public static final String COUPON_AMOUNT_INVALID = "优惠券面额必须大于0";
+    public static final String COUPON_THRESHOLD_INVALID = "使用门槛不能小于0";
+    public static final String COUPON_RATE_INVALID = "折扣率必须在0到1之间";
+    public static final String COUPON_TIME_INVALID = "有效期开始时间必须早于结束时间";
+    public static final String COUPON_TOTAL_INVALID = "发放总量不能小于0";
+    public static final String COUPON_TOTAL_TOO_SMALL = "发放总量不能小于已领取数量";
+    public static final String COUPON_LIMIT_INVALID = "每人限领数量至少为1";
+    public static final String COUPON_STATUS_INVALID = "优惠券状态不正确";
+    public static final String COUPON_NOT_FOUND = "优惠券不存在";
+    public static final String COUPON_NOT_AVAILABLE = "优惠券已下架或不在有效期内";
+    public static final String COUPON_SOLD_OUT = "优惠券已被领完";
+    public static final String COUPON_LIMIT_REACHED = "已达到该优惠券的领取上限";
+    public static final String COUPON_ALREADY_USED = "该优惠券已使用或已过期";
+    public static final String COUPON_NOT_OWNED = "优惠券不属于当前用户";
+    public static final String COUPON_THRESHOLD_NOT_MET = "订单金额未达到优惠券使用门槛";
+    public static final String COUPON_RECEIVED_PROTECTED = "已发放的优惠券不能删除，可先下架";
+    public static final String COUPON_LOCK_FAILED = "优惠券已被使用，请重新选择";
 
 
 }

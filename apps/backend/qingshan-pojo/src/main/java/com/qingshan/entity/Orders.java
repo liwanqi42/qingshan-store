@@ -86,6 +86,9 @@ public class Orders implements Serializable {
     //下单用户id
     private Long userId;
 
+    //使用的用户优惠券id
+    private Long userCouponId;
+
     //地址id
     private Long addressBookId;
 
@@ -101,8 +104,11 @@ public class Orders implements Serializable {
     //支付状态 0:未支付 1:已支付 2:退款
     private Integer payStatus;
 
-    //实收金额
+    //实收金额（商品金额 - 优惠券抵扣 + 运费）
     private BigDecimal amount;
+
+    //优惠券抵扣金额
+    private BigDecimal couponAmount;
 
     //备注
     private String remark;

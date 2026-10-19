@@ -27,8 +27,10 @@ public class OrdersSubmitDTO implements Serializable {
     private Integer invoiceType;
     //发票抬头
     private String invoiceTitle;
-    //总金额
+    //总金额（仅展示，后端按商品价格与优惠券重新计算）
     private BigDecimal amount;
+    //使用的用户优惠券id
+    private Long userCouponId;
     //下单商品明细，直接购买时传入；为空时按购物车下单
     private List<OrdersSubmitItemDTO> items;
 }

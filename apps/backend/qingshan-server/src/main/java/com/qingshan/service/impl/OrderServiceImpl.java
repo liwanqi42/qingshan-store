@@ -17,7 +17,9 @@ import com.qingshan.mapper.OrderMapper;
 import com.qingshan.mapper.ProductMapper;
 import com.qingshan.mapper.UserMapper;
 import com.qingshan.result.PageResult;
+import com.qingshan.service.CouponService;
 import com.qingshan.service.OrderService;
+import com.qingshan.service.support.OrderAmountCalculator;
 import com.qingshan.service.support.OrderConverter;
 import com.qingshan.service.support.OrderManager;
 import com.qingshan.service.support.ProductCacheManager;
@@ -76,6 +78,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private OrderStatusHandler orderStatusHandler;
+
+    @Autowired
+    private CouponService couponService;
+
+    @Autowired
+    private OrderAmountCalculator orderAmountCalculator;
+
     @Autowired
     private WebSocketServer webSocketServer;
 
@@ -96,16 +105,31 @@ public class OrderServiceImpl implements OrderService {
         //2.确定下单商品（购物车或直接购买），金额由服务端按商品价格计算
         OrderManager.OrderItems orderItems = orderManager.resolveOrderItems(ordersSubmitDTO.getItems(), userId);
 
-        //3.扣减库存（下单即占用库存，超时未支付时再回滚）
+        //3.优惠券校验与抵扣计算，金额只信服务端
+        Long userCouponId = ordersSubmitDTO.getUserCouponId();
+        BigDecimal goodsAmount = orderItems.getAmount();
+        BigDecimal couponAmount = userCouponId == null
+                ? BigDecimal.ZERO
+                : couponService.resolveDiscount(userCouponId, userId, goodsAmount);
+        BigDecimal payableAmount = orderAmountCalculator.payableAmount(goodsAmount, BigDecimal.ZERO, couponAmount);
+
+        //4.扣减库存（下单即占用库存，超时未支付时再回滚）
         orderManager.deductStock(orderItems);
 
-        //4.写入订单及订单明细
+        //5.写入订单及订单明细
         Orders orders = orderConverter.toOrder(ordersSubmitDTO, addressBook, userId,
-                snowflakeIdGenerator.nextIdStr(), LocalDateTime.now(), orderItems.getAmount());
+                snowflakeIdGenerator.nextIdStr(), LocalDateTime.now(), payableAmount,
+                couponAmount, userCouponId);
         orderMapper.insert(orders);
+
+        //6.条件锁定优惠券，防止同一张券并发用于多个订单；失败时整单回滚
+        if (userCouponId != null) {
+            couponService.lockForOrder(userCouponId, userId, orders.getId());
+        }
+
         orderDetailMapper.insertBatch(orderConverter.toOrderDetails(orders.getId(), orderItems.getItems()));
 
-        //5.清空本次下单涉及的购物车记录，直接购买的商品不在购物车中，无需清理
+        //7.清空本次下单涉及的购物车记录，直接购买的商品不在购物车中，无需清理
         orderManager.clearCartItems(orderItems, userId);
 
         return orderConverter.toOrderSubmitVO(orders);
@@ -179,6 +203,9 @@ public class OrderServiceImpl implements OrderService {
             return;
         }
 
+        // 支付成功后核销优惠券
+        couponService.markUsedByOrder(ordersDB.getId());
+
         // 支付成功后累加商品销量
         changeProductSales(ordersDB.getId(), 1);
 
@@ -244,6 +271,9 @@ public class OrderServiceImpl implements OrderService {
             // 已取消/已退款的订单不能再支付
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
+
+        // 支付成功后核销优惠券
+        couponService.markUsedByOrder(ordersDB.getId());
 
         // 支付成功后累加商品销量
         changeProductSales(ordersDB.getId(), 1);
@@ -326,6 +356,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 回滚下单时占用的库存
         orderManager.restoreStock(id);
+
+        // 退回优惠券
+        couponService.returnForOrder(id);
     }
 
     /**
@@ -456,6 +489,9 @@ public class OrderServiceImpl implements OrderService {
             // 待发货/已接单待派送的订单尚未出库，退款后回滚库存
             orderManager.restoreStock(ordersDB.getId());
 
+            // 退款后优惠券退回（未过期可再次使用）
+            couponService.returnForOrder(ordersDB.getId());
+
             // 退款后扣减销量
             changeProductSales(ordersDB.getId(), -1);
             return;
@@ -508,6 +544,9 @@ public class OrderServiceImpl implements OrderService {
         orderManager.refundIfPaid(ordersDB);
         // 商品已退回商家，恢复库存
         orderManager.restoreStock(ordersDB.getId());
+
+        // 退款后优惠券退回（未过期可再次使用）
+        couponService.returnForOrder(ordersDB.getId());
 
         // 退款后扣减销量
         changeProductSales(ordersDB.getId(), -1);
@@ -645,6 +684,9 @@ public class OrderServiceImpl implements OrderService {
         // 回滚下单时占用的库存
         orderManager.restoreStock(ordersDB.getId());
 
+        // 退回优惠券
+        couponService.returnForOrder(ordersDB.getId());
+
         // 已支付订单退款后扣减销量
         if (paid) {
             changeProductSales(ordersDB.getId(), -1);
@@ -679,6 +721,9 @@ public class OrderServiceImpl implements OrderService {
 
         // 回滚下单时占用的库存
         orderManager.restoreStock(ordersDB.getId());
+
+        // 退回优惠券
+        couponService.returnForOrder(ordersDB.getId());
 
         // 已支付订单退款后扣减销量
         if (paid) {
