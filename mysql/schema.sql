@@ -127,6 +127,66 @@ CREATE TABLE IF NOT EXISTS `sys_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='角色与菜单权限';
 
 -- ------------------------------------------------------------
+-- 字典类型
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_dict_type` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `type` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '字典类型编码',
+  `name` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '字典名称',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态 0:禁用，1:启用',
+  `sort` int NOT NULL DEFAULT '0' COMMENT '排序，越小越靠前',
+  `is_system` tinyint NOT NULL DEFAULT '0' COMMENT '是否内置 0:否，1:是',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='字典类型';
+
+-- ------------------------------------------------------------
+-- 字典项
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_dict_item` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `type_id` bigint NOT NULL COMMENT '字典类型id',
+  `label` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '字典标签',
+  `value` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '字典值',
+  `tag_type` varchar(16) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT '' COMMENT '标签样式 success/info/warning/danger',
+  `sort` int NOT NULL DEFAULT '0' COMMENT '排序，越小越靠前',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态 0:禁用，1:启用',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_type_value` (`type_id`, `value`),
+  KEY `idx_type_id` (`type_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='字典项';
+
+-- ------------------------------------------------------------
+-- 菜单配置
+-- 菜单是否对角色可见仍由 sys_role.menu_paths 控制，
+-- 本表只保存路由名称、标题、图标、排序、隐藏和分组。
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sys_menu` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '路由名称',
+  `path` varchar(128) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL COMMENT '路由路径',
+  `title` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL COMMENT '菜单标题',
+  `icon` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin DEFAULT NULL COMMENT '菜单图标',
+  `sort` int NOT NULL DEFAULT '0' COMMENT '排序，越小越靠前',
+  `hidden` tinyint NOT NULL DEFAULT '0' COMMENT '是否隐藏 0:否，1:是',
+  `more` tinyint NOT NULL DEFAULT '0' COMMENT '是否归入更多管理 0:否，1:是',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='菜单配置';
+
+-- ------------------------------------------------------------
 -- 员工信息
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `employee` (
@@ -164,8 +224,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `create_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_openid` (`openid`),
-  -- TODO(prod): 手机号登录依赖 phone 唯一，但目前没有唯一索引，需补 UNIQUE KEY `idx_phone` (`phone`)
-  -- 注意 MySQL 唯一索引允许多个 NULL，可以安全添加
+  -- 手机号登录依赖 phone 唯一；MySQL 唯一索引允许多个 NULL，可以安全添加
   UNIQUE KEY `idx_phone` (`phone`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin COMMENT='用户信息';
 
@@ -259,6 +318,44 @@ CREATE TABLE IF NOT EXISTS `bundle_item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='套装商品关系';
 
 -- ------------------------------------------------------------
+-- 优惠券
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `coupon` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '优惠券名称',
+  `type` tinyint NOT NULL COMMENT '类型 1满减券 2折扣券 3代金券 4满折券',
+  `full_money` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '使用门槛，0表示无门槛',
+  `minus` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '减免金额/代金金额',
+  `rate` decimal(4,2) NOT NULL DEFAULT '1.00' COMMENT '折扣率，如0.85',
+  `start_time` datetime NOT NULL COMMENT '有效期开始',
+  `end_time` datetime NOT NULL COMMENT '有效期结束',
+  `total_count` int NOT NULL DEFAULT '0' COMMENT '发放总量，0表示不限量',
+  `received_count` int NOT NULL DEFAULT '0' COMMENT '已领取数量',
+  `limit_per_user` int NOT NULL DEFAULT '1' COMMENT '每人限领数量',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态 0下架 1上架',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `create_user` bigint DEFAULT NULL COMMENT '创建人',
+  `update_user` bigint DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`id`),
+  KEY `idx_coupon_status_time` (`status`,`start_time`,`end_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='优惠券';
+
+CREATE TABLE IF NOT EXISTS `user_coupon` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `coupon_id` bigint NOT NULL COMMENT '优惠券id',
+  `receive_time` datetime NOT NULL COMMENT '领取时间',
+  `use_time` datetime DEFAULT NULL COMMENT '使用时间',
+  `order_id` bigint DEFAULT NULL COMMENT '使用的订单id',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态 0未使用 1已使用 2已过期 3锁定中',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_id` (`order_id`),
+  KEY `idx_user_status` (`user_id`,`status`),
+  KEY `idx_coupon_id` (`coupon_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='用户优惠券';
+
+-- ------------------------------------------------------------
 -- 订单
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `orders` (
@@ -266,12 +363,14 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `number` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '订单号',
   `status` int NOT NULL DEFAULT '1' COMMENT '订单状态 1待付款 2待发货 3已发货 4配送中 5已完成 6已取消 7退款',
   `user_id` bigint NOT NULL COMMENT '下单用户',
+  `user_coupon_id` bigint DEFAULT NULL COMMENT '使用的用户优惠券id',
   `address_book_id` bigint NOT NULL COMMENT '收货地址id',
   `order_time` datetime NOT NULL COMMENT '下单时间',
   `checkout_time` datetime DEFAULT NULL COMMENT '结账时间',
   `pay_method` int NOT NULL DEFAULT '1' COMMENT '支付方式 1微信 2支付宝 3银行卡',
   `pay_status` tinyint NOT NULL DEFAULT '0' COMMENT '支付状态 0未支付 1已支付 2退款',
   `amount` decimal(10,2) NOT NULL COMMENT '实付金额',
+  `coupon_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '优惠券抵扣金额',
   `remark` varchar(100) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '备注',
   `phone` varchar(11) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '手机号',
   `address` varchar(255) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '收货地址',

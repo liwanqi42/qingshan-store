@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS `stock_order`;
 DROP TABLE IF EXISTS `payment_notify_log`;
 DROP TABLE IF EXISTS `order_logistics_trace`;
 DROP TABLE IF EXISTS `order_detail`;
+DROP TABLE IF EXISTS `user_coupon`;
+DROP TABLE IF EXISTS `coupon`;
 DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `bundle_item`;
 DROP TABLE IF EXISTS `bundle`;
