@@ -1,8 +1,7 @@
 package com.qingshan.controller.notify;
 
-import com.alibaba.druid.support.json.JSONUtils;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.qingshan.properties.WeChatProperties;
 import com.qingshan.service.OrderService;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
@@ -115,7 +114,7 @@ public class PayNotifyController {
         map.put("code", "SUCCESS");
         map.put("message", "SUCCESS");
         response.setHeader("Content-type", ContentType.APPLICATION_JSON.toString());
-        response.getOutputStream().write(JSONUtils.toJSONString(map).getBytes(StandardCharsets.UTF_8));
+        response.getOutputStream().write(JSON.toJSONString(map).getBytes(StandardCharsets.UTF_8));
         response.flushBuffer();
     }
 }

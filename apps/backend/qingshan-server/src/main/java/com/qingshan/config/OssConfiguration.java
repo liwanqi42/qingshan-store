@@ -17,7 +17,9 @@ public class OssConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public AliOssUtil aliOssUtil(AliOssProperties aliOssProperties){
-        log.info("开始创建阿里云文件上传工具类对象：{}", aliOssProperties);
+        // 只记录非敏感配置，禁止把 AccessKeySecret 打进日志
+        log.info("初始化阿里云 OSS：endpoint={}, bucket={}",
+                aliOssProperties.getEndpoint(), aliOssProperties.getBucketName());
         return new AliOssUtil(
                 aliOssProperties.getEndpoint(),
                 aliOssProperties.getAccessKeyId(),

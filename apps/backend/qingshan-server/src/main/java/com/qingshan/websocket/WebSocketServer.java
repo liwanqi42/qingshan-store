@@ -1,6 +1,6 @@
 package com.qingshan.websocket;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.qingshan.entity.Orders;
 import com.qingshan.mapper.OrderMapper;
 import lombok.extern.slf4j.Slf4j;

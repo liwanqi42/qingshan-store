@@ -1,6 +1,7 @@
 package com.qingshan.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.qingshan.constant.MessageConstant;
 import com.qingshan.dto.UserLoginDTO;
 import com.qingshan.dto.UserProfileDTO;
@@ -169,7 +170,7 @@ public class UserServiceImpl implements UserService {
         map.put("grant_type", "authorization_code");
         String json = HttpClientUtil.doGet(WX_LOGIN, map);
 
-        JSONObject jsonObject = JSONObject.parseObject(json);
+        JSONObject jsonObject = JSON.parseObject(json);
         if (jsonObject == null || jsonObject.getString("openid") == null) {
             log.error("微信登录失败:{}", json);
             throw new LoginFailedException(MessageConstant.LOGIN_FAILED);
@@ -204,7 +205,7 @@ public class UserServiceImpl implements UserService {
         String url = WX_PHONE + "?access_token=" + getAccessToken();
         try {
             String json = HttpClientUtil.doPost4Json(url, body);
-            JSONObject jsonObject = JSONObject.parseObject(json);
+            JSONObject jsonObject = JSON.parseObject(json);
             if (jsonObject == null || jsonObject.getIntValue("errcode") != 0) {
                 log.error("获取微信手机号失败:{}", json);
                 throw new LoginFailedException("手机号授权失败，请重试");
@@ -242,7 +243,7 @@ public class UserServiceImpl implements UserService {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(ivBytes));
             String json = new String(cipher.doFinal(data), StandardCharsets.UTF_8);
 
-            JSONObject jsonObject = JSONObject.parseObject(json);
+            JSONObject jsonObject = JSON.parseObject(json);
             JSONObject watermark = jsonObject == null ? null : jsonObject.getJSONObject("watermark");
             if (watermark == null || !weChatProperties.getAppid().equals(watermark.getString("appid"))) {
                 throw new LoginFailedException("手机号校验失败，请重试");
@@ -272,7 +273,7 @@ public class UserServiceImpl implements UserService {
         map.put("secret", weChatProperties.getSecret());
         String json = HttpClientUtil.doGet(WX_ACCESS_TOKEN, map);
 
-        JSONObject jsonObject = JSONObject.parseObject(json);
+        JSONObject jsonObject = JSON.parseObject(json);
         String token = jsonObject == null ? null : jsonObject.getString("access_token");
         if (!StringUtils.hasText(token)) {
             log.error("获取微信access_token失败:{}", json);

@@ -4,7 +4,10 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -14,7 +17,7 @@ public class JwtUtil {
      * 生成jwt
      * 使用Hs256算法, 私匙使用固定秘钥
      *
-     * @param secretKey jwt秘钥
+     * @param secretKey jwt秘钥，HS256 要求至少 32 字节
      * @param ttlMillis jwt过期时间(毫秒)
      * @param claims    设置的信息
      * @return
@@ -35,7 +38,7 @@ public class JwtUtil {
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date())
                 // 设置签名使用的签名算法和签名使用的秘钥
-                .signWith(signatureAlgorithm, secretKey.getBytes(StandardCharsets.UTF_8))
+                .signWith(signingKey(secretKey), signatureAlgorithm)
                 // 设置过期时间
                 .setExpiration(exp);
 
@@ -51,12 +54,21 @@ public class JwtUtil {
      */
     public static Claims parseJWT(String secretKey, String token) {
         // 得到DefaultJwtParser
-        Claims claims = Jwts.parser()
+        Claims claims = Jwts.parserBuilder()
                 // 设置签名的秘钥
-                .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
+                .setSigningKey(signingKey(secretKey))
                 // 设置需要解析的jwt
+                .build()
                 .parseClaimsJws(token).getBody();
         return claims;
+    }
+
+    /**
+     * 由配置中的字符串生成 HS256 密钥。
+     * jjwt 0.11 起会校验 HMAC 密钥长度，密钥短于 32 字节时直接抛出 WeakKeyException。
+     */
+    private static Key signingKey(String secretKey) {
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
 }

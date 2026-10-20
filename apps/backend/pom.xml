@@ -6,7 +6,7 @@
     <parent>
         <artifactId>spring-boot-starter-parent</artifactId>
         <groupId>org.springframework.boot</groupId>
-        <version>2.7.3</version>
+        <version>2.7.18</version>
     </parent>
     <groupId>com.qingshan</groupId>
     <artifactId>backend</artifactId>
@@ -18,21 +18,36 @@
         <module>qingshan-server</module>
     </modules>
     <properties>
-        <!-- TODO(prod): Spring Boot 2.7.3 已停止维护；fastjson 1.2.76 / druid 1.2.1 / jjwt 0.9.1 / poi 3.16 版本较旧，
-             上线前跑一遍依赖漏洞扫描（OWASP Dependency-Check / mvn versions:display-dependency-updates），
-             至少升级 spring-boot、fastjson、jjwt 到有安全维护的版本 -->
+        <!-- 依赖版本策略：
+             · Spring Boot 保持在 2.7.x 最后一个小版本，避免 Boot 3 / Jakarta 大改；
+             · fastjson 1.x 已停止维护，改用 fastjson2；
+             · jjwt 0.11.x 要求 HMAC 密钥至少 256 位，dev/prod 配置需使用 32 字节以上随机密钥；
+             · byte-buddy 覆盖父 POM 版本，兼容本机 JDK 23 运行单元测试。 -->
         <mybatis.spring>2.2.0</mybatis.spring>
         <lombok>1.18.36</lombok>
-        <fastjson>1.2.76</fastjson>
-        <commons.lang>2.6</commons.lang>
-        <druid>1.2.1</druid>
-        <pagehelper>1.3.0</pagehelper>
+        <fastjson2>2.0.66</fastjson2>
+        <druid>1.2.28</druid>
+        <pagehelper>1.4.7</pagehelper>
         <aliyun.sdk.oss>3.10.2</aliyun.sdk.oss>
         <knife4j>3.0.2</knife4j>
         <aspectj>1.9.4</aspectj>
-        <jjwt>0.9.1</jjwt>
+        <jjwt>0.11.5</jjwt>
         <jaxb-api>2.3.1</jaxb-api>
-        <poi>3.16</poi>
+        <poi>5.4.1</poi>
+        <!-- 漏洞扫描整改：以下为 Boot 2.7 默认版本的补丁升级 -->
+        <netty.version>4.1.139.Final</netty.version>
+        <logback.version>1.2.13</logback.version>
+        <guava.version>33.7.2-jre</guava.version>
+        <jackson-bom.version>2.18.11</jackson-bom.version>
+        <commons-lang3.version>3.21.0</commons-lang3.version>
+        <log4j2.version>2.25.5</log4j2.version>
+        <classgraph.version>4.8.199</classgraph.version>
+        <commons-compress.version>1.28.0</commons-compress.version>
+        <mysql.version>8.4.0</mysql.version>
+        <!-- Boot 2.7 已停止维护，单独拉齐同一版本线上的最终补丁 -->
+        <tomcat.version>9.0.123</tomcat.version>
+        <spring-framework.version>5.3.39</spring-framework.version>
+        <byte-buddy.version>1.15.11</byte-buddy.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -49,15 +64,29 @@
             </dependency>
 
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson}</version>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2}</version>
             </dependency>
 
             <dependency>
-                <groupId>commons-lang</groupId>
-                <artifactId>commons-lang</artifactId>
-                <version>${commons.lang}</version>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- springfox 3.0.0 传递依赖，补丁升级以修复 XXE -->
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>${classgraph.version}</version>
+            </dependency>
+
+            <!-- poi 传递依赖，补丁升级以修复解压相关漏洞 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
             </dependency>
 
             <dependency>
@@ -92,7 +121,17 @@
 
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt</artifactId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt}</version>
             </dependency>
 

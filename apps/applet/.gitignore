@@ -1,2 +1,5 @@
 .DS_Store
 .idea/
+
+# 微信开发者工具的个人私有配置，每人本机不同，不纳入版本库
+project.private.config.json

@@ -16,6 +16,5 @@
 qingshan-server/src/main/resources/application-dev.yml
 qingshan-server/qingshan-server.iml
 
-*Test.java
-**/test/
+# 本地安全检查清单（含环境信息，按需在本地维护）
 /SECURITY_TODO.md
