@@ -29,7 +29,7 @@ qingshan-server     控制器、服务、Mapper、配置和定时任务
 
 ## 本地运行
 
-1. 安装 JDK 8+、Maven、MySQL、Redis。
+1. 安装 JDK 17+、Maven、MySQL、Redis。
 2. 在仓库根目录依次导入数据库脚本（开发环境）：
 
 ```bash

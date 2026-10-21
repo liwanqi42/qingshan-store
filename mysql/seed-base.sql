@@ -121,7 +121,7 @@ INSERT IGNORE INTO `sys_menu` (`id`,`name`,`path`,`title`,`icon`,`sort`,`hidden`
     (7,'CategoryView','/category','分类管理','el-icon-menu',70,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
     (8,'ProductView','/product','商品管理','el-icon-s-goods',80,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
     (9,'BundleView','/bundle','套餐管理','el-icon-box',90,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
-    (15,'CouponView','/coupon','优惠券管理','el-icon-ticket',95,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
+    (15,'CouponView','/coupon','优惠券管理','el-icon-s-ticket',95,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
     (10,'SystemUserView','/system/user','员工管理','el-icon-s-custom',100,0,0,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
     (11,'SystemMenuView','/system/menu','菜单管理','el-icon-s-grid',110,0,1,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),
     (12,'SystemRoleView','/system/role','权限管理','el-icon-s-check',120,0,1,'2026-10-24 10:00:00','2026-10-24 10:00:00',1,1),

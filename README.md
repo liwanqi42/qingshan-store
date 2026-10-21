@@ -12,6 +12,31 @@
 
 ---
 
+## 项目展示
+
+### 微信小程序
+
+<table>
+  <tr>
+    <td align="center"><img src="images/phone-home.png" alt="小程序首页" width="230"><br><sub>首页</sub></td>
+    <td align="center"><img src="images/phone-shopcart.png" alt="小程序购物车" width="230"><br><sub>购物车</sub></td>
+    <td align="center"><img src="images/phone-me.png" alt="小程序个人中心" width="230"><br><sub>我的</sub></td>
+  </tr>
+</table>
+
+### 管理后台
+
+<p align="center">
+  <img src="images/admin-manager.png" alt="管理后台工作台" width="900">
+  <br><sub>工作台</sub>
+</p>
+
+<p align="center">
+  <img src="images/admin-login.png" alt="管理后台登录页" width="900">
+  <br><sub>登录页</sub>
+</p>
+
+---
 
 ## 系统架构
 

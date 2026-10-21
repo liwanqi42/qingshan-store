@@ -4,11 +4,13 @@ import com.qingshan.entity.OrderDetail;
 import com.qingshan.entity.Orders;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.List;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderVO extends Orders implements Serializable {

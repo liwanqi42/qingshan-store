@@ -8,19 +8,9 @@ import com.qingshan.dto.StockLedgerPageQueryDTO;
 import com.qingshan.dto.StockOrderDTO;
 import com.qingshan.dto.StockOrderItemDTO;
 import com.qingshan.dto.StockOrderPageQueryDTO;
-import com.qingshan.entity.Employee;
-import com.qingshan.entity.Product;
-import com.qingshan.entity.ProductSku;
-import com.qingshan.entity.StockLedger;
-import com.qingshan.entity.StockOrder;
-import com.qingshan.entity.StockOrderItem;
+import com.qingshan.entity.*;
 import com.qingshan.exception.BaseException;
-import com.qingshan.mapper.EmployeeMapper;
-import com.qingshan.mapper.ProductMapper;
-import com.qingshan.mapper.ProductSkuMapper;
-import com.qingshan.mapper.StockLedgerMapper;
-import com.qingshan.mapper.StockOrderItemMapper;
-import com.qingshan.mapper.StockOrderMapper;
+import com.qingshan.mapper.*;
 import com.qingshan.result.PageResult;
 import com.qingshan.service.StockService;
 import com.qingshan.utils.PageUtil;
@@ -29,13 +19,8 @@ import com.qingshan.vo.StockItemVO;
 import com.qingshan.vo.StockLedgerVO;
 import com.qingshan.vo.StockOrderExportVO;
 import com.qingshan.vo.StockOrderVO;
-import com.qingshan.vo.StockSkuVO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,11 +35,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 入库/出库单据与库存台账
@@ -656,8 +637,7 @@ public class StockServiceImpl implements StockService {
      */
     private void writeExcel(HttpServletResponse response, String fileName, String sheetName,
                             String[] headers, List<Object[]> rows) {
-        SXSSFWorkbook workbook = new SXSSFWorkbook(100);
-        try {
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) {
             Sheet sheet = workbook.createSheet(sheetName);
 
             CellStyle headStyle = workbook.createCellStyle();
@@ -698,8 +678,6 @@ public class StockServiceImpl implements StockService {
         } catch (IOException e) {
             log.error("导出库存单据失败", e);
             throw new RuntimeException("导出库存单据失败", e);
-        } finally {
-            workbook.dispose();
         }
     }
 

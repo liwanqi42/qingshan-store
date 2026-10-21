@@ -184,7 +184,7 @@ export const constantRoutes = [
         component: CouponView,
         meta: {
           title: '优惠券管理',
-          icon: 'el-icon-ticket',
+          icon: 'el-icon-s-ticket',
           roles: ['admin'],
           sort: 95
         }

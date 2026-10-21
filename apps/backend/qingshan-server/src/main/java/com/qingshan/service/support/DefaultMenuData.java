@@ -21,7 +21,7 @@ public final class DefaultMenuData {
             menu("CategoryView", "/category", "分类管理", "el-icon-menu", 70, false, false),
             menu("ProductView", "/product", "商品管理", "el-icon-s-goods", 80, false, false),
             menu("BundleView", "/bundle", "套餐管理", "el-icon-box", 90, false, false),
-            menu("CouponView", "/coupon", "优惠券管理", "el-icon-ticket", 95, false, false),
+            menu("CouponView", "/coupon", "优惠券管理", "el-icon-s-ticket", 95, false, false),
             menu("SystemUserView", "/system/user", "员工管理", "el-icon-s-custom", 100, false, false),
             menu("SystemMenuView", "/system/menu", "菜单管理", "el-icon-s-grid", 110, false, true),
             menu("SystemRoleView", "/system/role", "权限管理", "el-icon-s-check", 120, false, true),

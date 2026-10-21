@@ -33,8 +33,10 @@ public class ProductVO implements Serializable {
     //封面图片
     private String image;
     //样式图列表（详情页轮播）
+    @Builder.Default
     private List<String> images = new ArrayList<>();
     //详情长图列表
+    @Builder.Default
     private List<String> detailImages = new ArrayList<>();
     //描述信息
     private String description;
@@ -49,8 +51,10 @@ public class ProductVO implements Serializable {
     //分类名称
     private String categoryName;
     //商品属性/规格
+    @Builder.Default
     private List<ProductAttr> attrs = new ArrayList<>();
     //商品SKU（每个规格组合的独立价格与库存）
+    @Builder.Default
     private List<ProductSku> skuList = new ArrayList<>();
 
 

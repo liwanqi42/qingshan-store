@@ -20,7 +20,7 @@ public class ShopStatusService {
     public static final int STATUS_OPEN = 1;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 获取营业状态，未设置时按打烊处理

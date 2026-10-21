@@ -35,7 +35,7 @@ public class ProductController {
     private ProductService productService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private ProductCacheManager productCacheManager;
@@ -116,6 +116,7 @@ public class ProductController {
      * @param key 缓存key
      * @return 缓存值，缓存不可用时返回null
      */
+    @SuppressWarnings("unchecked")
     private <T> T getCache(String key) {
         try {
             return (T) redisTemplate.opsForValue().get(key);

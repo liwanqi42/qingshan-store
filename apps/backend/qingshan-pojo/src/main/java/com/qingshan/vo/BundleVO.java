@@ -44,5 +44,6 @@ public class BundleVO implements Serializable {
     private String categoryName;
 
     //套装和商品的关联关系
+    @Builder.Default
     private List<BundleItem> bundleItems = new ArrayList<>();
 }

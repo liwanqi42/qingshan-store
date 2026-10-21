@@ -151,8 +151,8 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-import { constantRoutes } from '@/router/routes'
+import {mapState} from 'vuex'
+import {constantRoutes} from '@/router/routes'
 
 const ICON_OPTIONS = [
   'el-icon-s-home',
@@ -169,6 +169,7 @@ const ICON_OPTIONS = [
   'el-icon-notebook-2',
   'el-icon-menu',
   'el-icon-box',
+  'el-icon-s-ticket',
   'el-icon-setting'
 ]
 

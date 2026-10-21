@@ -148,7 +148,7 @@ public class WeChatPayUtil {
         String prepayId = jsonObject.getString("prepay_id");
         if (prepayId != null) {
             String timeStamp = String.valueOf(System.currentTimeMillis() / 1000);
-            String nonceStr = RandomStringUtils.randomNumeric(32);
+            String nonceStr = RandomStringUtils.secure().nextNumeric(32);
             ArrayList<Object> list = new ArrayList<>();
             list.add(weChatProperties.getAppid());
             list.add(timeStamp);

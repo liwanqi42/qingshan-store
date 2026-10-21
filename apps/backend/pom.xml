@@ -18,6 +18,9 @@
         <module>qingshan-server</module>
     </modules>
     <properties>
+        <!-- 编译与运行基线：Java 17（LTS），Spring Boot 2.7 支持该版本 -->
+        <java.version>17</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <!-- 依赖版本策略：
              · Spring Boot 保持在 2.7.x 最后一个小版本，避免 Boot 3 / Jakarta 大改；
              · fastjson 1.x 已停止维护，改用 fastjson2；

@@ -37,7 +37,7 @@ public class OrderValidator {
     private OrderProperties orderProperties;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private OrderMapper orderMapper;
